@@ -129,7 +129,7 @@ export default function PrivacyPage() {
             <Container size="md">
               <div className="max-w-2xl">
                 <HeroText>
-                  <p className="text-sm font-medium uppercase tracking-widest text-[hsl(var(--color-foreground-muted))] mb-4">
+                  <p className="text-sm font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-muted))] mb-4">
                     Legal
                   </p>
                 </HeroText>
@@ -158,7 +158,7 @@ export default function PrivacyPage() {
               <AnimatedSection>
                 <Separator className="mb-8" />
                 <nav className="mb-8">
-                  <p className="text-xs font-medium uppercase tracking-widest text-[hsl(var(--color-foreground-subtle))] mb-4">
+                  <p className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">
                     On this page
                   </p>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">

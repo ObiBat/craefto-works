@@ -81,7 +81,7 @@ export function InteractiveLogo({ className = "" }: InteractiveLogoProps) {
         animate={{ opacity: hasInteracted ? 0 : 1 }}
         transition={{ duration: 0.3 }}
       >
-        <span className="text-white/80 text-xs font-medium tracking-wider uppercase">
+        <span className="text-white/80 text-xs font-medium font-mono tracking-[0.06em] uppercase">
           Hover to interact
         </span>
         {/* Animated cursor icon */}

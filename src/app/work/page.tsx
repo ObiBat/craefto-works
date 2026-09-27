@@ -205,7 +205,7 @@ export default function WorkPage() {
                           </p>
 
                           {/* Industry */}
-                          <p className="text-xs text-white/50 uppercase tracking-wider">
+                          <p className="text-xs text-white/50 uppercase font-mono tracking-[0.06em]">
                             {project.industry}
                           </p>
 

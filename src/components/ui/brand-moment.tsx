@@ -265,7 +265,7 @@ export function BrandMoment({ slug }: { slug: BrandMomentSlug }) {
           }`}
           style={dark ? undefined : { color: JP.sumi }}
         >
-          <p className={`text-xs uppercase tracking-wide ${dark ? "text-white/60" : "text-[hsl(var(--color-foreground-subtle))]"}`}>
+          <p className={`text-xs uppercase font-mono tracking-[0.06em] ${dark ? "text-white/60" : "text-[hsl(var(--color-foreground-subtle))]"}`}>
             {copy.label}
           </p>
           <h3 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: dark ? "#ffffff" : JP.sumi }}>{copy.title}</h3>

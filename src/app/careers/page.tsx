@@ -267,7 +267,7 @@ export default function CareersPage() {
                   }} />
 
                   <div className="relative z-10 max-w-2xl">
-                    <span className="text-xs font-medium uppercase tracking-widest text-white/40 mb-6 block">
+                    <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-white/40 mb-6 block">
                       Open application
                     </span>
                     <h2 className="font-semibold tracking-tight !text-white text-3xl md:text-4xl lg:text-5xl leading-[1.05] mb-6">

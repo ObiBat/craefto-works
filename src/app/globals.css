@@ -74,9 +74,14 @@
      TYPOGRAPHY
      ───────────────────────────────────────────────────────────── */
 
-  --font-heading: var(--font-space-grotesk), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-heading: var(--font-archivo), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Archivo width for headings: 100 = normal, lower = more condensed (62–125). */
+  --heading-wdth: 100;
+  /* Inter optical size for body text: 32 = Inter Display, 14 = Inter Text. */
+  --body-opsz: 32;
 
   /* ─────────────────────────────────────────────────────────────
      BORDER RADIUS - Softer, more organic
@@ -238,6 +243,7 @@ body {
   background-color: hsl(var(--color-background));
   color: hsl(var(--color-foreground));
   font-family: var(--font-sans);
+  font-variation-settings: "opsz" var(--body-opsz);
   font-weight: 400;
   font-size: 16px;
   line-height: 1.7;
@@ -285,9 +291,15 @@ body {
 
 /* ─────────────────────────────────────────────────────────────
    TYPOGRAPHY SYSTEM
-   Headings: Space Grotesk 600
-   Body: DM Sans 400
+   Headings: Archivo 600
+   Body: Inter Display 400
+   Highlights: Geist Mono (labels, badges, metadata)
    ───────────────────────────────────────────────────────────── */
+
+h1, h2, h3, h4, h5, h6,
+.font-heading {
+  font-variation-settings: "wdth" var(--heading-wdth);
+}
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);

@@ -251,7 +251,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 <div className="mt-20 mb-16">
                   <div className="flex items-center justify-center gap-4">
                     <div className="h-px w-16 bg-border" />
-                    <span className="text-foreground-subtle text-xs tracking-[0.2em] uppercase font-medium">End</span>
+                    <span className="text-foreground-subtle text-xs font-mono tracking-[0.08em] uppercase font-medium">End</span>
                     <div className="h-px w-16 bg-border" />
                   </div>
                 </div>

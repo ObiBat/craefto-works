@@ -131,7 +131,7 @@ export default async function PillarPage({ params }: PillarPageProps) {
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: pillar.color }}
             />
-            <span className="text-sm font-medium uppercase tracking-wider" style={{ color: pillar.color }}>
+            <span className="text-sm font-medium uppercase font-mono tracking-[0.06em]" style={{ color: pillar.color }}>
               Content Pillar
             </span>
           </div>

@@ -59,7 +59,7 @@ export function Callout({
       <div className="flex items-start gap-4">
         <span className="shrink-0 mt-0.5">{icons[type]}</span>
         <div>
-          <p className="font-semibold text-sm uppercase tracking-wide mb-2 opacity-80">{labels[type]}</p>
+          <p className="font-medium text-sm uppercase font-mono tracking-[0.06em] mb-2 opacity-80">{labels[type]}</p>
           <div className="text-base leading-relaxed [&>p]:my-0 [&>p:not(:first-child)]:mt-3">{children}</div>
         </div>
       </div>
@@ -278,7 +278,7 @@ export const mdxComponents = {
     </div>
   ),
   th: ({ children, ...props }: React.HTMLAttributes<HTMLTableCellElement>) => (
-    <th className="border-b border-border bg-background-subtle px-5 py-3 text-left font-semibold text-sm uppercase tracking-wide text-foreground-muted" {...props}>
+    <th className="border-b border-border bg-background-subtle px-5 py-3 text-left font-medium text-sm uppercase font-mono tracking-[0.06em] text-foreground-muted" {...props}>
       {children}
     </th>
   ),

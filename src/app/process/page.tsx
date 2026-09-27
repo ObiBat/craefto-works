@@ -156,7 +156,7 @@ export default function ProcessPage() {
                             {/* Deliverable card with accent background */}
                             <div className="flex items-start">
                               <div className="rounded-xl bg-[hsl(var(--color-accent))]/10 border border-[hsl(var(--color-accent))]/20 p-6 w-full">
-                                <p className="text-xs font-semibold text-[hsl(var(--color-accent))] uppercase tracking-widest mb-3">
+                                <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase font-mono tracking-[0.06em] mb-3">
                                   Deliverable
                                 </p>
                                 <p className="text-[hsl(var(--color-foreground))] font-medium leading-relaxed">
@@ -223,7 +223,7 @@ export default function ProcessPage() {
               <AnimatedSection variant="scaleIn">
                 <div className="rounded-2xl bg-[hsl(var(--color-accent))] p-10 sm:p-14 md:p-16">
                   <div className="flex flex-col items-center text-center gap-8 max-w-2xl mx-auto">
-                    <span className="text-xs font-medium uppercase tracking-widest text-white/70">
+                    <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-white/70">
                       Ready?
                     </span>
                     <h2 className="font-semibold tracking-tight !text-white">

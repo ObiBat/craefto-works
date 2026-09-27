@@ -19,7 +19,7 @@ export function SocialProof() {
       <Container>
         <AnimatedSection>
           <div className="flex flex-col items-center text-center gap-10">
-            <p className="text-sm font-medium uppercase tracking-widest text-[hsl(var(--color-foreground-subtle))]">
+            <p className="text-sm font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
               Trusted by founders building the future
             </p>
 

@@ -23,7 +23,7 @@ export function AuthorCard({
   return (
     <div className="relative mt-16 p-8 rounded-2xl bg-background-subtle/50 border border-border-subtle">
       {/* Label */}
-      <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-6">
+      <p className="text-xs font-medium text-foreground-muted uppercase font-mono tracking-[0.06em] mb-6">
         Written by
       </p>
 

@@ -349,7 +349,7 @@ const changelog: ChangelogEntry[] = [
 function CategoryPill({ category }: { category: ChangeCategory }) {
   const config = categoryConfig[category];
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${config.color}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase font-mono tracking-[0.06em] ${config.color}`}>
       {config.label}
     </span>
   );
@@ -491,19 +491,19 @@ export default function ChangelogPage() {
                 <div className="flex flex-wrap gap-6 md:gap-10 pb-8 border-b border-[hsl(var(--color-border))]">
                   <div>
                     <p className="font-mono text-2xl font-semibold text-[hsl(var(--color-foreground))]">{totalCommits}+</p>
-                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))] uppercase tracking-wide mt-0.5">Commits</p>
+                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))] uppercase font-mono tracking-[0.06em] mt-0.5">Commits</p>
                   </div>
                   <div>
                     <p className="font-mono text-2xl font-semibold text-[hsl(var(--color-foreground))]">{totalEntries}</p>
-                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))] uppercase tracking-wide mt-0.5">Updates</p>
+                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))] uppercase font-mono tracking-[0.06em] mt-0.5">Updates</p>
                   </div>
                   <div>
                     <p className="font-mono text-2xl font-semibold text-[hsl(var(--color-foreground))]">{milestoneCount}</p>
-                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))] uppercase tracking-wide mt-0.5">Milestones</p>
+                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))] uppercase font-mono tracking-[0.06em] mt-0.5">Milestones</p>
                   </div>
                   <div>
                     <p className="font-mono text-2xl font-semibold text-[hsl(var(--color-accent))]">v{changelog[0].version}</p>
-                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))] uppercase tracking-wide mt-0.5">Latest</p>
+                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))] uppercase font-mono tracking-[0.06em] mt-0.5">Latest</p>
                   </div>
                 </div>
               </AnimatedSection>

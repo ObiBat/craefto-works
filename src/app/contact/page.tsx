@@ -90,7 +90,7 @@ export default function ContactPage() {
                   {/* Email Card */}
                   <AnimatedSection delay={0.25}>
                     <div className="p-5 rounded-xl bg-[hsl(var(--color-foreground))] text-[hsl(var(--color-background))]">
-                      <p className="text-xs uppercase tracking-widest opacity-50 mb-2">
+                      <p className="text-xs uppercase font-mono tracking-[0.06em] opacity-50 mb-2">
                         Prefer email?
                       </p>
                       <button
@@ -125,7 +125,7 @@ export default function ContactPage() {
                   {/* What to expect */}
                   <AnimatedSection delay={0.3}>
                     <div className="space-y-4">
-                      <p className="text-xs uppercase tracking-widest text-[hsl(var(--color-foreground-subtle))]">
+                      <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
                         What happens next
                       </p>
                       <div className="space-y-3">

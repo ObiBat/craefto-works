@@ -664,7 +664,7 @@ function RoleSummaryCard({ role, postedDate }: { role: Role; postedDate: string 
 function RoleSummaryContent({ role, postedDate }: { role: Role; postedDate: string }) {
   return (
     <div className="p-4 lg:p-0">
-      <p className="text-[10px] uppercase tracking-widest text-[hsl(var(--color-foreground-muted))] font-semibold mb-2">
+      <p className="text-[10px] uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-muted))] font-medium mb-2">
         Applying for
       </p>
       <h3 className="font-serif text-xl tracking-tight text-[hsl(var(--color-foreground))] mb-4">

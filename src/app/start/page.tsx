@@ -135,7 +135,7 @@ export default function StartPage() {
                       {stats.map((stat) => (
                         <StaggeredItem key={stat.label}>
                           <div className="rounded-xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-subtle))] p-5">
-                            <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase tracking-wide mb-1">
+                            <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase font-mono tracking-[0.06em] mb-1">
                               {stat.label}
                             </p>
                             <p className="text-lg font-semibold text-[hsl(var(--color-foreground))]">
@@ -218,7 +218,7 @@ export default function StartPage() {
                       <div className="rounded-xl border border-[hsl(var(--color-border))] overflow-hidden h-full flex flex-col">
                         {/* Typical */}
                         <div className="p-5 bg-[hsl(var(--color-background-subtle))] flex-1">
-                          <p className="text-xs font-medium text-[hsl(var(--color-foreground-subtle))] uppercase tracking-wide mb-2">
+                          <p className="text-xs font-medium text-[hsl(var(--color-foreground-subtle))] uppercase font-mono tracking-[0.06em] mb-2">
                             Typical Agency
                           </p>
                           <p className="text-sm text-[hsl(var(--color-foreground-muted))] leading-relaxed">
@@ -227,7 +227,7 @@ export default function StartPage() {
                         </div>
                         {/* Craefto */}
                         <div className="p-5 bg-[hsl(var(--color-accent))]/5 border-t border-[hsl(var(--color-accent))]/20 flex-1">
-                          <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase tracking-wide mb-2">
+                          <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase font-mono tracking-[0.06em] mb-2">
                             Craefto
                           </p>
                           <p className="text-sm text-[hsl(var(--color-foreground))] leading-relaxed font-medium">

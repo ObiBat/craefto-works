@@ -74,7 +74,7 @@ export function TableOfContents({ content }: TableOfContentsProps) {
   return (
     <nav className="hidden xl:block" aria-label="Table of contents">
       <div className="max-h-[calc(100vh-8rem)] overflow-auto pr-4 -mr-4">
-        <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-5">
+        <p className="text-xs font-medium text-foreground-muted uppercase font-mono tracking-[0.06em] mb-5">
           On this page
         </p>
         <ul className="space-y-1 text-sm border-l border-border-subtle">
@@ -113,7 +113,7 @@ export function TableOfContents({ content }: TableOfContentsProps) {
 
         {/* Share buttons */}
         <div className="mt-10 pt-6 border-t border-border">
-          <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-4">Share</p>
+          <p className="text-xs font-medium text-foreground-muted uppercase font-mono tracking-[0.06em] mb-4">Share</p>
           <div className="flex gap-2">
             <ShareButton
               network="twitter"

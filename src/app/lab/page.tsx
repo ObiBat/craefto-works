@@ -137,7 +137,7 @@ export default function LabPage() {
                 <div className="rounded-2xl bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] p-10 sm:p-14 md:p-16">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
                     <div className="max-w-xl">
-                      <span className="text-xs font-medium uppercase tracking-widest text-[hsl(var(--color-foreground-subtle))]">
+                      <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
                         Stay Updated
                       </span>
                       <h2 className="font-semibold tracking-tight mt-3 mb-4">
@@ -187,7 +187,7 @@ export default function LabPage() {
               <AnimatedSection variant="scaleIn">
                 <div className="rounded-2xl bg-[hsl(var(--color-accent))] p-10 sm:p-14 md:p-16">
                   <div className="flex flex-col items-center text-center gap-8 max-w-2xl mx-auto">
-                    <span className="text-xs font-medium uppercase tracking-widest text-white/70">
+                    <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-white/70">
                       Work With Us
                     </span>
                     <h2 className="font-semibold tracking-tight !text-white">

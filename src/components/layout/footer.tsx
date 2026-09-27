@@ -41,7 +41,7 @@ export function Footer() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 md:gap-12">
               {/* Navigate */}
               <nav aria-label="Footer navigation">
-                <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#ffffff' }}>
+                <p className="text-xs font-medium uppercase font-mono tracking-[0.06em] mb-4" style={{ color: '#ffffff' }}>
                   Navigate
                 </p>
                 <ul className="space-y-2.5">
@@ -86,7 +86,7 @@ export function Footer() {
 
               {/* Journal */}
               <nav aria-label="Journal">
-                <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#ffffff' }}>
+                <p className="text-xs font-medium uppercase font-mono tracking-[0.06em] mb-4" style={{ color: '#ffffff' }}>
                   Journal
                 </p>
                 <ul className="space-y-2.5">
@@ -127,7 +127,7 @@ export function Footer() {
 
               {/* Services */}
               <nav aria-label="Services">
-                <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#ffffff' }}>
+                <p className="text-xs font-medium uppercase font-mono tracking-[0.06em] mb-4" style={{ color: '#ffffff' }}>
                   Services
                 </p>
                 <ul className="space-y-2.5">
@@ -146,7 +146,7 @@ export function Footer() {
 
               {/* Connect */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#ffffff' }}>
+                <p className="text-xs font-medium uppercase font-mono tracking-[0.06em] mb-4" style={{ color: '#ffffff' }}>
                   Connect
                 </p>
                 <ul className="space-y-2.5">

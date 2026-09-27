@@ -192,7 +192,7 @@ function ServiceCard({
         </h3>
 
         {/* Tagline */}
-        <p className="text-[hsl(var(--color-accent))] font-medium uppercase tracking-wide text-xs mb-4">
+        <p className="text-[hsl(var(--color-accent))] font-medium uppercase font-mono tracking-[0.06em] text-xs mb-4">
           {service.tagline}
         </p>
 
@@ -203,7 +203,7 @@ function ServiceCard({
 
         {/* Scenarios */}
         <div className="pt-4 border-t border-[hsl(var(--color-border))]">
-          <p className="text-xs font-medium text-[hsl(var(--color-foreground-subtle))] uppercase tracking-wide mb-3">
+          <p className="text-xs font-medium text-[hsl(var(--color-foreground-subtle))] uppercase font-mono tracking-[0.06em] mb-3">
             Common scenarios
           </p>
           <div className="space-y-2">
@@ -221,7 +221,7 @@ function ServiceCard({
 
         {/* Includes */}
         <div className="pt-4 border-t border-[hsl(var(--color-border))] mt-4">
-          <p className="text-xs font-medium text-[hsl(var(--color-foreground-subtle))] uppercase tracking-wide mb-3">
+          <p className="text-xs font-medium text-[hsl(var(--color-foreground-subtle))] uppercase font-mono tracking-[0.06em] mb-3">
             Includes
           </p>
           <div className="flex flex-wrap gap-2">
@@ -383,7 +383,7 @@ export default function ServicesPage() {
 
                   {/* Process Card */}
                   <div className="lg:col-span-4 rounded-2xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-subtle))] p-6 lg:p-8">
-                    <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase tracking-wide mb-5">
+                    <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase font-mono tracking-[0.06em] mb-5">
                       How we work
                     </p>
                     <div className="space-y-4">
@@ -425,7 +425,7 @@ export default function ServicesPage() {
                 {/* Mobile Process */}
                 <AnimatedSection>
                   <div className="rounded-2xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-subtle))] p-6">
-                    <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase tracking-wide mb-5">
+                    <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase font-mono tracking-[0.06em] mb-5">
                       How we work
                     </p>
                     <div className="grid grid-cols-2 gap-4">
@@ -481,13 +481,13 @@ export default function ServicesPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-[hsl(var(--color-border))]">
-                          <th className="text-left py-4 pr-6 text-xs font-medium uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))]">
+                          <th className="text-left py-4 pr-6 text-xs font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
                             Project Type
                           </th>
-                          <th className="text-left py-4 pr-6 text-xs font-medium uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))]">
+                          <th className="text-left py-4 pr-6 text-xs font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
                             Typical Range
                           </th>
-                          <th className="text-left py-4 text-xs font-medium uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))]">
+                          <th className="text-left py-4 text-xs font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
                             Timeline
                           </th>
                         </tr>

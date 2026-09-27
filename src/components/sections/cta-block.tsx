@@ -13,7 +13,7 @@ export function CTABlock() {
         <AnimatedSection>
           <div className="rounded-2xl bg-[hsl(var(--color-accent))] p-10 sm:p-14 md:p-16">
             <div className="flex flex-col items-center text-center gap-8 max-w-2xl mx-auto">
-              <span className="text-xs font-medium uppercase tracking-widest text-white/70">
+              <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-white/70">
                 Start a project
               </span>
               <h2 className="font-semibold tracking-tight !text-white">

@@ -417,7 +417,7 @@ export function StackMarquee() {
   return (
     <AnimatedSection delay={0.2}>
       <div className="flex flex-col items-center gap-4 py-10">
-        <span className="text-xs font-medium uppercase tracking-widest text-[hsl(var(--color-foreground-subtle))]">
+        <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
           Our stack & tools
         </span>
         <div

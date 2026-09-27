@@ -49,7 +49,7 @@ export function ArticleCard({ article, featured = false }: ArticleCardProps) {
                   />
                   {article.pillar_name}
                 </span>
-                <span className="text-foreground-muted text-xs uppercase tracking-wide">
+                <span className="text-foreground-muted text-xs uppercase font-mono tracking-[0.06em]">
                   {contentTypeLabels[article.content_type]}
                 </span>
               </div>
@@ -132,7 +132,7 @@ export function ArticleCard({ article, featured = false }: ArticleCardProps) {
               {article.pillar_name}
             </span>
             <span className="text-foreground-subtle">·</span>
-            <span className="text-foreground-muted text-xs uppercase tracking-wide">
+            <span className="text-foreground-muted text-xs uppercase font-mono tracking-[0.06em]">
               {contentTypeLabels[article.content_type]}
             </span>
           </div>

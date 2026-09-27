@@ -1,23 +1,33 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, DM_Sans } from "next/font/google";
+import { Archivo, Inter, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { BackToTop } from "@/components/ui";
 import { AnalyticsProvider } from "@/components/analytics/analytics-provider";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
+// Headings: Archivo (variable width + weight; width set in globals.css).
+const archivo = Archivo({
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-space-grotesk",
+  axes: ["wdth"],
+  variable: "--font-archivo",
   preload: true,
 });
 
-const dmSans = DM_Sans({
+// Body: Inter, set in its Display optical size (opsz 32) in globals.css.
+const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
+  axes: ["opsz"],
+  variable: "--font-inter",
+  preload: true,
+});
+
+// Small highlights: labels, eyebrows, badges, metadata.
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-geist-mono",
   preload: true,
 });
 
@@ -216,7 +226,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${dmSans.variable}`}>
+    <html lang="en" className={`${archivo.variable} ${inter.variable} ${geistMono.variable}`}>
       <head>
         {/* Preconnect for fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -632,23 +632,23 @@ export default function CaseStudyPage() {
               <AnimatedSection>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 p-6 sm:p-8 rounded-xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))]">
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))] mb-2">Client</p>
+                    <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-2">Client</p>
                     <p className="font-medium">{project.client}</p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))] mb-2">Industry</p>
+                    <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-2">Industry</p>
                     <p className="font-medium">{project.industry}</p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))] mb-2">Timeline</p>
+                    <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-2">Timeline</p>
                     <p className="font-medium">{project.timeline}</p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))] mb-2">Year</p>
+                    <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-2">Year</p>
                     <p className="font-medium">{project.year}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-xs uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))] mb-2">Services</p>
+                    <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-2">Services</p>
                     <p className="font-medium">{project.services.join(" · ")}</p>
                   </div>
                 </div>
@@ -660,7 +660,7 @@ export default function CaseStudyPage() {
           <Section spacing="md">
             <Container size="md">
               <AnimatedSection>
-                <p className="text-xs uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))] mb-4">01 / The Challenge</p>
+                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">01 / The Challenge</p>
                 <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">
                   Understanding the problem
                 </h2>
@@ -692,7 +692,7 @@ export default function CaseStudyPage() {
           <Section spacing="md">
             <Container size="md">
               <AnimatedSection>
-                <p className="text-xs uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))] mb-4">02 / The Approach</p>
+                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">02 / The Approach</p>
                 <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">
                   How we tackled it
                 </h2>
@@ -751,7 +751,7 @@ export default function CaseStudyPage() {
           <Section spacing="md">
             <Container size="md">
               <AnimatedSection>
-                <p className="text-xs uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))] mb-4">03 / The Solution</p>
+                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">03 / The Solution</p>
                 <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">
                   What we built
                 </h2>
@@ -767,7 +767,7 @@ export default function CaseStudyPage() {
             <Container>
               <AnimatedSection>
                 <div className="p-6 sm:p-8 rounded-xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))]">
-                  <p className="text-xs uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))] mb-4">Tech Stack</p>
+                  <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">Tech Stack</p>
                   <div className="flex flex-wrap gap-2">
                     {project.techStack.map((tech) => (
                       <span
@@ -804,7 +804,7 @@ export default function CaseStudyPage() {
           <Section spacing="md">
             <Container size="md">
               <AnimatedSection>
-                <p className="text-xs uppercase tracking-wide text-[hsl(var(--color-foreground-subtle))] mb-4">04 / The Outcome</p>
+                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">04 / The Outcome</p>
                 <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">
                   Results & impact
                 </h2>
@@ -952,7 +952,7 @@ export default function CaseStudyPage() {
 
                     {/* Content */}
                     <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 lg:p-12">
-                      <p className="text-[10px] sm:text-xs uppercase tracking-widest text-white/60 mb-2 sm:mb-3">
+                      <p className="text-[10px] sm:text-xs uppercase font-mono tracking-[0.06em] text-white/60 mb-2 sm:mb-3">
                         Next Case Study
                       </p>
                       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">

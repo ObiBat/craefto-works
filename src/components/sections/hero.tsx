@@ -142,7 +142,7 @@ export function Hero() {
             <div className="flex items-center gap-8 pt-8 border-t-0 md:border-t border-[hsl(var(--color-border))] mt-4">
               {SOCIAL_PROOF.map((stat, index) => (
                 <div key={index} className="flex flex-col">
-                  <span className="text-2xl sm:text-3xl font-semibold text-[#4A4A4A] tabular-nums">
+                  <span className="font-heading text-2xl sm:text-3xl font-semibold text-[#4A4A4A] tabular-nums">
                     <AnimatedCounter value={stat.value} duration={2 + index * 0.2} />
                     {stat.suffix}
                   </span>
