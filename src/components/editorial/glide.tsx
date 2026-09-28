@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 /**
  * Glide: one soft tile that follows the pointer, and keyboard focus, across a
  * set of rows or cells, marking the one you are on without drawing lines.
- * Mark each row with `data-glide-item`. On touch screens it only follows focus.
+ * Mark each row with `data-glide-item`. On touch screens it marks the row you
+ * press, briefly, as feedback.
  *
  * `bleed` widens the tile past the row edges so text never sits flush on it.
  */
@@ -22,6 +23,7 @@ export function Glide({
   const rootRef = useRef<HTMLDivElement>(null);
   const tileRef = useRef<HTMLSpanElement>(null);
   const activeRef = useRef<HTMLElement | null>(null);
+  const pressTimer = useRef(0);
 
   const place = useCallback(
     (item: HTMLElement | null) => {
@@ -77,6 +79,21 @@ export function Glide({
       }}
       onPointerLeave={(e) => {
         if (e.pointerType === "mouse") place(null);
+      }}
+      onPointerDown={(e) => {
+        if (e.pointerType === "mouse") return;
+        const item = itemFrom(e.target);
+        if (!item) return;
+        window.clearTimeout(pressTimer.current);
+        place(item);
+      }}
+      onPointerUp={(e) => {
+        if (e.pointerType === "mouse") return;
+        pressTimer.current = window.setTimeout(() => place(null), 450);
+      }}
+      onPointerCancel={(e) => {
+        // The touch became a scroll: drop the tile straight away.
+        if (e.pointerType !== "mouse") place(null);
       }}
       onFocus={(e) => {
         if (!(e.target as HTMLElement).matches(":focus-visible")) return;

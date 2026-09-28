@@ -8,7 +8,7 @@ type Section = { number: string; label: string };
 
 /**
  * Wayfinding: the numbered section you are reading ("02 Case studies"), shown
- * beside the logo on wide screens. It reads the page's SectionLabels, so it
+ * beside the logo (phones and wide screens). It reads the page's SectionLabels, so it
  * needs no wiring per page, and types itself in like they do.
  */
 export function SectionIndicator({ className }: { className?: string }) {
@@ -44,7 +44,10 @@ export function SectionIndicator({ className }: { className?: string }) {
   }, [pathname]);
 
   return (
-    <span aria-hidden="true" className={cn("section-indicator font-mono text-[11px] uppercase tracking-[0.06em]", className)}>
+    <span
+      aria-hidden="true"
+      className={cn("section-indicator min-w-0 max-w-[52vw] overflow-hidden font-mono text-[11px] uppercase tracking-[0.06em] xl:max-w-none", className)}
+    >
       {current && (
         <span
           key={`${current.number}-${current.label}`}

@@ -1,4 +1,5 @@
 import { Header, Footer, Container } from "@/components/layout";
+import { BrandIntro } from "@/components/editorial/brand-intro";
 import {
   Hero,
   ServicesOverview,
@@ -10,6 +11,7 @@ import {
 export default function Home() {
   return (
     <>
+      <BrandIntro />
       <Header />
       <main id="main-content">
         <Hero />

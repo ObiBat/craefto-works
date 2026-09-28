@@ -264,7 +264,7 @@ export function Header() {
                   inverted={isMobileMenuOpen}
                 />
               </Link>
-              <SectionIndicator className={cn("hidden xl:inline-flex", isMobileMenuOpen && "invisible")} />
+              <SectionIndicator className={cn("inline-flex md:hidden xl:inline-flex", isMobileMenuOpen && "invisible")} />
             </div>
 
             {/* Desktop Navigation */}

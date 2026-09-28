@@ -28,21 +28,18 @@ const SOCIAL_PROOF = [
 
 export function Hero() {
   const [currentValueProp, setCurrentValueProp] = useState(0);
+  // The 3D artwork mounts once the browser is idle, so three.js never
+  // competes with the first paint.
   const [showBlob, setShowBlob] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    let idle = 0;
-    const update = () => {
-      if (!mq.matches) return setShowBlob(false);
-      const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
-      idle = w.requestIdleCallback ? w.requestIdleCallback(() => setShowBlob(true)) : window.setTimeout(() => setShowBlob(true), 300);
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void) => number;
+      cancelIdleCallback?: (id: number) => void;
     };
-    update();
-    mq.addEventListener("change", update);
+    const show = () => setShowBlob(true);
+    const idle = w.requestIdleCallback ? w.requestIdleCallback(show) : window.setTimeout(show, 300);
     return () => {
-      mq.removeEventListener("change", update);
-      const w = window as Window & { cancelIdleCallback?: (id: number) => void };
       if (w.cancelIdleCallback) w.cancelIdleCallback(idle);
       else window.clearTimeout(idle);
     };
@@ -57,10 +54,8 @@ export function Hero() {
 
   return (
     <section className="relative min-h-[100vh] flex items-center pt-20 pb-16 overflow-hidden bg-[hsl(var(--color-background))]">
-      {/* 3D animation: tablet and up only (on phones it sat under the buttons),
-          mounted once the browser is idle so three.js never competes with the
-          first paint, and never downloads on phones at all. */}
-      <div className="absolute hidden md:block top-0 right-0 bottom-0 w-[55%] z-0 pointer-events-none" aria-hidden="true">
+      {/* 3D artwork: behind the content on phones, the right half on wider screens */}
+      <div className="absolute left-0 right-0 top-[15%] bottom-0 z-0 pointer-events-none translate-x-[20%] md:top-0 md:left-auto md:right-0 md:w-[55%] md:translate-x-0" aria-hidden="true">
         {showBlob && <Metaballs className="w-full h-full" />}
       </div>
 

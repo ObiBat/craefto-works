@@ -254,7 +254,7 @@ interface StaggeredGridProps {
 export function StaggeredGrid({
   children,
   className,
-  staggerDelay = 0.08,
+  staggerDelay = 0.12,
 }: StaggeredGridProps) {
   return (
     <div

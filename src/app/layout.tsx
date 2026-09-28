@@ -6,6 +6,7 @@ import { AnalyticsProvider } from "@/components/analytics/analytics-provider";
 import { editorialBootScript } from "@/components/editorial/boot-script";
 import { SiteClassSync } from "@/components/editorial/site-class-sync";
 import { RouteTransitions } from "@/components/editorial/route-transitions";
+import { ScrollFallback } from "@/components/editorial/scroll-fallback";
 import "./globals.css";
 
 // Headings: Archivo (variable weight, normal width).
@@ -269,6 +270,7 @@ export default function RootLayout({
 
         <SiteClassSync />
         <RouteTransitions />
+        <ScrollFallback />
         <AnalyticsProvider />
         <Analytics />
       </body>

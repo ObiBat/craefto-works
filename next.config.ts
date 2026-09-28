@@ -10,8 +10,8 @@ const nextConfig: NextConfig = {
       static: 30,
     },
   },
-  // Allow mobile devices on local network to access dev server
-  allowedDevOrigins: ["http://192.168.1.100:3000"],
+  // Let phones on the local network use the dev server (hostnames, not URLs).
+  allowedDevOrigins: ["192.168.1.*"],
   // Required for @sparticuz/chromium to resolve its binary correctly on Vercel
   serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
   async redirects() {
