@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Suspense } from "react";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { PageTransition, AnimatedSection, HeroText } from "@/components/ui";
 import { ContactForm } from "@/components/forms/contact-form";
 import { siteConfig } from "@/lib/constants";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 function ContactFormSkeleton() {
   return (
@@ -43,15 +45,15 @@ export default function ContactPage() {
       <Header />
       <PageTransition>
         <main id="main-content" className="pt-20">
-          <Section spacing="sm" className="pb-8 md:pb-6">
+          <Section spacing="sm" className="pb-24 md:pb-40">
             <Container>
               {/* Breadcrumb */}
               <nav className="mb-4" aria-label="Breadcrumb">
                 <ol className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
                   <li>
-                    <a href="/" className="hover:text-[hsl(var(--color-foreground))] transition-colors">
+                    <Link href="/" className="hover:text-[hsl(var(--color-foreground))] transition-colors">
                       Home
-                    </a>
+                    </Link>
                   </li>
                   <li>
                     <span className="mx-2">/</span>
@@ -62,11 +64,7 @@ export default function ContactPage() {
 
               {/* Header */}
               <div className="mb-8 md:mb-10">
-                <HeroText>
-                  <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
-                    Start a project
-                  </h1>
-                </HeroText>
+                <h1 className="text-3xl md:text-4xl font-semibold tracking-tight"><RevealText text={"Start a project"} mode="load" /></h1>
                 <HeroText delay={0.1}>
                   <p className="text-base text-[hsl(var(--color-foreground-muted))] mt-2 max-w-md">
                     For founders and teams who value clarity and craft.

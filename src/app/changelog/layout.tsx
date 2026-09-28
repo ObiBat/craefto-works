@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "About",
+  title: "Changelog",
   description:
-    "Craefto is a creative tech studio in Sydney building brands, products and systems for founders and teams who think long-term.",
-  path: "/about",
+    "Every improvement, feature and refinement shipped to craefto.com. Building in public since January 2026.",
+  path: "/changelog",
 });
 
-export default function AboutLayout({
+export default function ChangelogLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createServerClient } from "@/lib/supabase";
 import { ArticleCard } from "@/components/journal/article-card";
 import type { ArticleCard as ArticleCardType } from "@/lib/journal-types";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 // ISR: Revalidate every 5 minutes
 export const revalidate = 300;
@@ -80,7 +81,7 @@ export async function generateMetadata({ params }: PillarPageProps): Promise<Met
   }
 
   return {
-    title: `${pillar.name} | Craefto Journal`,
+    title: { absolute: `${pillar.name} | Craefto Journal` },
     description: pillar.description || `Articles about ${pillar.name} from Craefto.`,
     alternates: {
       canonical: `https://www.craefto.com/journal/pillar/${pillar.slug}`,
@@ -136,7 +137,7 @@ export default async function PillarPage({ params }: PillarPageProps) {
             </span>
           </div>
           <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-foreground mb-6">
-            {pillar.name}
+            <RevealText text={pillar.name} mode="load" />
           </h1>
           {pillar.description && (
             <p className="text-xl text-foreground-muted max-w-2xl leading-relaxed">

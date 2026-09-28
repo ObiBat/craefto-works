@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { formatPrice, priceFor, type ServiceKey } from "@/lib/pricing";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 // Service to project type mapping
 const SERVICE_MAP: Record<string, string> = {
@@ -19,6 +21,11 @@ const SERVICE_MAP: Record<string, string> = {
   ai: "ai",
   security: "other",
 };
+
+// Form project types → published price ranges (lib/pricing.ts).
+const PROJECT_PRICING: Record<string, ServiceKey> = { brand: "brand", web: "web", saas: "product", ai: "ai" };
+const FORM_MINIMUM = Math.min(...Object.values(PROJECT_PRICING).map((key) => priceFor(key)?.min ?? Infinity));
+const aud = (amount: number) => `A${formatPrice(amount)}`;
 
 // Suggested budgets based on project type
 const BUDGET_SUGGESTIONS: Record<string, string> = {
@@ -252,7 +259,7 @@ export function ContactForm() {
               />
             </svg>
           </div>
-          <h3 className="text-xl font-semibold">Message sent</h3>
+          <h3 className="text-xl font-semibold"><RevealText text={"Message sent"} /></h3>
           <p className="text-[hsl(var(--color-foreground-muted))]">
             Thanks for reaching out. We&apos;ll be in touch within 24 hours.
           </p>
@@ -307,7 +314,8 @@ export function ContactForm() {
         )}
       </div>
 
-      <AnimatePresence mode="wait">
+      {/* initial={false}: the form is visible on first paint; only tab switches animate. */}
+      <AnimatePresence mode="wait" initial={false}>
         {quickMode ? (
           <motion.form
             key="quick"
@@ -501,8 +509,13 @@ export function ContactForm() {
             <option value="50k+">A$50k+</option>
             <option value="discuss">Let&apos;s discuss</option>
           </Select>
-          <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">
-            Minimum project investment: A$3,000
+          <p className="text-xs text-[hsl(var(--color-foreground-subtle))]" aria-live="polite">
+            {(() => {
+              const range = priceFor(PROJECT_PRICING[watchedProjectType] ?? "");
+              return range
+                ? `${range.label} projects usually run ${aud(range.min)} to ${aud(range.max)}.`
+                : `Minimum project investment: ${aud(FORM_MINIMUM)}`;
+            })()}
           </p>
           {errors.budget && (
             <p className="text-sm text-[hsl(var(--color-error))]">

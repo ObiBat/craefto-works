@@ -10,7 +10,7 @@ const badgeVariants = cva(
         default:
           "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground))]",
         secondary:
-          "bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground-muted))] border border-[hsl(var(--color-border-strong))]",
+          "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))]",
         accent:
           "bg-[hsl(var(--color-accent-subtle))] text-[hsl(var(--color-accent))]",
         sage:

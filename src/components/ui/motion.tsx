@@ -194,7 +194,9 @@ export function useElementScroll(offset?: ["start end" | "end start", "start end
 // ============================================================================
 
 /**
- * Page wrapper with entrance animation
+ * Page wrapper. Page-to-page motion is handled by the browser's View
+ * Transitions (see RouteTransitions), so this no longer fades the page in:
+ * a server-rendered page must be visible without waiting for JavaScript.
  */
 interface PageTransitionProps {
   children: React.ReactNode;
@@ -202,24 +204,13 @@ interface PageTransitionProps {
 }
 
 export function PageTransition({ children, className }: PageTransitionProps) {
-  const prefersReducedMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      initial="initial"
-      animate="enter"
-      exit="exit"
-      variants={pageVariants}
-      transition={prefersReducedMotion ? instantTransition : pageTransition}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className={className}>{children}</div>;
 }
 
 /**
- * Animated section with scroll trigger and accessibility
+ * Section that rises into view when scrolled to. Driven by CSS and the boot
+ * script's IntersectionObserver (see the editorial layer in globals.css), so
+ * it starts before hydration and content stays visible without JavaScript.
  */
 interface AnimatedSectionProps {
   children: React.ReactNode;
@@ -229,14 +220,6 @@ interface AnimatedSectionProps {
   id?: string;
 }
 
-const variantMap = {
-  fadeUp,
-  fadeIn,
-  fadeLeft,
-  fadeRight,
-  scaleIn,
-};
-
 export function AnimatedSection({
   children,
   className,
@@ -244,32 +227,23 @@ export function AnimatedSection({
   variant = "fadeUp",
   id,
 }: AnimatedSectionProps) {
-  const { ref, isInView } = useScrollAnimation();
-  const prefersReducedMotion = useReducedMotion();
-
-  const selectedVariant = prefersReducedMotion ? reducedMotionVariants : variantMap[variant];
-  const selectedTransition = prefersReducedMotion
-    ? instantTransition
-    : { ...smoothTransition, delay };
-
   return (
-    <motion.div
-      ref={ref}
+    <div
       id={id}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-      variants={selectedVariant}
-      transition={selectedTransition}
+      data-reveal="block"
+      data-variant={variant}
       className={className}
-      style={{ transform: "translateZ(0)" }} // Force GPU layer
+      style={{ "--d": Math.round(delay * 1000) } as React.CSSProperties}
+      suppressHydrationWarning
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
 /**
- * Staggered grid with scroll trigger
+ * Grid whose items rise in one after another when scrolled to (CSS-driven,
+ * like AnimatedSection). Items are its direct <StaggeredItem> children.
  */
 interface StaggeredGridProps {
   children: React.ReactNode;
@@ -282,38 +256,20 @@ export function StaggeredGrid({
   className,
   staggerDelay = 0.08,
 }: StaggeredGridProps) {
-  const { ref, isInView } = useScrollAnimation();
-  const prefersReducedMotion = useReducedMotion();
-
-  const variants = prefersReducedMotion
-    ? reducedMotionVariants
-    : {
-        hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: {
-            staggerChildren: staggerDelay,
-            delayChildren: 0.1,
-          },
-        },
-      };
-
   return (
-    <motion.div
-      ref={ref}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-      variants={variants}
+    <div
+      data-reveal="stagger"
       className={className}
-      style={{ transform: "translateZ(0)" }}
+      style={{ "--stagger": `${Math.round(staggerDelay * 1000)}ms` } as React.CSSProperties}
+      suppressHydrationWarning
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
 /**
- * Staggered item (child of StaggeredGrid)
+ * Staggered item (direct child of StaggeredGrid)
  */
 interface StaggeredItemProps {
   children: React.ReactNode;
@@ -321,22 +277,12 @@ interface StaggeredItemProps {
 }
 
 export function StaggeredItem({ children, className }: StaggeredItemProps) {
-  const prefersReducedMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      variants={prefersReducedMotion ? reducedMotionVariants : staggerItem}
-      transition={prefersReducedMotion ? instantTransition : smoothTransition}
-      className={className}
-      style={{ transform: "translateZ(0)" }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className={className ? `stagger-item ${className}` : "stagger-item"}>{children}</div>;
 }
 
 /**
- * Hero text with entrance animation
+ * Hero text with an entrance animation. Pure CSS, so it plays from the first
+ * paint instead of after hydration (hero copy is often the largest paint).
  */
 interface HeroTextProps {
   children: React.ReactNode;
@@ -345,26 +291,13 @@ interface HeroTextProps {
 }
 
 export function HeroText({ children, delay = 0, className }: HeroTextProps) {
-  const prefersReducedMotion = useReducedMotion();
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={
-        prefersReducedMotion
-          ? instantTransition
-          : {
-              duration: 0.7,
-              delay,
-              ease: [0.25, 0.1, 0.25, 1],
-            }
-      }
-      className={className}
-      style={{ transform: "translateZ(0)" }}
+    <div
+      className={className ? `hero-in ${className}` : "hero-in"}
+      style={{ "--hero-delay": `${delay}s` } as React.CSSProperties}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 

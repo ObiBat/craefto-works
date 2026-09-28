@@ -7,11 +7,12 @@ interface SectionProps extends React.HTMLAttributes<HTMLElement> {
 
 function Section({ className, spacing = "lg", children, ...props }: SectionProps) {
   const spacingClasses = {
-    xs: "py-8 md:py-10",
-    sm: "py-10 md:py-14",
-    md: "py-14 md:py-20",
-    lg: "py-16 md:py-24",
-    xl: "py-24 md:py-32",
+    // Generous, editorial rhythm: whitespace separates sections, not rules.
+    xs: "py-12 md:py-16",
+    sm: "py-16 md:py-24",
+    md: "py-20 md:py-32",
+    lg: "py-24 md:py-40",
+    xl: "py-32 md:py-52",
   };
 
   return (

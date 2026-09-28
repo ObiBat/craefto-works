@@ -12,6 +12,7 @@ import { ArticleCard } from "@/components/journal/article-card";
 import { ArticleAnalytics } from "@/components/journal/article-analytics";
 import { mdxComponents } from "@/components/journal/mdx-components";
 import type { ArticleCard as ArticleCardType } from "@/lib/journal-types";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 // ISR: Revalidate every 5 minutes for articles
 export const revalidate = 300;
@@ -176,8 +177,9 @@ export async function generateMetadata({
   const ogImageUrl = `${baseUrl}/journal/${slug}/opengraph-image`;
   
   return {
-    title: article.meta_title || `${article.title} | Craefto Journal`,
+    title: { absolute: article.meta_title ? `${article.meta_title} | Craefto` : `${article.title} | Craefto Journal` },
     description: article.meta_description || article.excerpt,
+    alternates: { canonical: `/journal/${slug}` },
     openGraph: {
       title: article.title,
       description: article.excerpt || undefined,
@@ -284,9 +286,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center gap-4 mb-12">
                 <div className="h-px flex-1 bg-border" />
-                <h2 className="font-heading text-xl md:text-2xl font-semibold text-foreground">
-                  Continue Reading
-                </h2>
+                <h2 className="font-heading text-xl md:text-2xl font-semibold text-foreground"><RevealText text={"Continue Reading"} /></h2>
                 <div className="h-px flex-1 bg-border" />
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">

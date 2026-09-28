@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Work",
+export const metadata: Metadata = pageMetadata({
+  title: "Case studies",
   description:
-    "A selection of projects across brand, web, and product. See how we build systems for founders and teams.",
-};
+    "Selected brand, web and product work by Craefto, each built as a system rather than a one-off.",
+  path: "/work",
+});
 
 export default function WorkLayout({
   children,

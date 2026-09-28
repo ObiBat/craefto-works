@@ -12,6 +12,7 @@ import {
   HeroText,
 } from "@/components/ui";
 import type { Role } from "@/lib/careers";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString + "T00:00:00");
@@ -62,7 +63,7 @@ export function RolePageClient({ role, applyHref }: RolePageClientProps) {
                 </HeroText>
                 <HeroText delay={0.1}>
                   <h1 className="font-semibold tracking-tight leading-[0.95]">
-                    {role.title}
+                    <RevealText text={role.title} mode="load" />
                   </h1>
                 </HeroText>
               </div>
@@ -144,9 +145,7 @@ export function RolePageClient({ role, applyHref }: RolePageClientProps) {
               <div className="lg:col-span-4">
                 <AnimatedSection>
                   <SectionLabel number="02" label="Responsibilities" />
-                  <h2 className="font-semibold tracking-tight mt-4 text-2xl">
-                    What you&apos;ll do
-                  </h2>
+                  <h2 className="font-semibold tracking-tight mt-4 text-2xl"><RevealText text={"What you'll do"} /></h2>
                 </AnimatedSection>
               </div>
               <div className="lg:col-span-7 lg:col-start-6">
@@ -176,9 +175,7 @@ export function RolePageClient({ role, applyHref }: RolePageClientProps) {
               <div className="lg:col-span-4">
                 <AnimatedSection>
                   <SectionLabel number="03" label="Requirements" />
-                  <h2 className="font-semibold tracking-tight mt-4 text-2xl">
-                    What we&apos;re looking for
-                  </h2>
+                  <h2 className="font-semibold tracking-tight mt-4 text-2xl"><RevealText text={"What we're looking for"} /></h2>
                 </AnimatedSection>
               </div>
               <div className="lg:col-span-7 lg:col-start-6">
@@ -207,9 +204,7 @@ export function RolePageClient({ role, applyHref }: RolePageClientProps) {
                 <div className="lg:col-span-4">
                   <AnimatedSection>
                     <SectionLabel number="04" label="Bonus" />
-                    <h2 className="font-semibold tracking-tight mt-4 text-2xl">
-                      Nice to have
-                    </h2>
+                    <h2 className="font-semibold tracking-tight mt-4 text-2xl"><RevealText text={"Nice to have"} /></h2>
                   </AnimatedSection>
                 </div>
                 <div className="lg:col-span-7 lg:col-start-6">
@@ -246,10 +241,8 @@ export function RolePageClient({ role, applyHref }: RolePageClientProps) {
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
                   <div className="max-w-lg">
-                    <h2 className="font-semibold tracking-tight !text-white text-2xl md:text-3xl mb-3">
-                      Sounds like you?
-                    </h2>
-                    <p className="text-white/60 leading-relaxed">
+                    <h2 className="font-semibold tracking-tight !text-white text-2xl md:text-3xl mb-3"><RevealText text={"Sounds like you?"} /></h2>
+                    <p data-ink className="text-white/60 leading-relaxed">
                       Send your portfolio and a few words about yourself. We read every application.
                     </p>
                   </div>

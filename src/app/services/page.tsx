@@ -6,6 +6,9 @@ import { Header, Footer, Container, Section } from "@/components/layout";
 import { Separator, PageTransition, AnimatedSection, HeroText, SectionLabel } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { RevealText } from "@/components/editorial/reveal-text";
+import { Glide } from "@/components/editorial/glide";
+import { priceRanges, rangeLabel, weeksLabel } from "@/lib/pricing";
 
 const services = [
   {
@@ -121,13 +124,16 @@ const workProcess = [
   { number: "04", title: "Launch", description: "Deploy and support" },
 ];
 
-const pricingData = [
-  { type: "Brand Identity", range: "$3,000 to $8,000", timeline: "3 to 6 weeks" },
-  { type: "Marketing Website", range: "$5,000 to $15,000", timeline: "4 to 8 weeks" },
-  { type: "Web Application / SaaS", range: "$10,000 to $30,000", timeline: "8 to 16 weeks" },
-  { type: "AI & Automation", range: "$3,000 to $12,000", timeline: "2 to 8 weeks" },
-  { type: "Security Audit", range: "$2,000 to $6,000", timeline: "1 to 3 weeks" },
-];
+const pricingData = priceRanges.map((range) => ({
+  type: range.label,
+  range: rangeLabel(range),
+  min: range.min,
+  max: range.max,
+  timeline: weeksLabel(range),
+}));
+
+// Every range bar shares one scale, so the rows compare at a glance.
+const PRICE_SCALE = Math.max(...pricingData.map((row) => row.max));
 
 const faqs = [
   {
@@ -241,35 +247,57 @@ function ServiceCard({
 }
 
 // FAQ Item Component
-function FAQItem({ faq }: { faq: typeof faqs[0] }) {
+function FAQItem({ faq, index }: { faq: typeof faqs[0]; index: number }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border-b border-[hsl(var(--color-border))]">
+    <div
+      data-glide-item
+      className={cn(
+        "-mx-2.5 sm:-mx-5 px-2.5 sm:px-5 rounded-2xl transition-colors duration-500",
+        isOpen && "bg-[hsl(var(--color-accent-subtle))]"
+      )}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-5 text-left group"
+        className="w-full flex items-center gap-5 py-5 text-left group"
+        aria-expanded={isOpen}
       >
-        <span className="font-medium text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors pr-4">
+        <span
+          className={cn(
+            "w-5 font-mono text-xs tabular-nums shrink-0 transition-colors duration-300 group-hover:text-[hsl(var(--color-accent))]",
+            isOpen ? "text-[hsl(var(--color-accent))]" : "text-[hsl(var(--color-foreground-subtle))]"
+          )}
+        >
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <span className="flex-1 font-medium text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors pr-4">
           {faq.question}
         </span>
-        <svg
+        <span
           className={cn(
-            "w-5 h-5 text-[hsl(var(--color-foreground-muted))] flex-shrink-0 transition-transform duration-300",
-            isOpen && "rotate-45"
+            "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:bg-[hsl(var(--color-accent))] group-hover:text-white",
+            isOpen
+              ? "bg-[hsl(var(--color-accent))] text-white"
+              : "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground))]"
           )}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
+          <svg
+            className={cn("w-4 h-4 transition-transform duration-300", isOpen && "rotate-45")}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </span>
       </button>
-      <div className={cn(
+      <div data-no-reveal className={cn(
         "overflow-hidden transition-all duration-300",
-        isOpen ? "max-h-[300px] opacity-100 pb-5" : "max-h-0 opacity-0"
+        isOpen ? "max-h-[300px] opacity-100 pb-6" : "max-h-0 opacity-0"
       )}>
-        <p className="text-[hsl(var(--color-foreground-muted))] leading-relaxed">
+        <p className="pl-10 text-[hsl(var(--color-foreground-muted))] leading-relaxed">
           {faq.answer}
         </p>
       </div>
@@ -278,9 +306,10 @@ function FAQItem({ faq }: { faq: typeof faqs[0] }) {
 }
 
 export default function ServicesPage() {
-  const scrollToSection = useCallback((targetId: string) => {
+  const scrollToSection = useCallback((targetId: string, onScrolled?: () => void) => {
     // Wait for page transition animation (300ms) + layout to settle
     const timer = setTimeout(() => {
+      onScrolled?.();
       const element = document.getElementById(targetId);
       if (element) {
         const headerOffset = 100;
@@ -298,8 +327,9 @@ export default function ServicesPage() {
   useEffect(() => {
     const target = sessionStorage.getItem("scrollToService");
     if (target) {
-      sessionStorage.removeItem("scrollToService");
-      const timer = scrollToSection(target);
+      // Cleared only once the scroll runs, so a re-run effect (Strict Mode,
+      // fast refresh) still finds it.
+      const timer = scrollToSection(target, () => sessionStorage.removeItem("scrollToService"));
       return () => clearTimeout(timer);
     }
 
@@ -319,7 +349,7 @@ export default function ServicesPage() {
       <PageTransition>
         <main id="main-content" className="pt-20">
           {/* Hero - Compact */}
-          <Section spacing="sm" className="pb-8 md:pb-6">
+          <Section spacing="sm" className="pb-12 md:pb-20">
             <Container>
               <div className="max-w-3xl">
                 <nav className="mb-6" aria-label="Breadcrumb">
@@ -334,11 +364,7 @@ export default function ServicesPage() {
                   </ol>
                 </nav>
 
-                <HeroText>
-                  <h1 className="font-semibold tracking-tight mb-4">
-                    Services
-                  </h1>
-                </HeroText>
+                <h1 className="font-semibold tracking-tight mb-4"><RevealText text={"Services"} mode="load" /></h1>
                 <HeroText delay={0.1}>
                   <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
                     Tailored systems, not templates. Each project approached from first principles.
@@ -465,10 +491,8 @@ export default function ServicesPage() {
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
                     <SectionLabel number="06" label="Investment" />
-                    <h2 className="font-semibold tracking-tight">
-                      Transparent pricing
-                    </h2>
-                    <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"Transparent pricing"} /></h2>
+                    <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
                       Every project is different, but here is what to expect. We will give you a precise quote after our discovery call.
                     </p>
                   </div>
@@ -477,6 +501,7 @@ export default function ServicesPage() {
                 <Separator />
 
                 <AnimatedSection delay={0.1}>
+                  <Glide bleed={16} className="pricing-rows">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
@@ -494,14 +519,23 @@ export default function ServicesPage() {
                       </thead>
                       <tbody>
                         {pricingData.map((row) => (
-                          <tr key={row.type} className="border-b border-[hsl(var(--color-border-subtle))]">
-                            <td className="py-4 pr-6 font-medium text-[hsl(var(--color-foreground))]">
+                          <tr key={row.type} data-glide-item>
+                            <td className="py-5 pr-6 font-medium text-[hsl(var(--color-foreground))]">
                               {row.type}
                             </td>
-                            <td className="py-4 pr-6 text-[hsl(var(--color-accent))] font-medium">
-                              {row.range}
+                            <td className="py-5 pr-6">
+                              <span className="block text-[hsl(var(--color-accent))] font-medium tabular-nums">{row.range}</span>
+                              <span className="relative mt-2.5 block h-2 w-full max-w-[240px]" aria-hidden="true">
+                                <span
+                                  className="range-bar absolute inset-y-0 rounded-full bg-[hsl(var(--color-accent))]/35"
+                                  style={{
+                                    left: `${(row.min / PRICE_SCALE) * 100}%`,
+                                    width: `${((row.max - row.min) / PRICE_SCALE) * 100}%`,
+                                  }}
+                                />
+                              </span>
                             </td>
-                            <td className="py-4 text-[hsl(var(--color-foreground-muted))]">
+                            <td className="py-5 text-[hsl(var(--color-foreground-muted))]">
                               {row.timeline}
                             </td>
                           </tr>
@@ -509,6 +543,7 @@ export default function ServicesPage() {
                       </tbody>
                     </table>
                   </div>
+                  </Glide>
                   <p className="mt-6 text-sm text-[hsl(var(--color-foreground-muted))]">
                     These are starting points. Pricing is always fixed and agreed upon before work begins.
                   </p>
@@ -524,20 +559,18 @@ export default function ServicesPage() {
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
                     <SectionLabel number="07" label="FAQ" />
-                    <h2 className="font-semibold tracking-tight">
-                      Common questions
-                    </h2>
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"Common questions"} /></h2>
                   </div>
                 </AnimatedSection>
 
                 <Separator />
 
                 <AnimatedSection delay={0.1}>
-                  <div className="max-w-2xl">
-                    {faqs.map((faq) => (
-                      <FAQItem key={faq.question} faq={faq} />
+                  <Glide bleed={0} className="max-w-2xl">
+                    {faqs.map((faq, index) => (
+                      <FAQItem key={faq.question} faq={faq} index={index} />
                     ))}
-                  </div>
+                  </Glide>
                 </AnimatedSection>
               </div>
             </Container>
@@ -550,10 +583,8 @@ export default function ServicesPage() {
                 <div className="rounded-2xl bg-[hsl(var(--color-accent))] p-8 sm:p-10 lg:p-12">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                     <div className="max-w-xl">
-                      <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight !text-white mb-2">
-                        Ready to start?
-                      </h2>
-                      <p className="text-white/80 text-base lg:text-lg leading-relaxed">
+                      <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight !text-white mb-2"><RevealText text={"Ready to start?"} /></h2>
+                      <p data-ink className="text-white/80 text-base lg:text-lg leading-relaxed">
                         You don&apos;t need a finished brief. Start with what you are thinking about, and we will shape it together.
                       </p>
                     </div>

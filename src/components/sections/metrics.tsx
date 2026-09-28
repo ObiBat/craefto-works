@@ -4,6 +4,7 @@ import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
 import { Separator } from "@/components/ui/separator";
 import { AnimatedSection, StaggeredGrid, StaggeredItem, AnimatedCounter } from "@/components/ui/motion";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 const metrics = [
   {
@@ -39,10 +40,8 @@ export function Metrics() {
         <div className="flex flex-col gap-14">
           <AnimatedSection>
             <div className="flex flex-col gap-4 text-center max-w-2xl mx-auto">
-              <h2 className="font-semibold tracking-tight">
-                Building track record
-              </h2>
-              <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
+              <h2 className="font-semibold tracking-tight"><RevealText text={"Building track record"} /></h2>
+              <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
                 Numbers that reflect our commitment to quality and long-term partnerships.
               </p>
             </div>

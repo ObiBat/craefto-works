@@ -11,15 +11,15 @@
      COLORS - PAPER & INK PALETTE
      ───────────────────────────────────────────────────────────── */
 
-  /* Background - Warm cream like quality paper */
-  --color-background: 38 33% 97%;          /* #FAF7F2 */
-  --color-background-subtle: 36 26% 93%;   /* #F3EDE5 */
-  --color-background-muted: 34 20% 90%;    /* #EAE4DB */
+  /* Background - Near-white paper, a touch of warmth */
+  --color-background: 40 33% 99%;          /* #FDFCFA */
+  --color-background-subtle: 40 26% 96%;   /* #F7F5F1 */
+  --color-background-muted: 38 16% 92%;    /* #EFECE7 */
 
   /* Foreground - Deep warm black like ink */
-  --color-foreground: 30 12% 9%;           /* #1A1714 */
-  --color-foreground-muted: 28 8% 33%;     /* #5C5650 */
-  --color-foreground-subtle: 26 6% 48%;    /* #847B73 */
+  --color-foreground: 30 6% 7%;            /* #121110 */
+  --color-foreground-muted: 30 7% 23%;     /* #3F3B37 */
+  --color-foreground-subtle: 30 6% 38%;    /* #67615B (6.2:1 on background) */
 
   /* Border - Warm tones */
   --color-border: 32 14% 86%;              /* #E5DFD6 */
@@ -27,8 +27,8 @@
   --color-border-strong: 30 12% 75%;       /* #CCC3B8 */
 
   /* Primary - Warm black ink */
-  --color-primary: 30 12% 9%;              /* #1A1714 */
-  --color-primary-foreground: 38 33% 97%;  /* #FAF7F2 */
+  --color-primary: 30 6% 7%;               /* #121110 */
+  --color-primary-foreground: 40 33% 99%;  /* #FDFCFA */
   --color-primary-hover: 28 10% 18%;       /* #312B26 */
 
   /* Accent - Muted Sage Green (craft, artisan feel) */
@@ -75,12 +75,12 @@
      ───────────────────────────────────────────────────────────── */
 
   --font-heading: var(--font-archivo), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Archivo width for headings: 100 = normal, lower = more condensed (62–125). */
-  --heading-wdth: 100;
-  /* Inter optical size for body text: 32 = Inter Display, 14 = Inter Text. */
+  /* DM Sans optical size for body text (9–40): higher is narrower and tighter,
+     for a more editorial texture. Small text keeps the automatic text cut
+     (see "Small text" below). */
   --body-opsz: 32;
 
   /* ─────────────────────────────────────────────────────────────
@@ -244,6 +244,7 @@ body {
   color: hsl(var(--color-foreground));
   font-family: var(--font-sans);
   font-variation-settings: "opsz" var(--body-opsz);
+  letter-spacing: -0.01em;
   font-weight: 400;
   font-size: 16px;
   line-height: 1.7;
@@ -292,13 +293,14 @@ body {
 /* ─────────────────────────────────────────────────────────────
    TYPOGRAPHY SYSTEM
    Headings: Archivo 600
-   Body: Inter Display 400
+   Body: DM Sans 400 (optical size 32)
    Highlights: Geist Mono (labels, badges, metadata)
    ───────────────────────────────────────────────────────────── */
 
-h1, h2, h3, h4, h5, h6,
-.font-heading {
-  font-variation-settings: "wdth" var(--heading-wdth);
+/* Small text (captions, labels, meta) reads better at DM Sans' own text cut:
+   optical size follows the actual size instead of the display setting. */
+:is(.text-xs, .text-sm, [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"], [class*="text-[13px]"]) {
+  font-variation-settings: normal;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -1228,3 +1230,424 @@ article img {
 @keyframes cs-art-snip-r { 0%,55%,100% { transform: rotate(0); } 20%,42% { transform: rotate(13deg); } 50% { transform: rotate(0); } }
 @keyframes cs-art-pulse { 0%,48%,100% { transform: scale(1); } 52% { transform: scale(1.22); } 64% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .cs-art-jaw-l, .cs-art-jaw-r, .cs-art-rivet { animation: none; } }
+
+/* ─────────────────────────────────────────────────────────────
+   EDITORIAL LAYER — public site only (html.site, set by the boot
+   script in layout.tsx; admin and portal are never affected)
+   ───────────────────────────────────────────────────────────── */
+
+/* No rules, dividers or outlines: whitespace does the separating.
+   Loading spinners keep theirs (they are drawn with borders). */
+html.site *:not(input[type="checkbox"], input[type="radio"], .animate-spin, [data-keep-border]) {
+  border-color: transparent !important;
+}
+/* Form fields: a soft fill stands in for the outline, so every field
+   stays findable. An invalid field keeps its red edge. */
+html.site :is(input, textarea, select)[class~="border"]:not([type="checkbox"], [type="radio"], [type="file"]) {
+  background-color: hsl(var(--color-background-muted) / 0.7);
+}
+html.site :is(input, textarea, select)[class~="border"]:not([type="checkbox"], [type="radio"], [type="file"]):hover {
+  background-color: hsl(var(--color-background-muted));
+}
+html.site :is(input, textarea, select)[class~="border"]:not([type="checkbox"], [type="radio"], [type="file"]):focus {
+  background-color: hsl(var(--color-background-muted) / 0.4);
+}
+html.site :is(input, textarea, select)[aria-invalid="true"] {
+  border-color: hsl(var(--color-error)) !important;
+}
+html.site hr {
+  border-color: transparent !important;
+  background: none !important;
+}
+/* Lines drawn as thin background strips (dividers, timelines). Only strips
+   are cleared, so fills that borrow the border colour (toggles, hover
+   states) keep it. */
+html.site :is([class~="h-px"], [class~="w-px"], [class~="h-0.5"], [class~="w-0.5"])[class*="border"] {
+  background: transparent !important;
+}
+
+/* Text reveals: each word rises from its own baseline mask. */
+.rt-word {
+  display: inline-block;
+  overflow: clip;
+  overflow-clip-margin: 0.14em;
+  vertical-align: top;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.rt-word > span {
+  display: inline-block;
+  transition: transform 950ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(80ms + var(--w, 0) * 38ms);
+}
+.js [data-reveal="text"]:not([data-in]) .rt-word > span {
+  transform: translate3d(0, 108%, 0);
+}
+
+/* Headline on page load: starts partly risen, so it paints at once. */
+@keyframes rt-rise {
+  from { transform: translate3d(0, 70%, 0); }
+  to { transform: none; }
+}
+[data-reveal-load] .rt-word > span {
+  animation: rt-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(80ms + var(--w, 0) * 48ms);
+}
+
+/* Sections (AnimatedSection): a short rise as they scroll into view. Driven
+   by the boot script's observer, so it starts before hydration. */
+[data-reveal="block"] {
+  transition: opacity 800ms cubic-bezier(0.22, 1, 0.36, 1), transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--d, 0) * 1ms);
+}
+.js [data-reveal="block"]:not([data-in]) {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+}
+.js [data-reveal="block"][data-variant="fadeIn"]:not([data-in]) {
+  transform: none;
+}
+.js [data-reveal="block"][data-variant="fadeLeft"]:not([data-in]) {
+  transform: translate3d(24px, 0, 0);
+}
+.js [data-reveal="block"][data-variant="fadeRight"]:not([data-in]) {
+  transform: translate3d(-24px, 0, 0);
+}
+.js [data-reveal="block"][data-variant="scaleIn"]:not([data-in]) {
+  transform: scale(0.95);
+}
+
+/* Grids (StaggeredGrid): items rise one after another. */
+.stagger-item {
+  transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1), transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(100ms + var(--i, 0) * var(--stagger, 80ms));
+}
+.stagger-item:nth-child(2) { --i: 1; }
+.stagger-item:nth-child(3) { --i: 2; }
+.stagger-item:nth-child(4) { --i: 3; }
+.stagger-item:nth-child(5) { --i: 4; }
+.stagger-item:nth-child(6) { --i: 5; }
+.stagger-item:nth-child(7) { --i: 6; }
+.stagger-item:nth-child(8) { --i: 7; }
+.stagger-item:nth-child(n + 9) { --i: 8; }
+.js [data-reveal="stagger"]:not([data-in]) > .stagger-item {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+}
+
+/* Hero copy (HeroText): plays from the first paint, no JavaScript needed. */
+.hero-in {
+  animation: hero-in 700ms cubic-bezier(0.25, 0.1, 0.25, 1) var(--hero-delay, 0s) both;
+}
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0);
+  }
+}
+
+/* Mono section labels type in: a stepped wipe that uncovers one
+   monospace character per step (--n is the label's length). */
+.type-num {
+  transition: opacity 120ms linear;
+}
+.type-in {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path calc(var(--n, 12) * 28ms) steps(var(--n, 12), end);
+}
+.js [data-reveal="type"]:not([data-in]) .type-num {
+  opacity: 0;
+}
+.js [data-reveal="type"]:not([data-in]) .type-in {
+  clip-path: inset(0 100% 0 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js [data-reveal="text"]:not([data-in]) .rt-word > span,
+  .js [data-reveal="block"]:not([data-in]),
+  .js [data-reveal="stagger"]:not([data-in]) > .stagger-item,
+  .js [data-reveal="type"]:not([data-in]) .type-num {
+    opacity: 1;
+    transform: none;
+  }
+  .hero-in {
+    animation: none;
+  }
+  .js [data-reveal="type"]:not([data-in]) .type-in {
+    clip-path: none;
+  }
+  [data-reveal-load] .rt-word > span {
+    animation: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   STRUCTURE WITHOUT LINES
+   ───────────────────────────────────────────────────────────── */
+
+/* Glide: one soft tile follows the row you are on (see <Glide>). */
+.glide-root {
+  position: relative;
+  isolation: isolate;
+}
+.glide-tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  border-radius: 1rem;
+  background: hsl(var(--color-background-muted) / 0.72);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    height 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 260ms ease;
+}
+.glide-tile[data-on] {
+  opacity: 1;
+}
+
+/* Feathered edges: the header, and sticky sub-bars, fade into the page
+   instead of ending on a rule. */
+.feather-edge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 2.25rem;
+  pointer-events: none;
+  background: linear-gradient(to bottom, hsl(var(--color-background) / 0.95), hsl(var(--color-background) / 0));
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.feather-edge[data-scrolled]::after {
+  opacity: 1;
+}
+/* A stuck sub-bar takes the feather over from the header above it. */
+html:has([data-subbar][data-scrolled]) .site-header::after {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glide-tile {
+    transition: opacity 150ms linear;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SCROLL-LINKED COPY: tied to scroll position, so text arrives as
+   you move through the whitespace. Browsers without scroll-driven
+   animations, and reduced motion, simply show the text at rest.
+   ───────────────────────────────────────────────────────────── */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Paragraphs surface line by line: a soft band sweeps down through the
+       block as it rises into view. Only outermost blocks animate; forms,
+       navs, statements and opted-out areas are left alone, and so is text
+       inside clipping or scrolling boxes (cards, carousels, tables): a
+       scroll timeline follows the nearest scroll box, which would never move. */
+    html.site main :is(p, dd, figcaption):not(:is(li, dd, figcaption, form, nav, [data-ink], [data-no-reveal], .overflow-hidden, .overflow-auto, .overflow-scroll, [class*="overflow-x-"], [class*="overflow-y-"]) *):not([data-ink], [data-no-reveal], .sr-only, [class*="opacity-"]) {
+      animation: copy-surface linear backwards;
+      animation-timeline: view();
+      animation-range: cover 0% cover 26%;
+    }
+    /* List items rise one after another (a mask would hide their bullets). */
+    html.site main li:not(:is(li, dd, figcaption, form, nav, [data-ink], [data-no-reveal], .overflow-hidden, .overflow-auto, .overflow-scroll, [class*="overflow-x-"], [class*="overflow-y-"]) *):not([data-no-reveal], [class*="opacity-"]) {
+      animation: item-rise linear backwards;
+      animation-timeline: view();
+      animation-range: cover 0% cover 22%;
+    }
+
+    /* Statements ink in: faint below the reading line, then darkening top
+       to bottom as you scroll to them. */
+    html.site [data-ink]:not(:is(.overflow-hidden, .overflow-auto, .overflow-scroll, [class*="overflow-x-"], [class*="overflow-y-"]) *) {
+      background-image: linear-gradient(to bottom, currentColor calc(50% - 1.2em), color-mix(in srgb, currentColor 20%, transparent) calc(50% + 1.2em));
+      background-size: 100% calc(200% + 2.4em);
+      background-repeat: no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: ink-in linear both;
+      animation-timeline: view();
+      animation-range: cover 4% cover 44%;
+    }
+
+    /* Price ranges draw themselves as the table arrives, and are whole
+       before its rows reach reading height (never a misleading half bar).
+       The timeline sits outside the table's own horizontal scroll box. */
+    .pricing-rows {
+      view-timeline-name: --pricing;
+    }
+    .range-bar {
+      transform-origin: left center;
+      animation: bar-grow linear both;
+      animation-timeline: --pricing;
+      animation-range: entry 0% entry 55%;
+    }
+
+    /* Sequence markers (process steps, changelog dates) fill in as their
+       step arrives, standing in for the old timeline line. */
+    .phase,
+    .changelog-entry {
+      view-timeline-name: --step;
+    }
+    .phase-marker,
+    .entry-dot {
+      animation: marker-on linear both;
+      animation-timeline: --step;
+      animation-range: entry 10% cover 28%;
+    }
+  }
+}
+
+@keyframes copy-surface {
+  from {
+    translate: 0 0.6em;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(50% - 1.2em), transparent calc(50% + 1.2em));
+    mask-image: linear-gradient(to bottom, #000 calc(50% - 1.2em), transparent calc(50% + 1.2em));
+    -webkit-mask-size: 100% calc(200% + 2.4em);
+    mask-size: 100% calc(200% + 2.4em);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: 0 100%;
+    mask-position: 0 100%;
+  }
+  to {
+    translate: 0 0;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(50% - 1.2em), transparent calc(50% + 1.2em));
+    mask-image: linear-gradient(to bottom, #000 calc(50% - 1.2em), transparent calc(50% + 1.2em));
+    -webkit-mask-size: 100% calc(200% + 2.4em);
+    mask-size: 100% calc(200% + 2.4em);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+  }
+}
+@keyframes item-rise {
+  from {
+    opacity: 0;
+    translate: 0 0.9em;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes ink-in {
+  from {
+    background-position: 0 100%;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+@keyframes bar-grow {
+  from {
+    scale: 0 1;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+@keyframes marker-on {
+  from {
+    background-color: hsl(var(--color-background-muted));
+    color: hsl(var(--color-foreground-subtle));
+    scale: 0.8;
+  }
+  to {
+    background-color: hsl(var(--color-accent));
+    color: #fff;
+    scale: 1;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PAGE TRANSITIONS, IMAGE REVEALS, WAYFINDING
+   ───────────────────────────────────────────────────────────── */
+
+/* Page to page (see <RouteTransitions>): the old page drifts up and fades
+   while the new one rises in. The header has its own layer, so it holds
+   still instead of cross-fading with the page. */
+.site-header {
+  view-transition-name: site-header;
+}
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-out 240ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-in 560ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both;
+  }
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+}
+
+/* Images open from a slightly inset frame and settle from a gentle zoom
+   as they scroll in, echoing the text (tied to scroll, like the copy). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    html.site [data-unmask]:not(:is(.overflow-hidden, .overflow-auto, .overflow-scroll, [class*="overflow-x-"], [class*="overflow-y-"]) *) {
+      view-timeline-name: --unmask;
+      animation: unmask linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 38%;
+    }
+    html.site [data-unmask] img {
+      animation: settle linear both;
+      animation-timeline: --unmask;
+      animation-range: entry 0% cover 60%;
+    }
+  }
+}
+@keyframes unmask {
+  from {
+    clip-path: inset(12% 5% 0 5% round 1.25rem);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 1.25rem);
+  }
+}
+@keyframes settle {
+  from {
+    transform: scale(1.1);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* Wayfinding: the section indicator beside the logo types in like the
+   section labels do (--n is its length in characters). */
+.section-indicator-text {
+  display: inline-block;
+  white-space: nowrap;
+  animation: indicator-type calc(var(--n, 12) * 22ms) steps(var(--n, 12), end) both;
+}
+@keyframes indicator-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .section-indicator-text {
+    animation: none;
+  }
+}

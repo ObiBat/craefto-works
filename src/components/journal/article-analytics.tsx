@@ -10,7 +10,7 @@ interface ArticleAnalyticsProps {
 export function ArticleAnalytics({ articleId, slug }: ArticleAnalyticsProps) {
   const tracked = React.useRef(false);
   const scrollDepths = React.useRef<Set<number>>(new Set());
-  const startTime = React.useRef<number>(Date.now());
+  const startTime = React.useRef<number>(0);
 
   // Get or create visitor ID
   const getVisitorId = React.useCallback(() => {
@@ -96,8 +96,9 @@ export function ArticleAnalytics({ articleId, slug }: ArticleAnalyticsProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [trackEvent]);
 
-  // Track time on page when leaving
+  // Track time on page when leaving (the clock starts once mounted)
   React.useEffect(() => {
+    startTime.current = Date.now();
     const handleBeforeUnload = () => {
       const timeOnPage = Math.round((Date.now() - startTime.current) / 1000);
       const maxDepth = Math.max(...Array.from(scrollDepths.current), 0);

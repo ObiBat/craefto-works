@@ -14,6 +14,8 @@ import {
 } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { roles } from "@/lib/careers";
+import { RevealText } from "@/components/editorial/reveal-text";
+import { Glide } from "@/components/editorial/glide";
 
 const principles = [
   { text: "Ship real work. No spec projects, no fake briefs." },
@@ -54,15 +56,13 @@ export default function CareersPage() {
                     </ol>
                   </nav>
 
-                  <HeroText>
-                    <h1 className="font-semibold tracking-tight mb-0 leading-[0.92]">
-                      We make things
-                      <br />
-                      <span className="text-[hsl(var(--color-accent))]">worth looking at.</span>
-                      <br />
-                      Join us.
-                    </h1>
-                  </HeroText>
+                  <h1 className="font-semibold tracking-tight mb-0 leading-[0.92]">
+                    <RevealText text="We make things" mode="load" />
+                    <br />
+                    <span className="text-[hsl(var(--color-accent))]"><RevealText text="worth looking at." mode="load" delay={3} /></span>
+                    <br />
+                    <RevealText text="Join us." mode="load" delay={6} />
+                  </h1>
                 </div>
 
                 {/* Right: supporting text */}
@@ -110,13 +110,13 @@ export default function CareersPage() {
                 <div className="lg:col-span-7 lg:col-start-6">
                   <AnimatedSection delay={0.1}>
                     <div className="space-y-8 text-lg text-[hsl(var(--color-foreground-muted))] leading-[1.8]">
-                      <p>
+                      <p data-ink>
                         Most agencies hire creatives then micromanage them into mediocrity. We do the opposite. We set the vision together, then get out of your way. No design by committee. No pixel policing. If we hired you, we trust your taste.
                       </p>
-                      <p>
+                      <p data-ink>
                         Projects here go live. You will build real brands, real campaigns, and real products that people actually see and interact with. Not pitch decks that collect dust in someone&apos;s inbox.
                       </p>
-                      <p>
+                      <p data-ink>
                         One week you might be crafting a fintech brand identity. The next, social campaigns for a wellness startup. Then a presentation deck for a Series A raise. The variety keeps things fresh and your portfolio stacked.
                       </p>
                     </div>
@@ -155,20 +155,19 @@ export default function CareersPage() {
                 <div className="lg:col-span-4">
                   <AnimatedSection>
                     <SectionLabel number="03" label="Open roles" />
-                    <h2 className="font-semibold tracking-tight mt-4">
-                      Current openings
-                    </h2>
+                    <h2 className="font-semibold tracking-tight mt-4"><RevealText text={"Current openings"} /></h2>
                   </AnimatedSection>
                 </div>
 
                 <div className="lg:col-span-7 lg:col-start-6">
                   {roles.length > 0 ? (
-                    <div className="flex flex-col">
+                    <Glide bleed={0} className="flex flex-col">
                       {roles.map((role, i) => (
                         <AnimatedSection key={role.slug} delay={i * 0.08}>
                           <Link
                             href={`/careers/${role.slug}`}
-                            className="group block py-8 border-b border-[hsl(var(--color-border))] first:pt-0 last:border-b-0 transition-colors"
+                            data-glide-item
+                            className="group block -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 py-7 rounded-2xl transition-colors"
                           >
                             {/* Department + Meta */}
                             <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -183,7 +182,7 @@ export default function CareersPage() {
                               <h3 className="text-2xl md:text-3xl font-semibold tracking-tight group-hover:text-[hsl(var(--color-accent))] transition-colors duration-300">
                                 {role.title}
                               </h3>
-                              <div className="flex-shrink-0 w-10 h-10 rounded-full border border-[hsl(var(--color-border-strong))] flex items-center justify-center group-hover:bg-[hsl(var(--color-foreground))] group-hover:border-[hsl(var(--color-foreground))] transition-all duration-300">
+                              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--color-background-muted))] flex items-center justify-center group-hover:bg-[hsl(var(--color-foreground))] transition-all duration-300">
                                 <svg
                                   className="w-4 h-4 text-[hsl(var(--color-foreground-muted))] group-hover:text-[hsl(var(--color-background))] transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                                   fill="none"
@@ -204,7 +203,7 @@ export default function CareersPage() {
                           </Link>
                         </AnimatedSection>
                       ))}
-                    </div>
+                    </Glide>
                   ) : (
                     <AnimatedSection delay={0.1}>
                       <div className="py-16 text-center">
@@ -242,6 +241,9 @@ export default function CareersPage() {
                     } ${i % 2 !== 1 ? "sm:border-r lg:border-r-0" : "sm:border-r-0"} ${
                       i % 3 !== 2 ? "lg:border-r" : "lg:border-r-0"
                     } sm:px-6 lg:px-8`}>
+                      <span className="block mb-4 font-mono text-xs tabular-nums text-[hsl(var(--color-accent))]">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
                       <p className="font-semibold tracking-tight text-[hsl(var(--color-foreground))] mb-2">
                         {perk.label}
                       </p>
@@ -260,12 +262,6 @@ export default function CareersPage() {
             <Container>
               <AnimatedSection variant="scaleIn">
                 <div className="relative overflow-hidden rounded-2xl bg-[hsl(var(--color-foreground))] p-10 sm:p-16 md:p-24">
-                  {/* Decorative grid */}
-                  <div className="absolute inset-0 opacity-[0.03]" style={{
-                    backgroundImage: `linear-gradient(hsl(var(--color-background)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--color-background)) 1px, transparent 1px)`,
-                    backgroundSize: "60px 60px",
-                  }} />
-
                   <div className="relative z-10 max-w-2xl">
                     <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-white/40 mb-6 block">
                       Open application

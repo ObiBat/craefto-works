@@ -5,6 +5,7 @@ import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/components/ui/motion";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 export function CTABlock() {
   return (
@@ -16,10 +17,8 @@ export function CTABlock() {
               <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-white/70">
                 Start a project
               </span>
-              <h2 className="font-semibold tracking-tight !text-white">
-                Ready to build something that lasts?
-              </h2>
-              <p className="text-white/80 text-lg leading-relaxed max-w-lg">
+              <h2 className="font-semibold tracking-tight !text-white"><RevealText text={"Ready to build something that lasts?"} /></h2>
+              <p data-ink className="text-white/80 text-lg leading-relaxed max-w-lg">
                 You don&apos;t need a finished brief. Start with what you are thinking about, and we will shape it together.
               </p>
               <Button size="lg" variant="secondary" className="mt-2 !bg-white !text-[hsl(var(--color-accent))] hover:!bg-[hsl(var(--color-foreground))] hover:!text-white" asChild>

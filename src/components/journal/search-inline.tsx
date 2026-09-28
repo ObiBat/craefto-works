@@ -150,7 +150,7 @@ export function JournalSearchInline() {
                         </div>
                     ) : query.length >= 2 && !isLoading ? (
                         <div className="p-4 text-center text-sm text-[hsl(var(--color-foreground-muted))]">
-                            No articles found for "{query}"
+                            No articles found for &ldquo;{query}&rdquo;
                         </div>
                     ) : query.length < 2 ? (
                         <div className="p-4 text-center text-xs text-[hsl(var(--color-foreground-muted))]">

@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Disable client-side router cache to prevent blank pages on back navigation
+  // Keep the client router cache as short as Next allows (dynamic pages are
+  // never reused; static ones for 30s, the minimum) so back navigation
+  // always renders fresh pages.
   experimental: {
     staleTimes: {
       dynamic: 0,
-      static: 0,
+      static: 30,
     },
   },
   // Allow mobile devices on local network to access dev server
@@ -19,9 +21,30 @@ const nextConfig: NextConfig = {
         destination: "/journal/author/craefto-works",
         permanent: true,
       },
+      // /lab was a second About page from the Craefto Lab days; its story now lives on /about.
+      {
+        source: "/lab",
+        destination: "/about",
+        permanent: true,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
+        ],
+      },
     ];
   },
   images: {
+    // AVIF first (smallest), WebP for browsers without it.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",

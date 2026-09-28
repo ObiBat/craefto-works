@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Services",
   description:
-    "We build tailored systems including brand identity, web development, SaaS products, and AI powered tools for founders and teams who value craft.",
-};
+    "Brand identity, web design and development, digital products, AI automation and security audits, with transparent pricing from one team.",
+  path: "/services",
+});
 
 export default function ServicesLayout({
   children,

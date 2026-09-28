@@ -6,6 +6,7 @@ import { Section } from "@/components/layout/section";
 import { Separator } from "@/components/ui/separator";
 import { SectionLabel } from "@/components/ui/section-label";
 import { AnimatedSection, StaggeredGrid, StaggeredItem } from "@/components/ui/motion";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 // ============================================================================
 // STACK TOOLS
@@ -383,10 +384,8 @@ export function Team({ sectionNumber = "05" }: { sectionNumber?: string }) {
               <SectionLabel number={sectionNumber} label="Our team" />
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                 <div>
-                  <h2 className="font-semibold tracking-tight">
-                    Craft & character
-                  </h2>
-                  <p className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-3">
+                  <h2 className="font-semibold tracking-tight"><RevealText text={"Craft & character"} /></h2>
+                  <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-3">
                     A small, focused team obsessed with quality over quantity.
                   </p>
                 </div>

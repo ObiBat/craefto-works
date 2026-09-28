@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 interface SearchResult {
@@ -182,7 +181,7 @@ export function JournalSearch() {
               {/* No results */}
               {query.length >= 2 && results.length === 0 && !isLoading && (
                 <div className="p-8 text-center text-foreground-muted">
-                  <p>No articles found for "{query}"</p>
+                  <p>No articles found for &ldquo;{query}&rdquo;</p>
                 </div>
               )}
 

@@ -5,58 +5,16 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
-import { Separator } from "@/components/ui/separator";
 import { SectionLabel } from "@/components/ui/section-label";
 import { AnimatedSection } from "@/components/ui/motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { services } from "@/lib/constants";
+import { RevealText } from "@/components/editorial/reveal-text";
+import { Glide } from "@/components/editorial/glide";
+import { cn } from "@/lib/utils";
+import { formatPrice, priceFor, weeksLabel } from "@/lib/pricing";
 
-function formatPrice(price: number) {
-  return new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
-}
-
-function ServiceIcon({ icon }: { icon: string }) {
-  switch (icon) {
-    case "brand":
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-        </svg>
-      );
-    case "web":
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      );
-    case "product":
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-        </svg>
-      );
-    case "ai":
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
-      );
-    case "security":
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-      );
-    default:
-      return null;
-  }
-}
 
 function AccordionItem({
   service,
@@ -70,16 +28,28 @@ function AccordionItem({
   onToggle: () => void;
 }) {
   const number = String(index + 1).padStart(2, "0");
+  const price = priceFor(service.icon);
 
   return (
-    <div className="border-b border-[hsl(var(--color-border))]">
+    <div
+      data-glide-item
+      className={cn(
+        "-mx-2.5 sm:-mx-6 px-2.5 sm:px-6 rounded-2xl transition-colors duration-500",
+        isOpen && "bg-[hsl(var(--color-accent-subtle))]"
+      )}
+    >
       <button
         onClick={onToggle}
         className="w-full py-6 sm:py-8 flex items-center gap-4 sm:gap-8 text-left group transition-colors"
         aria-expanded={isOpen}
       >
         {/* Number */}
-        <span className="text-sm font-medium text-[hsl(var(--color-foreground-subtle))] tabular-nums w-8 shrink-0">
+        <span
+          className={cn(
+            "font-mono text-sm font-medium tabular-nums w-8 shrink-0 transition-colors duration-300 group-hover:text-[hsl(var(--color-accent))]",
+            isOpen ? "text-[hsl(var(--color-accent))]" : "text-[hsl(var(--color-foreground-subtle))]"
+          )}
+        >
           {number}
         </span>
 
@@ -99,7 +69,12 @@ function AccordionItem({
         <motion.div
           animate={{ rotate: isOpen ? 45 : 0 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[hsl(var(--color-border))] flex items-center justify-center shrink-0 transition-colors group-hover:border-[hsl(var(--color-accent))] group-hover:bg-[hsl(var(--color-accent))] group-hover:text-white"
+          className={cn(
+            "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:bg-[hsl(var(--color-accent))] group-hover:text-white",
+            isOpen
+              ? "bg-[hsl(var(--color-accent))] text-white"
+              : "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground))]"
+          )}
         >
           <svg
             className="w-4 h-4 sm:w-5 sm:h-5"
@@ -127,7 +102,7 @@ function AccordionItem({
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <div className="pl-12 sm:pl-16 pb-8 sm:pb-10 pr-4 sm:pr-8 -mx-4 sm:-mx-8 px-4 sm:px-8 bg-[hsl(var(--color-accent-subtle))]">
+            <div data-no-reveal className="pl-12 sm:pl-16 pb-8 sm:pb-10">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 pt-6">
                 {/* Description + CTA */}
                 <div className="flex flex-col gap-5 lg:col-span-1">
@@ -140,13 +115,13 @@ function AccordionItem({
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-[hsl(var(--color-foreground-subtle))]">Starting from</span>
                       <span className="font-semibold text-[hsl(var(--color-foreground))]">
-                        {formatPrice(service.startingPrice)}
+                        {price && formatPrice(price.min)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-[hsl(var(--color-foreground-subtle))]">Typical timeline</span>
                       <span className="font-medium text-[hsl(var(--color-foreground))]">
-                        {service.timeline}
+                        {price && weeksLabel(price)}
                       </span>
                     </div>
                   </div>
@@ -217,10 +192,8 @@ export function ServicesOverview() {
               <SectionLabel number="01" label="Services" />
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                 <div>
-                  <h2 className="font-semibold tracking-tight">
-                    What we build
-                  </h2>
-                  <p className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-3">
+                  <h2 className="font-semibold tracking-tight"><RevealText text={"What we build"} /></h2>
+                  <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-3">
                     End-to-end capabilities from brand to product.
                   </p>
                 </div>
@@ -249,7 +222,7 @@ export function ServicesOverview() {
 
           {/* Services Accordion */}
           <AnimatedSection>
-            <div className="border-t border-[hsl(var(--color-border))]">
+            <Glide bleed={0}>
               {services.map((service, index) => (
                 <AccordionItem
                   key={service.title}
@@ -259,7 +232,7 @@ export function ServicesOverview() {
                   onToggle={() => handleToggle(index)}
                 />
               ))}
-            </div>
+            </Glide>
           </AnimatedSection>
         </div>
       </Container>

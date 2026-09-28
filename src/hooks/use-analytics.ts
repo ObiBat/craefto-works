@@ -10,6 +10,9 @@ export function usePageView() {
   useEffect(() => {
     // Don't track admin pages
     if (pathname.startsWith("/admin")) return;
+    // Only real visits: local development and automated browsers (tests,
+    // screenshot tools) would otherwise write to the live analytics.
+    if (process.env.NODE_ENV !== "production" || navigator.webdriver) return;
 
     const trackPageView = async () => {
       try {

@@ -1,14 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
 import { Header, Footer, Container, Section } from "@/components/layout";
+import { RevealText } from "@/components/editorial/reveal-text";
 
-export const metadata = {
-  title: "Unsubscribed | Craefto",
-  description: "You have been unsubscribed from the Craefto Journal.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Unsubscribed",
+  description:
+    "You have been unsubscribed from the Craefto Journal.",
+  path: "/unsubscribed",
+  noIndex: true,
+});
 
 interface UnsubscribedPageProps {
   searchParams: Promise<{ success?: string; already?: string; error?: string }>;
@@ -44,9 +46,7 @@ export default async function UnsubscribedPage({ searchParams }: UnsubscribedPag
                       />
                     </svg>
                   </div>
-                  <h1 className="text-2xl font-semibold text-[hsl(var(--color-foreground))] mb-4">
-                    Something went wrong
-                  </h1>
+                  <h1 className="text-2xl font-semibold text-[hsl(var(--color-foreground))] mb-4"><RevealText text={"Something went wrong"} mode="load" /></h1>
                   <p className="text-[hsl(var(--color-foreground-muted))] mb-8">
                     {error === "invalid_token"
                       ? "This unsubscribe link is invalid or has expired."
@@ -71,7 +71,7 @@ export default async function UnsubscribedPage({ searchParams }: UnsubscribedPag
                     </svg>
                   </div>
                   <h1 className="text-2xl font-semibold text-[hsl(var(--color-foreground))] mb-4">
-                    {already ? "Already unsubscribed" : "You've been unsubscribed"}
+                    <RevealText text={already ? "Already unsubscribed" : "You've been unsubscribed"} mode="load" />
                   </h1>
                   <p className="text-[hsl(var(--color-foreground-muted))] mb-8">
                     {already

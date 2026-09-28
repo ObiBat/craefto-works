@@ -5,6 +5,7 @@ import { Header, Footer, Container, Section } from "@/components/layout";
 import { Separator, PageTransition, AnimatedSection, StaggeredGrid, StaggeredItem, HeroText, SectionLabel } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { Team } from "@/components/sections/team";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 const values = [
   {
@@ -113,9 +114,9 @@ export default function AboutPage() {
                 <nav className="mb-8" aria-label="Breadcrumb">
                   <ol className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
                     <li>
-                      <a href="/" className="hover:text-[hsl(var(--color-foreground))] transition-colors">
+                      <Link href="/" className="hover:text-[hsl(var(--color-foreground))] transition-colors">
                         Home
-                      </a>
+                      </Link>
                     </li>
                     <li>
                       <span className="mx-2">/</span>
@@ -124,16 +125,43 @@ export default function AboutPage() {
                   </ol>
                 </nav>
 
-                <HeroText>
-                  <h1 className="font-semibold tracking-tight mb-6">
-                    About Us
-                  </h1>
-                </HeroText>
+                <h1 className="font-semibold tracking-tight mb-6"><RevealText text={"About Us"} mode="load" /></h1>
                 <HeroText delay={0.1}>
                   <p className="text-xl text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
                     A creative tech studio building systems for founders who think long-term.
                   </p>
                 </HeroText>
+              </div>
+            </Container>
+          </Section>
+
+          {/* The Story */}
+          <Section spacing="lg" className="pt-0 md:pt-0">
+            <Container>
+              <div className="flex flex-col gap-14 md:gap-10">
+                <AnimatedSection>
+                  <div className="flex flex-col gap-4">
+                    <SectionLabel number="01" label="The Story" />
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"Where it started"} /></h2>
+                  </div>
+                </AnimatedSection>
+
+                <Separator />
+
+                <AnimatedSection delay={0.1}>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+                    <div className="space-y-6 text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
+                      <p>
+                        <strong className="text-[hsl(var(--color-foreground))]">Founded in Sydney by Obi Batbileg</strong> after graduating from Western Sydney University. Built from the belief that businesses deserve better than overpriced templates and disconnected teams.
+                      </p>
+                    </div>
+                    <div className="space-y-6 text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
+                      <p>
+                        <strong className="text-[hsl(var(--color-foreground))]">Every project gets the same attention:</strong> understand deeply, design intentionally, build precisely. No shortcuts, no outsourcing the hard parts, no disappearing after launch.
+                      </p>
+                    </div>
+                  </div>
+                </AnimatedSection>
               </div>
             </Container>
           </Section>
@@ -144,10 +172,8 @@ export default function AboutPage() {
               <div className="flex flex-col gap-14">
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
-                    <SectionLabel number="01" label="Philosophy" />
-                    <h2 className="font-semibold tracking-tight">
-                      How we think
-                    </h2>
+                    <SectionLabel number="02" label="Philosophy" />
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"How we think"} /></h2>
                   </div>
                 </AnimatedSection>
 
@@ -183,11 +209,9 @@ export default function AboutPage() {
               <div className="flex flex-col gap-14">
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
-                    <SectionLabel number="02" label="Values" />
-                    <h2 className="font-semibold tracking-tight">
-                      What we believe
-                    </h2>
-                    <p className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-2">
+                    <SectionLabel number="03" label="Values" />
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"What we believe"} /></h2>
+                    <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-2">
                       The principles that guide every decision we make.
                     </p>
                   </div>
@@ -229,11 +253,9 @@ export default function AboutPage() {
               <div className="flex flex-col gap-14">
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
-                    <SectionLabel number="03" label="Boundaries" />
-                    <h2 className="font-semibold tracking-tight">
-                      What we don&apos;t do
-                    </h2>
-                    <p className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-2">
+                    <SectionLabel number="04" label="Boundaries" />
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"What we don't do"} /></h2>
+                    <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-2">
                       Being clear about what we won&apos;t do helps us focus on what we do best.
                     </p>
                   </div>
@@ -265,10 +287,8 @@ export default function AboutPage() {
               <div className="flex flex-col gap-14">
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
-                    <SectionLabel number="04" label="Future" />
-                    <h2 className="font-semibold tracking-tight">
-                      Looking ahead
-                    </h2>
+                    <SectionLabel number="05" label="Future" />
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"Looking ahead"} /></h2>
                   </div>
                 </AnimatedSection>
 
@@ -302,7 +322,7 @@ export default function AboutPage() {
           </Section>
 
           {/* Team */}
-          <Team />
+          <Team sectionNumber="06" />
 
           {/* CTA */}
           <Section spacing="xl">
@@ -313,10 +333,8 @@ export default function AboutPage() {
                     <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-white/70">
                       Connect
                     </span>
-                    <h2 className="font-semibold tracking-tight !text-white">
-                      Let&apos;s build something together
-                    </h2>
-                    <p className="text-white/80 text-lg leading-relaxed max-w-lg">
+                    <h2 className="font-semibold tracking-tight !text-white"><RevealText text={"Let's build something together"} /></h2>
+                    <p data-ink className="text-white/80 text-lg leading-relaxed max-w-lg">
                       Interested in new projects and collaborations with people who care about craft.
                     </p>
                     <Button size="lg" variant="secondary" className="mt-2 !bg-white !text-[hsl(var(--color-accent))] hover:!bg-[hsl(var(--color-foreground))] hover:!text-white" asChild>

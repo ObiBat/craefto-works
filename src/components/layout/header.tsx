@@ -8,6 +8,7 @@ import { Container } from "./container";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { navigation } from "@/lib/constants";
+import { SectionIndicator } from "@/components/editorial/section-indicator";
 
 function MoreDropdown({ items, indexOffset }: { items: { name: string; href: string }[]; indexOffset: number }) {
   const pathname = usePathname();
@@ -235,32 +236,36 @@ export function Header() {
   return (
     <>
       <header
+        data-scrolled={isScrolled && !isMobileMenuOpen ? "" : undefined}
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+          "site-header feather-edge fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           isMobileMenuOpen
             ? "bg-[hsl(var(--color-foreground))] backdrop-blur-0 border-transparent shadow-none"
             : isScrolled
-              ? "bg-[hsl(var(--color-background))]/95 backdrop-blur-md border-b border-[hsl(var(--color-border))] shadow-sm"
+              ? "bg-[hsl(var(--color-background))]/95 backdrop-blur-md"
               : "bg-transparent"
         )}
       >
         <Container>
           <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
-            <Link
-              href="/"
-              className={cn(
-                "flex-shrink-0 logo-link",
-                isMobileMenuOpen && "logo-inverted"
-              )}
-              onClick={handleLogoClick}
-              aria-label="Craefto - Home"
-            >
-              <Logo
-                size="md"
-                inverted={isMobileMenuOpen}
-              />
-            </Link>
+            {/* Logo, and on wide screens the section you are reading */}
+            <div className="flex items-center gap-6 min-w-0">
+              <Link
+                href="/"
+                className={cn(
+                  "flex-shrink-0 logo-link",
+                  isMobileMenuOpen && "logo-inverted"
+                )}
+                onClick={handleLogoClick}
+                aria-label="Craefto - Home"
+              >
+                <Logo
+                  size="md"
+                  inverted={isMobileMenuOpen}
+                />
+              </Link>
+              <SectionIndicator className={cn("hidden xl:inline-flex", isMobileMenuOpen && "invisible")} />
+            </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">

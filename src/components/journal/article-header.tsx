@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 interface ArticleHeaderProps {
   article: {
@@ -65,7 +66,7 @@ export function ArticleHeader({ article }: ArticleHeaderProps) {
 
       {/* Title */}
       <h1 className="font-heading text-[2.25rem] md:text-[3rem] lg:text-[3.5rem] font-semibold leading-[1.08] tracking-[-0.025em] text-foreground mb-6">
-        {article.title}
+        <RevealText text={article.title} mode="load" />
       </h1>
 
       {/* Subtitle */}
@@ -137,7 +138,7 @@ export function ArticleHeader({ article }: ArticleHeaderProps) {
               height={0}
               sizes="(max-width: 768px) 100vw, 680px"
               className="w-full h-auto"
-              priority
+              preload
             />
           </div>
           {article.featured_image_alt && (

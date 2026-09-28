@@ -13,7 +13,7 @@ const buttonVariants = cva(
         accent:
           "bg-[hsl(var(--color-accent))] text-white rounded-full btn-magnetic btn-fill-hover",
         secondary:
-          "bg-transparent text-[hsl(var(--color-foreground))] rounded-full border border-[hsl(var(--color-border-strong))] btn-magnetic btn-border-hover",
+          "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground))] rounded-full btn-magnetic btn-border-hover",
         ghost:
           "text-[hsl(var(--color-foreground))] rounded-full hover:bg-[hsl(var(--color-background-muted))] btn-magnetic",
         link: "text-[hsl(var(--color-foreground))] underline-offset-4 hover:underline hover:text-[hsl(var(--color-accent))]",

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Separator, PageTransition, AnimatedSection, StaggeredGrid, StaggeredItem, HeroText, SectionLabel } from "@/components/ui";
 import { Button } from "@/components/ui/button";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 const stats = [
   { label: "Founded", value: "2025" },
@@ -80,7 +81,7 @@ export default function StartPage() {
       <PageTransition>
         <main id="main-content" className="pt-20">
           {/* Hero */}
-          <Section spacing="sm" className="pb-8 md:pb-6">
+          <Section spacing="sm" className="pb-12 md:pb-20">
             <Container>
               <div className="max-w-3xl">
                 <nav className="mb-6 md:mb-4" aria-label="Breadcrumb">
@@ -95,11 +96,7 @@ export default function StartPage() {
                   </ol>
                 </nav>
 
-                <HeroText>
-                  <h1 className="font-semibold tracking-tight mb-4">
-                    New here? Let us introduce ourselves.
-                  </h1>
-                </HeroText>
+                <h1 className="font-semibold tracking-tight mb-4"><RevealText text={"New here? Let us introduce ourselves."} mode="load" /></h1>
                 <HeroText delay={0.1}>
                   <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
                     We&apos;re a small, focused team in Sydney that designs and builds digital products for businesses that care about quality.
@@ -116,9 +113,7 @@ export default function StartPage() {
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
                     <SectionLabel number="01" label="Who We Are" />
-                    <h2 className="font-semibold tracking-tight">
-                      Design, code, and strategy under one roof
-                    </h2>
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"Design, code, and strategy under one roof"} /></h2>
                   </div>
                 </AnimatedSection>
 
@@ -158,9 +153,7 @@ export default function StartPage() {
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
                     <SectionLabel number="02" label="Our Promise" />
-                    <h2 className="font-semibold tracking-tight">
-                      We start with dialogue
-                    </h2>
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"We start with dialogue"} /></h2>
                   </div>
                 </AnimatedSection>
 
@@ -169,7 +162,7 @@ export default function StartPage() {
                 <AnimatedSection delay={0.1}>
                   <div className="flex flex-col items-center text-center gap-12">
                     <blockquote className="max-w-2xl">
-                      <p className="text-2xl sm:text-3xl font-heading font-semibold text-[hsl(var(--color-foreground))] leading-snug tracking-tight">
+                      <p data-ink className="text-2xl sm:text-3xl font-heading font-semibold text-[hsl(var(--color-foreground))] leading-snug tracking-tight">
                         &ldquo;You don&apos;t need a polished brief. Many clients come to us with just an idea.&rdquo;
                       </p>
                       <p className="mt-4 text-lg text-[hsl(var(--color-foreground-muted))]">
@@ -204,9 +197,7 @@ export default function StartPage() {
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
                     <SectionLabel number="03" label="What Makes Us Different" />
-                    <h2 className="font-semibold tracking-tight">
-                      One team, one conversation, start to finish
-                    </h2>
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"One team, one conversation, start to finish"} /></h2>
                   </div>
                 </AnimatedSection>
 
@@ -258,9 +249,7 @@ export default function StartPage() {
                     className="group flex items-center justify-between p-8 sm:p-10 rounded-2xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-subtle))] hover:border-[hsl(var(--color-accent))] transition-all duration-300"
                   >
                     <div>
-                      <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors mb-2">
-                        Want to know exactly how projects work?
-                      </h3>
+                      <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors mb-2"><RevealText text={"Want to know exactly how projects work?"} /></h3>
                       <p className="text-[hsl(var(--color-foreground-muted))]">
                         Four clear phases from discovery to launch. No surprises, no scope creep.
                       </p>
@@ -281,9 +270,7 @@ export default function StartPage() {
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
                     <SectionLabel number="05" label="What We Build" />
-                    <h2 className="font-semibold tracking-tight">
-                      From brands to platforms
-                    </h2>
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"From brands to platforms"} /></h2>
                   </div>
                 </AnimatedSection>
 
@@ -295,7 +282,8 @@ export default function StartPage() {
                       <Link
                         href={service.href}
                         onClick={(e) => handleServiceClick(e, service.href)}
-                        className="group flex items-center justify-between p-5 rounded-xl border border-[hsl(var(--color-border))] hover:border-[hsl(var(--color-accent))] transition-all duration-300"
+                        data-no-transition
+                        className="group flex items-center justify-between p-5 rounded-xl bg-[hsl(var(--color-background-subtle))] hover:bg-[hsl(var(--color-accent-subtle))] transition-all duration-300"
                       >
                         <span className="font-medium text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors">
                           {service.title}
@@ -322,10 +310,8 @@ export default function StartPage() {
               <AnimatedSection variant="scaleIn">
                 <div className="rounded-2xl bg-[hsl(var(--color-accent))] p-10 sm:p-14 md:p-16">
                   <div className="flex flex-col items-center text-center gap-8 max-w-2xl mx-auto">
-                    <h2 className="font-semibold tracking-tight !text-white">
-                      You don&apos;t need to have everything figured out.
-                    </h2>
-                    <p className="text-white/80 text-lg leading-relaxed max-w-lg">
+                    <h2 className="font-semibold tracking-tight !text-white"><RevealText text={"You don't need to have everything figured out."} /></h2>
+                    <p data-ink className="text-white/80 text-lg leading-relaxed max-w-lg">
                       Just tell us what you are thinking about, and we will take it from there. No pressure, no commitment, just a conversation.
                     </p>
                     <Button size="lg" variant="secondary" className="mt-2 !bg-white !text-[hsl(var(--color-accent))] hover:!bg-[hsl(var(--color-foreground))] hover:!text-white" asChild>

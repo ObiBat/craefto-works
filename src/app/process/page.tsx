@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Separator, PageTransition, AnimatedSection, StaggeredGrid, StaggeredItem, HeroText, SectionLabel } from "@/components/ui";
 import { Button } from "@/components/ui/button";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 const phases = [
   {
@@ -75,7 +76,7 @@ export default function ProcessPage() {
       <PageTransition>
         <main id="main-content" className="pt-20">
           {/* Hero */}
-          <Section spacing="sm" className="pb-8 md:pb-6">
+          <Section spacing="sm" className="pb-12 md:pb-20">
             <Container>
               <div className="max-w-3xl">
                 <nav className="mb-6 md:mb-4" aria-label="Breadcrumb">
@@ -90,11 +91,7 @@ export default function ProcessPage() {
                   </ol>
                 </nav>
 
-                <HeroText>
-                  <h1 className="font-semibold tracking-tight mb-4">
-                    How we work
-                  </h1>
-                </HeroText>
+                <h1 className="font-semibold tracking-tight mb-4"><RevealText text={"How we work"} mode="load" /></h1>
                 <HeroText delay={0.1}>
                   <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
                     Every project follows a clear path. No surprises, no scope creep, no disappearing acts.
@@ -108,19 +105,19 @@ export default function ProcessPage() {
           <Section spacing="lg" className="pt-0 md:pt-0">
             <Container>
               <div className="relative">
-                {/* Vertical timeline line */}
-                <div className="absolute left-6 lg:left-8 top-0 bottom-0 w-px bg-[hsl(var(--color-border))]" aria-hidden="true" />
-
-                <div className="flex flex-col gap-16 lg:gap-20">
+                <div className="flex flex-col gap-24 lg:gap-32">
                   {phases.map((phase, index) => (
                     <AnimatedSection key={phase.title} delay={index * 0.1}>
-                      <div className="relative pl-16 lg:pl-24">
-                        {/* Phase number circle on timeline */}
-                        <div className="absolute left-0 top-0 z-10 flex items-center justify-center">
-                          <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-[hsl(var(--color-accent))] flex items-center justify-center shadow-lg shadow-[hsl(var(--color-accent))]/20">
-                            <span className="text-2xl lg:text-3xl font-bold text-white font-heading">
-                              {phase.number}
-                            </span>
+                      <div className="phase grid grid-cols-[3rem_1fr] lg:grid-cols-[4rem_1fr] gap-x-5 lg:gap-x-10">
+                        {/* Phase marker: stays beside the phase while you read it,
+                            and fills in as the phase arrives (no timeline line). */}
+                        <div>
+                          <div className="sticky top-28">
+                            <div className="phase-marker w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-[hsl(var(--color-accent))] text-white flex items-center justify-center">
+                              <span className="text-2xl lg:text-3xl font-bold font-heading">
+                                {phase.number}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
@@ -167,12 +164,6 @@ export default function ProcessPage() {
                           </div>
                         </div>
 
-                        {/* Separator between phases */}
-                        {index < phases.length - 1 && (
-                          <div className="mt-16 lg:mt-20">
-                            <Separator />
-                          </div>
-                        )}
                       </div>
                     </AnimatedSection>
                   ))}
@@ -188,10 +179,8 @@ export default function ProcessPage() {
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
                     <SectionLabel number="05" label="Your Part" />
-                    <h2 className="font-semibold tracking-tight">
-                      What we need from you
-                    </h2>
-                    <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"What we need from you"} /></h2>
+                    <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
                       Great projects are a collaboration. Here is what helps us deliver our best work.
                     </p>
                   </div>
@@ -226,10 +215,8 @@ export default function ProcessPage() {
                     <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-white/70">
                       Ready?
                     </span>
-                    <h2 className="font-semibold tracking-tight !text-white">
-                      Let&apos;s start with a conversation
-                    </h2>
-                    <p className="text-white/80 text-lg leading-relaxed max-w-lg">
+                    <h2 className="font-semibold tracking-tight !text-white"><RevealText text={"Let's start with a conversation"} /></h2>
+                    <p data-ink className="text-white/80 text-lg leading-relaxed max-w-lg">
                       Book a free 30 minute discovery call. We will discuss your goals, answer your questions, and outline next steps.
                     </p>
                     <Button size="lg" variant="secondary" className="mt-2 !bg-white !text-[hsl(var(--color-accent))] hover:!bg-[hsl(var(--color-foreground))] hover:!text-white" asChild>

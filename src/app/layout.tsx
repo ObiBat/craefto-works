@@ -1,25 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Inter, Geist_Mono } from "next/font/google";
+import { Archivo, DM_Sans, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { BackToTop } from "@/components/ui";
 import { AnalyticsProvider } from "@/components/analytics/analytics-provider";
+import { editorialBootScript } from "@/components/editorial/boot-script";
+import { SiteClassSync } from "@/components/editorial/site-class-sync";
+import { RouteTransitions } from "@/components/editorial/route-transitions";
 import "./globals.css";
 
-// Headings: Archivo (variable width + weight; width set in globals.css).
+// Headings: Archivo (variable weight, normal width).
 const archivo = Archivo({
   subsets: ["latin"],
   display: "swap",
-  axes: ["wdth"],
   variable: "--font-archivo",
   preload: true,
 });
 
-// Body: Inter, set in its Display optical size (opsz 32) in globals.css.
-const inter = Inter({
+// Body: DM Sans, variable optical size; set to a tighter, editorial cut
+// (opsz 32) in globals.css.
+const dmSans = DM_Sans({
   subsets: ["latin"],
   display: "swap",
   axes: ["opsz"],
-  variable: "--font-inter",
+  variable: "--font-dm-sans",
   preload: true,
 });
 
@@ -37,7 +40,7 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FAF7F2" },
+    { media: "(prefers-color-scheme: light)", color: "#FDFCFA" },
   ],
 };
 
@@ -95,8 +98,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
-    url: "https://www.craefto.com",
+    locale: "en_AU",
+    url: "./",
     siteName: "Craefto",
     title: "Craefto | Creative Tech Studio",
     description:
@@ -131,8 +134,10 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  // "./" resolves to each page's own path, so no page can inherit the
+  // homepage as its canonical. Pages with their own metadata set it explicitly.
   alternates: {
-    canonical: "https://www.craefto.com",
+    canonical: "./",
   },
   verification: {
     google: "kXrPFgynaTLHeof1J6rY-uZKVo6dYXXQYbKU71lbfpg",
@@ -160,7 +165,9 @@ const jsonLd = {
   },
   address: {
     "@type": "PostalAddress",
-    addressCountry: "US",
+    addressLocality: "Sydney",
+    addressRegion: "NSW",
+    addressCountry: "AU",
   },
   foundingDate: "2025",
   numberOfEmployees: {
@@ -226,8 +233,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${archivo.variable} ${inter.variable} ${geistMono.variable}`}>
+    <html lang="en-AU" className={`${archivo.variable} ${dmSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: editorialBootScript }} />
         {/* Preconnect for fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -259,6 +267,8 @@ export default function RootLayout({
         {children}
         <BackToTop />
 
+        <SiteClassSync />
+        <RouteTransitions />
         <AnalyticsProvider />
         <Analytics />
       </body>

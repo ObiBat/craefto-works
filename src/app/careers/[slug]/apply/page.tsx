@@ -21,8 +21,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `Apply — ${role.title} | Careers`,
+    title: { absolute: `Apply: ${role.title} | Careers | Craefto` },
     description: `Apply for the ${role.title} position at Craefto.`,
+    alternates: { canonical: `/careers/${role.slug}/apply` },
     robots: { index: false, follow: false },
   };
 }

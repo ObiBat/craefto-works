@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Badge, Separator, PageTransition, AnimatedSection, StaggeredGrid, StaggeredItem, HeroText, ProjectImagePlaceholder } from "@/components/ui";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 // Projects data - in production, this would come from a CMS or data file
 const projects = [
@@ -122,9 +123,9 @@ export default function WorkPage() {
                 <nav className="mb-6 md:mb-4" aria-label="Breadcrumb">
                   <ol className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
                     <li>
-                      <a href="/" className="hover:text-[hsl(var(--color-foreground))] transition-colors">
+                      <Link href="/" className="hover:text-[hsl(var(--color-foreground))] transition-colors">
                         Home
-                      </a>
+                      </Link>
                     </li>
                     <li>
                       <span className="mx-2">/</span>
@@ -133,11 +134,7 @@ export default function WorkPage() {
                   </ol>
                 </nav>
 
-                <HeroText>
-                  <h1 className="font-semibold tracking-tight mb-4">
-                    Case studies
-                  </h1>
-                </HeroText>
+                <h1 className="font-semibold tracking-tight mb-4"><RevealText text={"Case studies"} mode="load" /></h1>
                 <HeroText delay={0.1}>
                   <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
                     A selection of projects across brand, web, and product. Each one

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Button } from "@/components/ui/button";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 export default function NotFound() {
   return (
@@ -15,9 +16,7 @@ export default function NotFound() {
                   404
                 </span>
 
-                <h1 className="text-3xl font-semibold tracking-tight">
-                  Page not found
-                </h1>
+                <h1 className="text-3xl font-semibold tracking-tight"><RevealText text={"Page not found"} mode="load" /></h1>
 
                 <p className="text-lg text-[hsl(var(--color-foreground-muted))]">
                   The page you&apos;re looking for doesn&apos;t exist or has been

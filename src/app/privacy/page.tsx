@@ -1,13 +1,17 @@
 import { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { PageTransition, AnimatedSection, HeroText } from "@/components/ui";
 import { Separator } from "@/components/ui/separator";
+import { RevealText } from "@/components/editorial/reveal-text";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Privacy Policy",
-  description: "Learn how Craefto collects, uses, and protects your personal information.",
-};
+  description:
+    "How Craefto collects, uses and protects your personal information.",
+  path: "/privacy",
+});
 
 interface ContentItem {
   subtitle?: string;
@@ -133,11 +137,7 @@ export default function PrivacyPage() {
                     Legal
                   </p>
                 </HeroText>
-                <HeroText delay={0.1}>
-                  <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight mb-6">
-                    Privacy Policy
-                  </h1>
-                </HeroText>
+                <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight mb-6"><RevealText text={"Privacy Policy"} mode="load" /></h1>
                 <HeroText delay={0.2}>
                   <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
                     Your privacy matters to us. This policy explains how we collect, use, and protect your information when you visit our website or engage our services.

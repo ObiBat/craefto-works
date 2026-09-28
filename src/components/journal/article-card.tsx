@@ -28,6 +28,8 @@ export function ArticleCard({ article, featured = false }: ArticleCardProps) {
                   src={article.featured_image_url}
                   alt={article.title}
                   fill
+                  preload
+                  sizes="(max-width: 768px) 100vw, (max-width: 1400px) 50vw, 700px"
                   className="object-cover transition-all duration-700 group-hover:scale-105"
                 />
                 {/* Overlay gradient on hover */}
@@ -112,6 +114,7 @@ export function ArticleCard({ article, featured = false }: ArticleCardProps) {
               src={article.featured_image_url}
               alt={article.title}
               fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 440px"
               className="object-cover transition-all duration-500 group-hover:scale-105"
             />
           </div>

@@ -1,17 +1,17 @@
 import { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/seo";
 
+// /_next/ must stay crawlable: it serves the CSS, scripts and optimised images
+// search engines need to render pages and index their images.
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = "https://www.craefto.com";
-
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/_next/", "/admin/"],
+        disallow: ["/api/", "/admin/", "/portal/"],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
-    host: baseUrl,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

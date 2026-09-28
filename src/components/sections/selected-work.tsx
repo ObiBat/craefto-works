@@ -10,6 +10,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedSection } from "@/components/ui/motion";
 import { ProjectImagePlaceholder } from "@/components/ui/project-image-placeholder";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 // Featured projects for the homepage strip, newest first
 const featuredProjects = [
@@ -152,7 +153,7 @@ function ArrowButton({
       type="button"
       onClick={onTap}
       aria-label={direction === "left" ? "Move case studies backwards" : "Move case studies forwards"}
-      className={`${size === "lg" ? "h-14 w-14" : "h-11 w-11"} rounded-full border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))] flex items-center justify-center transition-colors hover:bg-[hsl(var(--color-background-subtle))] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-foreground))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--color-background))]`}
+      className={`${size === "lg" ? "h-14 w-14" : "h-11 w-11"} rounded-full border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))] flex items-center justify-center transition-colors hover:bg-[hsl(var(--color-background-muted))] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-foreground))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--color-background))]`}
     >
       <svg className={size === "lg" ? "w-5 h-5" : "w-4 h-4"} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         {direction === "left" ? (
@@ -315,10 +316,8 @@ export function SelectedWork() {
               <SectionLabel number="02" label="Case studies" />
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
                 <div>
-                  <h2 className="font-semibold tracking-tight">
-                    Featured case studies
-                  </h2>
-                  <p className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-3">
+                  <h2 className="font-semibold tracking-tight"><RevealText text={"Featured case studies"} /></h2>
+                  <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-3">
                     Recent projects for founders building the future.
                   </p>
                 </div>

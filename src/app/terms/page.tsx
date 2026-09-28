@@ -1,13 +1,17 @@
 import { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { PageTransition, AnimatedSection, HeroText } from "@/components/ui";
 import { Separator } from "@/components/ui/separator";
+import { RevealText } from "@/components/editorial/reveal-text";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Terms of Service",
-  description: "Terms and conditions for using Craefto services and website.",
-};
+  description:
+    "Terms and conditions for using Craefto services and this website.",
+  path: "/terms",
+});
 
 interface ContentItem {
   subtitle?: string;
@@ -155,11 +159,7 @@ export default function TermsPage() {
                     Legal
                   </p>
                 </HeroText>
-                <HeroText delay={0.1}>
-                  <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight mb-6">
-                    Terms of Service
-                  </h1>
-                </HeroText>
+                <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight mb-6"><RevealText text={"Terms of Service"} mode="load" /></h1>
                 <HeroText delay={0.2}>
                   <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
                     These terms govern your use of our website and services. Please read them carefully before engaging with Craefto.

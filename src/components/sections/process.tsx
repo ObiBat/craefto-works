@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { SectionLabel } from "@/components/ui/section-label";
 import { AnimatedSection, StaggeredGrid, StaggeredItem } from "@/components/ui/motion";
 import { processSteps } from "@/lib/constants";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 export function Process() {
   return (
@@ -16,10 +17,8 @@ export function Process() {
           <AnimatedSection>
             <div className="flex flex-col gap-4">
               <SectionLabel number="04" label="Process" />
-              <h2 className="font-semibold tracking-tight">
-                How we work
-              </h2>
-              <p className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-2xl leading-relaxed mt-2">
+              <h2 className="font-semibold tracking-tight"><RevealText text={"How we work"} /></h2>
+              <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-2xl leading-relaxed mt-2">
                 A clear, collaborative process from discovery to delivery.
               </p>
             </div>

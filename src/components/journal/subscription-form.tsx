@@ -80,7 +80,7 @@ function SubscriptionFormInner() {
           </svg>
         </div>
         <p className="text-[hsl(var(--color-foreground))] font-medium mb-2">
-          You're subscribed!
+          You&apos;re subscribed!
         </p>
         <p className="text-[hsl(var(--color-foreground-muted))] text-sm">
           Welcome to the Craefto Journal. Check your inbox for a welcome email.
@@ -108,7 +108,7 @@ function SubscriptionFormInner() {
           </svg>
         </div>
         <p className="text-[hsl(var(--color-foreground))] font-medium mb-2">
-          You're already subscribed
+          You&apos;re already subscribed
         </p>
         <p className="text-[hsl(var(--color-foreground-muted))] text-sm">
           Thanks for being part of the Craefto community.
@@ -128,7 +128,7 @@ function SubscriptionFormInner() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
-          className="flex-1 px-5 py-3.5 rounded-xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))] placeholder:text-[hsl(var(--color-foreground-muted))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))] focus:border-transparent shadow-sm transition-shadow disabled:opacity-50"
+          className="flex-1 px-5 py-3.5 rounded-xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))] placeholder:text-[hsl(var(--color-foreground-muted))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))] focus:border-transparent transition-shadow disabled:opacity-50"
           required
           disabled={status === "loading"}
         />

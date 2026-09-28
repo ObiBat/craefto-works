@@ -21,31 +21,28 @@ const defaultPreferences: ConsentPreferences = {
   marketing: false,
 };
 
+// Saved preferences for the current consent version, if any (client only).
+function readSavedPreferences(): ConsentPreferences | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const saved = JSON.parse(localStorage.getItem(CONSENT_COOKIE_NAME) || "null");
+    return saved?.version === CONSENT_VERSION ? saved.preferences : null;
+  } catch {
+    return null;
+  }
+}
+
 export function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
-  const [preferences, setPreferences] = useState<ConsentPreferences>(defaultPreferences);
+  const [preferences, setPreferences] = useState<ConsentPreferences>(() => readSavedPreferences() ?? defaultPreferences);
 
   // Check for existing consent on mount
+  // No consent for the current version yet: ask, after a short delay.
   useEffect(() => {
-    const savedConsent = localStorage.getItem(CONSENT_COOKIE_NAME);
-    if (!savedConsent) {
-      // Show banner after a short delay for better UX
-      const timer = setTimeout(() => setShowBanner(true), 1500);
-      return () => clearTimeout(timer);
-    } else {
-      try {
-        const parsed = JSON.parse(savedConsent);
-        if (parsed.version === CONSENT_VERSION) {
-          setPreferences(parsed.preferences);
-        } else {
-          // Version changed, re-consent needed
-          setTimeout(() => setShowBanner(true), 1500);
-        }
-      } catch {
-        setTimeout(() => setShowBanner(true), 1500);
-      }
-    }
+    if (readSavedPreferences()) return;
+    const timer = setTimeout(() => setShowBanner(true), 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   // Listen for openCookiePreferences event from footer

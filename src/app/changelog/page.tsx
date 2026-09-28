@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { PageTransition, AnimatedSection, HeroText } from "@/components/ui";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -357,40 +358,32 @@ function CategoryPill({ category }: { category: ChangeCategory }) {
 
 function VersionBadge({ version }: { version: string }) {
   return (
-    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-medium border border-[hsl(var(--color-accent))] text-[hsl(var(--color-accent))] bg-[hsl(var(--color-accent))]/5">
+    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-medium text-[hsl(var(--color-accent))] bg-[hsl(var(--color-accent))]/10">
       v{version}
     </span>
   );
 }
 
-function TimelineEntry({ entry, isFirst, isLast }: { entry: ChangelogEntry; isFirst: boolean; isLast: boolean }) {
+function TimelineEntry({ entry }: { entry: ChangelogEntry }) {
   const hasMilestone = !!entry.milestone;
 
   return (
     <AnimatedSection>
-      <div className="relative grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
-        {/* Timeline line (desktop) */}
-        <div className="hidden md:block absolute left-[200px] top-0 bottom-0 w-px">
-          {!isFirst && (
-            <div className="absolute left-0 -top-8 w-px h-8 bg-[hsl(var(--color-border))]" />
-          )}
-          <div className={`absolute left-0 top-0 w-px bg-[hsl(var(--color-border))] ${isLast ? 'h-6' : 'h-full'}`} />
-          {!isLast && (
-            <div className="absolute left-0 bottom-0 w-px h-8 bg-[hsl(var(--color-border))]" />
-          )}
-        </div>
-
-        {/* Date column */}
-        <div className="md:text-right md:pr-8 relative">
-          <div className="hidden md:block absolute right-[-4.5px] top-[7px] w-[9px] h-[9px] rounded-full border-2 border-[hsl(var(--color-accent))] bg-[hsl(var(--color-background))]" />
-          <p className="font-mono text-sm text-[hsl(var(--color-foreground-muted))] tracking-tight">
-            {entry.date}
-          </p>
-          {entry.version && (
-            <div className="mt-2">
-              <VersionBadge version={entry.version} />
-            </div>
-          )}
+      <div className="changelog-entry relative grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
+        {/* Date column: stays beside the entry while you read it; its dot
+            fills in as the entry arrives (no timeline line). */}
+        <div className="md:text-right md:pr-8">
+          <div className="relative md:sticky md:top-28">
+            <span className="entry-dot hidden md:block absolute -right-[37px] top-[6px] w-2.5 h-2.5 rounded-full bg-[hsl(var(--color-accent))]" aria-hidden="true" />
+            <p className="font-mono text-sm text-[hsl(var(--color-foreground-muted))] tracking-tight">
+              {entry.date}
+            </p>
+            {entry.version && (
+              <div className="mt-2">
+                <VersionBadge version={entry.version} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Content column */}
@@ -407,7 +400,7 @@ function TimelineEntry({ entry, isFirst, isLast }: { entry: ChangelogEntry; isFi
             {entry.changes.map((change, i) => (
               <div
                 key={i}
-                className="group rounded-xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))] p-5 transition-colors duration-200 hover:border-[hsl(var(--color-accent))]/40"
+                className="group rounded-2xl bg-[hsl(var(--color-background-subtle))] p-6 transition-colors duration-300 hover:bg-[hsl(var(--color-accent-subtle))]"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                   <h4 className="font-medium text-[hsl(var(--color-foreground))]">
@@ -455,7 +448,7 @@ export default function ChangelogPage() {
       <PageTransition>
         <main id="main-content" className="pt-20">
           {/* Hero */}
-          <Section spacing="sm" className="pb-8 md:pb-6">
+          <Section spacing="sm" className="pb-12 md:pb-20">
             <Container>
               <div className="max-w-3xl">
                 <nav className="mb-6 md:mb-4" aria-label="Breadcrumb">
@@ -470,11 +463,7 @@ export default function ChangelogPage() {
                   </ol>
                 </nav>
 
-                <HeroText>
-                  <h1 className="font-semibold tracking-tight mb-4">
-                    Changelog
-                  </h1>
-                </HeroText>
+                <h1 className="font-semibold tracking-tight mb-4"><RevealText text={"Changelog"} mode="load" /></h1>
                 <HeroText delay={0.1}>
                   <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
                     Every improvement, feature, and refinement we ship. Building in public since January 2026.
@@ -510,12 +499,10 @@ export default function ChangelogPage() {
 
               {/* Timeline */}
               <div className="mt-10 md:mt-14 space-y-8 md:space-y-12">
-                {changelog.map((entry, i) => (
+                {changelog.map((entry) => (
                   <TimelineEntry
                     key={entry.date}
                     entry={entry}
-                    isFirst={i === 0}
-                    isLast={i === changelog.length - 1}
                   />
                 ))}
               </div>
@@ -529,10 +516,8 @@ export default function ChangelogPage() {
                 <div className="rounded-2xl bg-[hsl(var(--color-background-subtle))] border border-[hsl(var(--color-border))] p-8 sm:p-10 lg:p-12">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                     <div className="max-w-xl">
-                      <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-[hsl(var(--color-foreground))] mb-2">
-                        Want to see what we can build for you?
-                      </h2>
-                      <p className="text-[hsl(var(--color-foreground-muted))] leading-relaxed">
+                      <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-[hsl(var(--color-foreground))] mb-2"><RevealText text={"Want to see what we can build for you?"} /></h2>
+                      <p data-ink className="text-[hsl(var(--color-foreground-muted))] leading-relaxed">
                         Every line in this changelog is proof of how we work: iterative, precise, and always improving.
                       </p>
                     </div>

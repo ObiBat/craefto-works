@@ -1,4 +1,7 @@
 import { Suspense } from "react";
+import { StickyBar } from "@/components/editorial/sticky-bar";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase";
 import { Header, Footer, Section, Container } from "@/components/layout";
@@ -7,27 +10,24 @@ import { ArticleCard } from "@/components/journal/article-card";
 import { JournalSearchInline } from "@/components/journal/search-inline";
 import { SubscriptionForm } from "@/components/journal/subscription-form";
 import type { ArticleCard as ArticleCardType, Pillar } from "@/lib/journal-types";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 // ISR: Revalidate every 60 seconds
 export const revalidate = 60;
 
-export const metadata = {
-  title: "Journal | Craefto",
-  description:
-    "Insights on systems thinking, applied AI, product craft, and creative technology from the Craefto team.",
-  alternates: {
-    canonical: "https://www.craefto.com/journal",
-    types: {
-      "application/rss+xml": "https://www.craefto.com/journal/feed",
-      "application/atom+xml": "https://www.craefto.com/journal/atom",
-    },
-  },
-  openGraph: {
-    title: "Journal | Craefto",
+export const metadata: Metadata = {
+  ...pageMetadata({
+    title: "Journal",
     description:
-      "Insights on systems thinking, applied AI, product craft, and creative technology.",
-    url: "https://www.craefto.com/journal",
-    type: "website",
+      "Insights on systems thinking, applied AI, product craft and creative technology from the Craefto team.",
+    path: "/journal",
+  }),
+  alternates: {
+    canonical: "/journal",
+    types: {
+      "application/rss+xml": "/journal/feed",
+      "application/atom+xml": "/journal/atom",
+    },
   },
 };
 
@@ -127,11 +127,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
                 </ol>
               </nav>
 
-              <HeroText>
-                <h1 className="font-semibold tracking-tight mb-6">
-                  Journal
-                </h1>
-              </HeroText>
+              <h1 className="font-semibold tracking-tight mb-6"><RevealText text={"Journal"} mode="load" /></h1>
               <HeroText delay={0.1}>
                 <p className="text-xl text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
                   Insights on systems thinking, applied AI, product craft, and creative
@@ -143,7 +139,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         </Section>
 
         {/* Pillar Filters - Sticky */}
-        <div className="sticky top-16 z-30 bg-[hsl(var(--color-background))]/95 backdrop-blur-md border-b border-[hsl(var(--color-border))]">
+        <StickyBar top={64} className="sticky top-16 z-30 bg-[hsl(var(--color-background))]/95 backdrop-blur-md">
           <Container>
             <div className="flex items-center justify-between gap-3 py-2 sm:py-3">
               <nav className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1" aria-label="Content pillars">
@@ -166,7 +162,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
               </div>
             </div>
           </Container>
-        </div>
+        </StickyBar>
 
         {/* Articles */}
         <Section spacing="md">
@@ -221,7 +217,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         </Section>
 
         {/* Newsletter CTA */}
-        <Section spacing="lg" className="bg-[hsl(var(--color-background-muted))]">
+        <Section spacing="lg">
           <Container>
             <AnimatedSection variant="scaleIn">
               <div className="max-w-2xl mx-auto text-center">
@@ -230,10 +226,8 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h2 className="font-semibold tracking-tight text-[hsl(var(--color-foreground))] mb-4">
-                  Stay in the loop
-                </h2>
-                <p className="text-[hsl(var(--color-foreground-muted))] mb-10 max-w-md mx-auto">
+                <h2 className="font-semibold tracking-tight text-[hsl(var(--color-foreground))] mb-4"><RevealText text={"Stay in the loop"} /></h2>
+                <p data-ink className="text-[hsl(var(--color-foreground-muted))] mb-10 max-w-md mx-auto">
                   Get our latest insights on AI, product strategy, and creative
                   technology delivered to your inbox.
                 </p>

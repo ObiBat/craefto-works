@@ -5,6 +5,7 @@ import Image from "next/image";
 import { createServerClient } from "@/lib/supabase";
 import { ArticleCard } from "@/components/journal/article-card";
 import type { ArticleCard as ArticleCardType } from "@/lib/journal-types";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 // ISR: Revalidate every 5 minutes
 export const revalidate = 300;
@@ -84,7 +85,7 @@ export async function generateMetadata({ params }: AuthorPageProps): Promise<Met
   }
 
   return {
-    title: `${author.name} | Craefto Journal`,
+    title: { absolute: `${author.name} | Craefto Journal` },
     description: author.bio || `Articles by ${author.name} on Craefto Journal.`,
     alternates: {
       canonical: `https://www.craefto.com/journal/author/${author.slug}`,
@@ -150,7 +151,7 @@ export default async function AuthorPage({ params }: AuthorPageProps) {
             {/* Info */}
             <div className="flex-1">
               <h1 className="font-heading text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-2">
-                {author.name}
+                <RevealText text={author.name} mode="load" />
               </h1>
               {author.role && (
                 <p className="text-lg text-foreground-muted mb-4">{author.role}</p>

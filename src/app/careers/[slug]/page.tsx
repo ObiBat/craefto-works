@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${role.title} | Careers`,
+    title: { absolute: `${role.title} | Careers | Craefto` },
     description: role.description,
     openGraph: {
       title: `${role.title} | Careers | Craefto`,

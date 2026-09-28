@@ -3,14 +3,19 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { CodeBlock } from "./code-block";
 
-// Pull Quote Component - Centered editorial style
+// Pull Quote Component - Centered editorial style: a large accent quote mark
+// sets it apart (no rules), and the words ink in as you scroll to them.
 export function PullQuote({ children }: { children: React.ReactNode }) {
   return (
-    <blockquote className="my-16 md:my-20 py-10 border-y border-border">
-      <div className="font-heading text-[1.375rem] md:text-[1.625rem] leading-[1.45] text-foreground max-w-[42ch] mx-auto text-center">
-        <span className="text-accent/60">&ldquo;</span>
+    <blockquote className="my-20 md:my-28 max-w-[42ch] mx-auto text-center">
+      <span aria-hidden="true" className="block font-heading text-[5rem] md:text-[6.5rem] leading-[0.7] text-accent/30 select-none">
+        &ldquo;
+      </span>
+      <div
+        data-ink
+        className="font-heading text-[1.375rem] md:text-[1.75rem] leading-[1.4] tracking-[-0.01em] text-foreground [&_p]:my-0 [&_p]:max-w-none [&_p]:[font-size:inherit] [&_p]:[line-height:inherit] [&_p]:[color:inherit] [&_p]:[letter-spacing:inherit]"
+      >
         {children}
-        <span className="text-accent/60">&rdquo;</span>
       </div>
     </blockquote>
   );
@@ -191,7 +196,7 @@ function CustomImage({
 }: React.ImgHTMLAttributes<HTMLImageElement>) {
   return (
     <figure className="my-10 md:my-14 max-w-2xl mx-auto">
-      <div className="overflow-hidden rounded-lg bg-background-muted">
+      <div data-unmask className="overflow-hidden rounded-lg bg-background-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
@@ -267,23 +272,32 @@ export const mdxComponents = {
       {children}
     </li>
   ),
+  // Section break: three dots, the typographic way, instead of a rule.
   hr: () => (
-    <hr className="my-16 border-0 h-px bg-gradient-to-r from-transparent via-border-strong to-transparent" />
+    <div role="separator" className="my-16 md:my-20 flex items-center justify-center gap-3">
+      <span className="w-1.5 h-1.5 rounded-full bg-accent/45" />
+      <span className="w-1.5 h-1.5 rounded-full bg-accent/45" />
+      <span className="w-1.5 h-1.5 rounded-full bg-accent/45" />
+    </div>
   ),
   table: ({ children, ...props }: React.HTMLAttributes<HTMLTableElement>) => (
-    <div className="my-8 overflow-x-auto rounded-lg border border-border">
-      <table className="w-full border-collapse text-base" {...props}>
+    <div className="my-10 overflow-x-auto">
+      {/* Rows read by soft alternating tiles rather than rules. */}
+      <table
+        className="w-full border-separate border-spacing-y-1 text-base [&_tbody_tr:nth-child(odd)_td]:bg-background-subtle [&_tbody_td:first-child]:rounded-l-xl [&_tbody_td:last-child]:rounded-r-xl"
+        {...props}
+      >
         {children}
       </table>
     </div>
   ),
   th: ({ children, ...props }: React.HTMLAttributes<HTMLTableCellElement>) => (
-    <th className="border-b border-border bg-background-subtle px-5 py-3 text-left font-medium text-sm uppercase font-mono tracking-[0.06em] text-foreground-muted" {...props}>
+    <th className="px-5 pb-3 text-left font-medium text-xs uppercase font-mono tracking-[0.06em] text-foreground-subtle" {...props}>
       {children}
     </th>
   ),
   td: ({ children, ...props }: React.HTMLAttributes<HTMLTableCellElement>) => (
-    <td className="border-b border-border-subtle px-5 py-4 text-foreground/90" {...props}>
+    <td className="px-5 py-4 text-foreground/90" {...props}>
       {children}
     </td>
   ),

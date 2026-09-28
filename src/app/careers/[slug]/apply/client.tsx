@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageTransition, AnimatedSection } from "@/components/ui";
 import type { Role, ApplicationQuestion } from "@/lib/careers";
 import { supabase } from "@/lib/supabase";
+import { RevealText } from "@/components/editorial/reveal-text";
 
 // User-facing steps. The submission spinner is rendered as an overlay rather
 // than a fake step so the progress indicator and step counter stay accurate.
@@ -68,7 +69,7 @@ function chipClass(selected: boolean): string {
   if (selected) {
     return `${base} bg-[hsl(var(--color-foreground))] border-[hsl(var(--color-foreground))] text-[hsl(var(--color-background))] hover:opacity-90`;
   }
-  return `${base} bg-transparent border-[hsl(var(--color-border))] text-[hsl(var(--color-foreground-muted))] hover:border-[hsl(var(--color-foreground))] hover:text-[hsl(var(--color-foreground))]`;
+  return `${base} bg-[hsl(var(--color-background-muted))] border-[hsl(var(--color-border))] text-[hsl(var(--color-foreground-muted))] hover:bg-[hsl(var(--color-border))] hover:text-[hsl(var(--color-foreground))]`;
 }
 
 // ── Main component ──
@@ -403,7 +404,7 @@ export function ApplicationFormClient({ role }: { role: Role }) {
                 className="font-serif tracking-tight text-[hsl(var(--color-foreground))]"
                 style={{ fontSize: "clamp(1.6rem, 2.6vw, 2rem)", lineHeight: 1.15, letterSpacing: "-0.01em" }}
               >
-                Apply for {role.title}
+                <RevealText text={`Apply for ${role.title}`} mode="load" />
               </h1>
               <div className="flex items-center gap-2">
                 <Badge variant="accent">{role.department}</Badge>
@@ -622,7 +623,7 @@ function ProgressIndicator({
               {/* Connector line between circles */}
               {i < STEPS.length - 1 && (
                 <div className="flex-1 h-0.5 mx-1.5">
-                  <div className="h-full bg-[hsl(var(--color-border))] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full overflow-hidden">
                     <motion.div
                       className="h-full bg-[hsl(var(--color-foreground))]/30 rounded-full"
                       initial={false}
@@ -1179,7 +1180,7 @@ function CompensationField({
 
   return (
     <div
-      className={`flex items-stretch rounded-xl border overflow-hidden transition-all duration-300 ease-out ${
+      className={`flex items-stretch rounded-xl border overflow-hidden bg-[hsl(var(--color-background-muted))]/70 hover:bg-[hsl(var(--color-background-muted))] transition-all duration-300 ease-out ${
         error
           ? "border-red-500/60 focus-within:border-red-500 focus-within:ring-4 focus-within:ring-red-500/15"
           : "border-[hsl(var(--color-border))] hover:border-[hsl(var(--color-foreground))]/40 focus-within:border-[hsl(var(--color-foreground))] focus-within:ring-4 focus-within:ring-[hsl(var(--color-foreground))]/10 focus-within:shadow-[0_4px_24px_-8px_hsl(var(--color-foreground)/0.15)]"
@@ -1193,14 +1194,14 @@ function CompensationField({
         onChange={(e) => onChange(buildValue(e.target.value, currency, period))}
         placeholder="0"
         aria-label="Amount"
-        className="w-28 flex-shrink-0 px-4 py-4 bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))] placeholder-[hsl(var(--color-foreground-subtle))] focus:outline-none text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-28 flex-shrink-0 px-4 py-4 bg-transparent text-[hsl(var(--color-foreground))] placeholder-[hsl(var(--color-foreground-subtle))] focus:outline-none text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       <div className="w-px bg-[hsl(var(--color-border))]" />
       <select
         value={currency}
         onChange={(e) => onChange(buildValue(amount, e.target.value, period))}
         aria-label="Currency"
-        className="px-3 py-4 bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))] text-sm focus:outline-none cursor-pointer appearance-none"
+        className="px-3 py-4 bg-transparent text-[hsl(var(--color-foreground))] text-sm focus:outline-none cursor-pointer appearance-none"
         style={{ backgroundImage: "none" }}
       >
         {CURRENCIES.map((c) => (
@@ -1212,7 +1213,7 @@ function CompensationField({
         value={period}
         onChange={(e) => onChange(buildValue(amount, currency, e.target.value))}
         aria-label="Period"
-        className="flex-1 px-3 py-4 bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))] text-sm focus:outline-none cursor-pointer appearance-none"
+        className="flex-1 px-3 py-4 bg-transparent text-[hsl(var(--color-foreground))] text-sm focus:outline-none cursor-pointer appearance-none"
         style={{ backgroundImage: "none" }}
       >
         {PERIODS.map((p) => (
@@ -1324,7 +1325,7 @@ function FileUploadZone({
   return (
     <label
       htmlFor={id}
-      className="flex flex-col items-center justify-center gap-3 min-h-[160px] border-2 border-dashed border-[hsl(var(--color-border))] rounded-xl cursor-pointer hover:border-[hsl(var(--color-foreground))] transition-colors duration-200"
+      className="flex flex-col items-center justify-center gap-3 min-h-[160px] border-2 border-dashed border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-muted))] hover:bg-[hsl(var(--color-border))] rounded-xl cursor-pointer hover:border-[hsl(var(--color-foreground))] transition-colors duration-200"
     >
       <svg className="w-10 h-10 text-[hsl(var(--color-foreground-subtle))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
