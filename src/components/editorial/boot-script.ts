@@ -7,15 +7,16 @@
  *    so the page is always readable without it.
  * 3. Watches [data-reveal] elements and marks them [data-in] once they scroll
  *    into view. A MutationObserver picks up elements from client navigation.
- * 4. Logo intro, once per session (?intro replays): html.logo-intro draws the
- *    header logo in place; on the home page html.logo-intro-home runs the full
- *    intro instead, and html.intro-delay holds the hero until the veil opens.
+ * 4. Logo intro on every full page load (not on in-site navigation, never
+ *    with reduced motion): html.logo-intro draws the header logo in place; on
+ *    the home page html.logo-intro-home runs the full construction intro
+ *    instead, and html.intro-delay holds the hero until the veil opens.
  */
 export const editorialBootScript = `(function(){
 var d=document.documentElement;
 function mark(){var p=location.pathname;d.classList.toggle('site',!/^\\/(admin|portal)(\\/|$)/.test(p)&&location.hostname.indexOf('project-portal')!==0);}
 mark();window.__cwMarkSite=mark;
-try{var q=location.search.indexOf('intro')>-1;if(d.classList.contains('site')&&(q||!sessionStorage.getItem('cw-intro'))&&!matchMedia('(prefers-reduced-motion: reduce)').matches){sessionStorage.setItem('cw-intro','1');var h=location.pathname==='/';d.classList.add('logo-intro');if(h)d.classList.add('logo-intro-home','intro-delay');setTimeout(function(){d.classList.remove('logo-intro','logo-intro-home');},h?2450:1750);if(h)setTimeout(function(){d.classList.remove('intro-delay');},5200);}}catch(e){}
+try{if(d.classList.contains('site')&&!matchMedia('(prefers-reduced-motion: reduce)').matches){var h=location.pathname==='/';d.classList.add('logo-intro');if(h)d.classList.add('logo-intro-home','intro-delay');setTimeout(function(){d.classList.remove('logo-intro','logo-intro-home');},h?3100:1750);if(h)setTimeout(function(){d.classList.remove('intro-delay');},6800);}}catch(e){}
 d.classList.add('js');
 if(!('IntersectionObserver' in window)){d.classList.remove('js');return;}
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.setAttribute('data-in','');io.unobserve(e.target);}});},{rootMargin:'0px 0px -12% 0px',threshold:0});

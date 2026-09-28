@@ -1708,7 +1708,8 @@ html:has([data-subbar][data-scrolled]) .site-header::after {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   LOGO INTRO: first visit per session (classes set by the boot script)
+   LOGO INTRO: every full page load (classes set by the boot script;
+   skipped with reduced motion)
    ───────────────────────────────────────────────────────────── */
 
 /* The mark (<LogoMark>): fill and pens stacked; at rest only the fill shows. */
@@ -1725,11 +1726,10 @@ html:has([data-subbar][data-scrolled]) .site-header::after {
   stroke-width: var(--pen, 110);
 }
 
-/* The draw. Two pens trace the outline from both tail ends at once (the
-   second pen is the first turned a half-turn), the leaf counters follow, and
-   the mark turns a half-turn into place, landing on itself because the mark
-   is symmetric. Then the fill blooms from the crossing point as the pens
-   fade. */
+/* Other pages: the header logo draws itself in place. Two pens trace the
+   outline from both tail ends (the second is the first turned a half-turn),
+   the counters follow, the mark turns a half-turn into place (landing on
+   itself: the mark is symmetric), and the fill blooms from the centre. */
 @keyframes mark-turn {
   from {
     rotate: -180deg;
@@ -1773,27 +1773,32 @@ html:has([data-subbar][data-scrolled]) .site-header::after {
     clip-path: circle(72% at 50% 50%);
   }
 }
-:is(html.logo-intro:not(.logo-intro-home) .site-header, html.logo-intro-home .brand-intro) .logo-mark {
+html.logo-intro:not(.logo-intro-home) .site-header .logo-mark {
   animation: mark-turn 1400ms cubic-bezier(0.25, 1, 0.5, 1) 80ms both;
 }
-:is(html.logo-intro:not(.logo-intro-home) .site-header, html.logo-intro-home .brand-intro) .mark-pens {
+html.logo-intro:not(.logo-intro-home) .site-header .mark-pens {
   animation: mark-pens-fade 1550ms linear 80ms both;
 }
-:is(html.logo-intro:not(.logo-intro-home) .site-header, html.logo-intro-home .brand-intro) .mark-pen-outer {
+html.logo-intro:not(.logo-intro-home) .site-header .mark-pen-outer {
   stroke-dasharray: 0.5 1;
   animation: mark-pen-outer 1100ms cubic-bezier(0.5, 0, 0.2, 1) 120ms both;
 }
-:is(html.logo-intro:not(.logo-intro-home) .site-header, html.logo-intro-home .brand-intro) .mark-pen-counter {
+html.logo-intro:not(.logo-intro-home) .site-header .mark-pen-counter {
   stroke-dasharray: 1 1;
   animation: mark-pen-counter 850ms cubic-bezier(0.5, 0, 0.2, 1) 380ms both;
 }
-:is(html.logo-intro:not(.logo-intro-home) .site-header, html.logo-intro-home .brand-intro) .mark-fill {
+html.logo-intro:not(.logo-intro-home) .site-header .mark-fill {
   animation: mark-bloom 560ms cubic-bezier(0.25, 1, 0.5, 1) 1020ms both;
 }
 
-/* Home: the mark draws large in the centre over a veil, the veil parts along
-   the mark's diagonal (its halves drifting out toward the tails), and the
-   mark glides into the header slot, where the real logo takes over. */
+/* Home: the construction intro (<BrandIntro>). Drawn at full size and only
+   ever scaled down, so it stays sharp at any pixel density. Timeline:
+   0.0s  centre point, axes to the corners, square and circles (sage hairlines)
+   0.5s  two mirrored pens trace the outline from the tails, stylus points on
+         their tips; the counters follow from the leaf tips
+   1.3s  the fill blooms from the centre, the construction dissolves
+   1.85s a pass of light; a hairline cut runs along the leaf diagonal
+   2.15s the veil parts along the cut, the mark glides into the header */
 .brand-intro {
   display: none;
 }
@@ -1804,75 +1809,234 @@ html.logo-intro-home .brand-intro {
   z-index: 100;
   pointer-events: none;
   --intro-gutter: 16px;
-  --intro-scale: 3.6;
-  --pen: 55;
+  --stage: 260px;
+  --stage-k: 0.1538462; /* 40px header logo ÷ stage size */
+  --hair: 1.5; /* construction hairlines, viewBox units (about 1px) */
+  --pen: 31; /* outline pens, path units (about 2px) */
 }
 @media (min-width: 640px) {
   html.logo-intro-home .brand-intro {
     --intro-gutter: 24px;
+    --stage: 340px;
+    --stage-k: 0.1176471;
+    --hair: 1.15;
+    --pen: 27;
   }
 }
 @media (min-width: 1024px) {
   html.logo-intro-home .brand-intro {
     --intro-gutter: 32px;
-    --intro-scale: 4.6;
+    --stage: 420px;
+    --stage-k: 0.0952381;
+    --hair: 0.95;
+    --pen: 25;
   }
 }
+
+/* The veil, in two halves meeting on a 45° line through the centre (the
+   mark's leaf diagonal). They overlap by a couple of pixels, so no seam
+   shows until the cut. */
 .brand-intro-veil {
   position: absolute;
   inset: 0;
   background: hsl(var(--color-background));
 }
-/* The halves overlap by a couple of pixels, so no seam shows before they part. */
 .brand-intro-veil-a {
-  clip-path: polygon(0 0, calc(100% + 3px) 0, 0 calc(100% + 3px));
-  animation: intro-veil-a 820ms cubic-bezier(0.65, 0, 0.35, 1) 1480ms both;
+  clip-path: polygon(0 0, calc(50vw + 50vh + 2px) 0, 0 calc(50vw + 50vh + 2px));
+  animation: intro-veil-a 800ms cubic-bezier(0.7, 0, 0.3, 1) 2150ms both;
 }
 .brand-intro-veil-b {
-  clip-path: polygon(100% -3px, 100% 100%, -3px 100%);
-  animation: intro-veil-b 820ms cubic-bezier(0.65, 0, 0.35, 1) 1480ms both;
+  clip-path: polygon(calc(50vw + 50vh - 2px) 0, 400vw 0, 400vw 400vh, 0 400vh, 0 calc(50vw + 50vh - 2px));
+  animation: intro-veil-b 800ms cubic-bezier(0.7, 0, 0.3, 1) 2150ms both;
 }
 @keyframes intro-veil-a {
   to {
-    transform: translate3d(-62%, -62%, 0);
+    transform: translate3d(calc(-25vw - 25vh - 48px), calc(-25vw - 25vh - 48px), 0);
   }
 }
 @keyframes intro-veil-b {
   to {
-    transform: translate3d(62%, 62%, 0);
+    transform: translate3d(calc(25vw + 25vh + 48px), calc(25vw + 25vh + 48px), 0);
   }
 }
-/* Laid out exactly where the header logo sits (same container and gutter),
-   and started from the centre of the screen, enlarged. */
-.brand-intro-slot {
+.brand-intro-seam {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 300vmax;
+  height: 1px;
+  background: hsl(var(--color-accent) / 0.55);
+  transform: translate(-50%, -50%) rotate(-45deg) scaleX(0);
+  animation: intro-seam 900ms cubic-bezier(0.65, 0, 0.35, 1) 1900ms both;
+}
+@keyframes intro-seam {
+  0% {
+    transform: translate(-50%, -50%) rotate(-45deg) scaleX(0);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(-50%, -50%) rotate(-45deg) scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(-45deg) scaleX(1);
+    opacity: 0;
+  }
+}
+
+/* The stage sits where the header logo does (same container and gutter),
+   starts centred on screen at full size and shrinks into the header. */
+.brand-intro-stage {
   position: absolute;
   top: 12px;
   left: calc(max(0px, (100% - 87.5rem) / 2) + var(--intro-gutter));
-  width: 40px;
-  height: 40px;
-  color: hsl(var(--color-foreground));
-  animation: intro-fly 860ms cubic-bezier(0.65, 0, 0.35, 1) 1420ms both;
+  width: var(--stage);
+  height: var(--stage);
+  transform-origin: 0 0;
+  will-change: transform;
+  animation: intro-fly 820ms cubic-bezier(0.65, 0, 0.35, 1) 2200ms both;
 }
 @keyframes intro-fly {
   from {
-    translate: calc(50vw - (max(0px, (100vw - 87.5rem) / 2) + var(--intro-gutter) + 20px)) calc(50vh - 32px);
-    scale: var(--intro-scale);
+    translate: calc(50vw - max(0px, (100vw - 87.5rem) / 2) - var(--intro-gutter) - var(--stage) / 2) calc(50vh - 12px - var(--stage) / 2);
+    scale: 1;
   }
   to {
     translate: 0 0;
-    scale: 1;
+    scale: var(--stage-k);
   }
 }
+.brand-intro-art {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  color: hsl(var(--color-foreground));
+  animation: intro-turn 1900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.brand-intro-art > svg {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+@keyframes intro-turn {
+  from {
+    rotate: -90deg;
+  }
+  to {
+    rotate: 0deg;
+  }
+}
+
+/* Construction */
+.intro-construct {
+  stroke: hsl(var(--color-accent));
+  stroke-width: var(--hair);
+  opacity: 0.6;
+  animation: intro-dissolve 520ms ease 1450ms both;
+}
+@keyframes intro-dissolve {
+  to {
+    opacity: 0;
+    scale: 1.035;
+  }
+}
+.intro-centre {
+  fill: hsl(var(--color-accent));
+  stroke: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: intro-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes intro-pop {
+  from {
+    scale: 0;
+  }
+}
+.intro-ray,
+.intro-square,
+.intro-ring-outer,
+.intro-ring-inner,
+.intro-pen-counter {
+  stroke-dasharray: 1 1;
+}
+.intro-ray {
+  animation: intro-draw 460ms cubic-bezier(0.25, 1, 0.5, 1) 60ms both;
+}
+.intro-ring-outer {
+  animation: intro-draw 760ms cubic-bezier(0.45, 0, 0.2, 1) 150ms both;
+}
+.intro-square {
+  animation: intro-draw 700ms cubic-bezier(0.45, 0, 0.2, 1) 220ms both;
+}
+.intro-ring-inner {
+  animation: intro-draw 680ms cubic-bezier(0.45, 0, 0.2, 1) 300ms both;
+}
+@keyframes intro-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Pens and their stylus points */
+.intro-pens {
+  stroke: currentColor;
+  animation: intro-fade-out 380ms ease 1500ms both;
+}
+@keyframes intro-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+.intro-pen-outer,
+.intro-pen-counter {
+  stroke-width: var(--pen);
+}
+.intro-pen-outer {
+  stroke-dasharray: 0.5 1;
+  animation: mark-pen-outer 1080ms cubic-bezier(0.5, 0, 0.2, 1) 480ms both;
+}
+.intro-pen-counter {
+  animation: intro-draw 720ms cubic-bezier(0.5, 0, 0.2, 1) 780ms both;
+}
+.intro-tip {
+  fill: hsl(var(--color-accent));
+  stroke: none;
+}
+
+/* Fill bloom and the pass of light */
+.intro-fill {
+  clip-path: circle(0% at 49.9% 49.9%);
+  animation: intro-bloom 560ms cubic-bezier(0.25, 1, 0.5, 1) 1320ms both;
+}
+@keyframes intro-bloom {
+  to {
+    clip-path: circle(75% at 49.9% 49.9%);
+  }
+}
+.intro-sheen {
+  translate: -140px 0;
+  animation: intro-sheen 640ms cubic-bezier(0.45, 0, 0.25, 1) 1850ms both;
+}
+@keyframes intro-sheen {
+  to {
+    translate: 520px 0;
+  }
+}
+
 /* While the intro plays, the header's own logo waits in the wings and the
    hero holds until the veil opens. */
 html.logo-intro-home .site-header .logo-link {
   opacity: 0;
 }
 html.intro-delay [data-reveal-load] .rt-word > span {
-  animation-delay: calc(1650ms + var(--w, 0) * 110ms);
+  animation-delay: calc(2250ms + var(--w, 0) * 110ms);
 }
 html.intro-delay .hero-in {
-  animation-delay: calc(var(--hero-delay, 0s) + 1.55s);
+  animation-delay: calc(var(--hero-delay, 0s) + 2.1s);
 }
 @media (prefers-reduced-motion: reduce) {
   .brand-intro {
