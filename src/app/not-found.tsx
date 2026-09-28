@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { RevealText } from "@/components/editorial/reveal-text";
+
+// A 404 has no canonical URL of its own and is never indexed (this replaces
+// the site-wide "index, follow", which would contradict Next's own noindex).
+export const metadata: Metadata = {
+  title: { absolute: "Page not found | Craefto" },
+  robots: { index: false, follow: true },
+  alternates: { canonical: null },
+};
 
 export default function NotFound() {
   return (
