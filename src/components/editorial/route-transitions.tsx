@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
  * Soft page-to-page transitions using the browser's View Transitions API: the
  * old page settles out as the new one arrives, instead of cutting. Internal
  * link clicks are routed through `document.startViewTransition`; everything
- * else (new tabs, downloads, same-page anchors, admin and portal, links marked
+ * else (new tabs, downloads, same-page anchors, admin, links marked
  * `data-no-transition`, browsers without the API, reduced motion) navigates
  * exactly as before. Styles live in the editorial layer of globals.css.
  */
@@ -33,7 +33,7 @@ export function RouteTransitions() {
       if ((link.target && link.target !== "_self") || link.hasAttribute("download") || link.hasAttribute("data-no-transition")) return;
       const url = new URL(link.href, window.location.href);
       if (url.origin !== window.location.origin || url.pathname === window.location.pathname) return;
-      if (/^\/(admin|portal|api)(\/|$)/.test(url.pathname) || /^\/(admin|portal)(\/|$)/.test(window.location.pathname)) return;
+      if (/^\/(admin|api)(\/|$)/.test(url.pathname) || /^\/admin(\/|$)/.test(window.location.pathname)) return;
 
       // Runs in the capture phase, before Next's <Link> handler, which then
       // sees the event as handled and stands down.

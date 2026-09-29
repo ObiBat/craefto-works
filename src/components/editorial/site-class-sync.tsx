@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 /**
  * Keeps html.site correct after client-side navigation between the site and
- * admin/portal, and ends the logo intro as soon as you navigate away from the
+ * admin, and ends the logo intro as soon as you navigate away from the
  * page it played on (so the next page's logo and hero never wait for it).
  */
 export function SiteClassSync() {

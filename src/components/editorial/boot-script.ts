@@ -2,7 +2,7 @@
  * Inline boot script for the public site (runs in <head>, before first paint).
  *
  * 1. Marks public pages with html.site so the editorial styles (no rules or
- *    outlines, more air) never touch /admin or /portal, which share this layout.
+ *    outlines, more air) never touch /admin, which shares this layout.
  * 2. Adds html.js: text animations only hide text when JavaScript is running,
  *    so the page is always readable without it.
  * 3. Watches [data-reveal] elements and marks them [data-in] once they scroll
@@ -14,7 +14,7 @@
  */
 export const editorialBootScript = `(function(){
 var d=document.documentElement;
-function mark(){var p=location.pathname;d.classList.toggle('site',!/^\\/(admin|portal)(\\/|$)/.test(p)&&location.hostname.indexOf('project-portal')!==0);}
+function mark(){d.classList.toggle('site',!/^\\/admin(\\/|$)/.test(location.pathname));}
 mark();window.__cwMarkSite=mark;
 try{if(d.classList.contains('site')&&!matchMedia('(prefers-reduced-motion: reduce)').matches){var h=location.pathname==='/';d.classList.add('logo-intro');if(h)d.classList.add('logo-intro-home','intro-delay');setTimeout(function(){d.classList.remove('logo-intro','logo-intro-home');},h?3100:1750);if(h)setTimeout(function(){d.classList.remove('intro-delay');},6800);}}catch(e){}
 d.classList.add('js');
