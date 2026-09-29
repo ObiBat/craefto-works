@@ -205,11 +205,7 @@ export function Footer() {
               {" · "}
               <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
               {" · "}
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent('openCookiePreferences'))}
-                className="hover:text-white transition-colors"
-              >Cookies</button>
+              <Link href="/privacy#cookies" className="hover:text-white transition-colors">Cookies</Link>
             </p>
           </div>
         </div>

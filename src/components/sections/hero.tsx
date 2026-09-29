@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { HeroText, AnimatedCounter } from "@/components/ui/motion";
@@ -27,7 +26,9 @@ const SOCIAL_PROOF = [
 ];
 
 export function Hero() {
-  const [currentValueProp, setCurrentValueProp] = useState(0);
+  // The line on show, and the one leaving (none until the first change).
+  const [line, setLine] = useState({ current: 0, previous: -1 });
+  const paused = useRef(false);
   // The 3D artwork mounts once the browser is idle, so three.js never
   // competes with the first paint.
   const [showBlob, setShowBlob] = useState(false);
@@ -45,9 +46,12 @@ export function Hero() {
     };
   }, []);
 
+  // Rotate every 4s; hold while the pointer rests on it, and never with reduced motion.
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const interval = setInterval(() => {
-      setCurrentValueProp((prev) => (prev + 1) % VALUE_PROPS.length);
+      if (paused.current) return;
+      setLine(({ current }) => ({ current: (current + 1) % VALUE_PROPS.length, previous: current }));
     }, 4000);
     return () => clearInterval(interval);
   }, []);
@@ -79,21 +83,28 @@ export function Hero() {
 
           {/* Rotating value prop */}
           <HeroText delay={0.2}>
-            <div className="h-[56px] sm:h-[64px] overflow-hidden">
-              {/* initial={false}: the first line renders visible (server and first
-                  paint); only later changes animate. */}
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.p
-                  key={currentValueProp}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
+            {/* All lines share one grid cell; CSS lifts the old one out, then the
+                new one in (see .rotator in globals.css). The first line is the
+                one in the HTML, visible from the first paint. */}
+            <div
+              className="rotator h-[56px] sm:h-[64px] overflow-hidden"
+              onPointerEnter={() => {
+                paused.current = true;
+              }}
+              onPointerLeave={() => {
+                paused.current = false;
+              }}
+            >
+              {VALUE_PROPS.map((text, i) => (
+                <p
+                  key={text}
+                  data-state={i === line.current ? "active" : i === line.previous ? "leaving" : "idle"}
+                  aria-hidden={i !== line.current}
                   className="text-lg sm:text-xl max-w-lg leading-relaxed text-[hsl(var(--color-foreground-muted))]"
                 >
-                  {VALUE_PROPS[currentValueProp]}
-                </motion.p>
-              </AnimatePresence>
+                  {text}
+                </p>
+              ))}
             </div>
           </HeroText>
 

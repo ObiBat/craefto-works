@@ -1,34 +1,41 @@
 "use client";
 
-import { motion, useAnimation } from "framer-motion";
 import { useState } from "react";
 
 interface InteractiveLogoProps {
   className?: string;
 }
 
+/**
+ * GlobFam's flower mark: hover (or touch) turns it half a turn and lifts it,
+ * a tap spins it a full turn. CSS transitions do the motion (see .ilogo in
+ * globals.css); React only tracks the state.
+ */
 export function InteractiveLogo({ className = "" }: InteractiveLogoProps) {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const controls = useAnimation();
+  const [isPressed, setIsPressed] = useState(false);
+  const [spins, setSpins] = useState(0);
 
   const handleHoverStart = () => {
     setIsHovered(true);
     setHasInteracted(true);
-    controls.start({ scale: 1.1, rotate: 180 });
   };
 
   const handleHoverEnd = () => {
     setIsHovered(false);
-    controls.start({ scale: 1, rotate: 0 });
+    setIsPressed(false);
   };
 
   const handleTap = () => {
     setHasInteracted(true);
-    controls.start({ scale: 0.95, rotate: 360 }).then(() => {
-      controls.start({ scale: 1, rotate: 360 });
-    });
+    setSpins((n) => n + 1);
+    setIsPressed(true);
+    window.setTimeout(() => setIsPressed(false), 250);
   };
+
+  const turn = spins * 360 + (isHovered ? 180 : 0);
+  const scale = isPressed ? 0.95 : isHovered ? 1.1 : 1;
 
   return (
     <div
@@ -36,12 +43,9 @@ export function InteractiveLogo({ className = "" }: InteractiveLogoProps) {
       style={{ backgroundColor: "#1A759F" }}
     >
       {/* Interactive Logo Container */}
-      <motion.div
-        className="relative cursor-pointer p-8 rounded-full"
-        style={{ touchAction: "none" }}
-        animate={controls}
-        initial={{ scale: 1, rotate: 0 }}
-        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+      <div
+        className="ilogo-mark relative cursor-pointer p-8 rounded-full"
+        style={{ touchAction: "none", transform: `rotate(${turn}deg) scale(${scale})` }}
         onMouseEnter={handleHoverStart}
         onMouseLeave={handleHoverEnd}
         onTouchStart={handleHoverStart}
@@ -49,11 +53,9 @@ export function InteractiveLogo({ className = "" }: InteractiveLogoProps) {
         onClick={handleTap}
       >
         {/* Hover background glow */}
-        <motion.div
-          className="absolute inset-0 rounded-full bg-white/10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.2 }}
+        <div
+          className="ilogo-glow absolute inset-0 rounded-full bg-white/10"
+          style={{ opacity: isHovered ? 1 : 0 }}
         />
 
         {/* GlobFam Flower Logo - White version */}
@@ -72,29 +74,18 @@ export function InteractiveLogo({ className = "" }: InteractiveLogoProps) {
           <path d="M 12 12 C 9.5 12 6.5 12.5 3.5 14.5 C 6.5 15.5 10 14 12 12" stroke="white" strokeWidth="1" strokeLinecap="round" fill="none"/>
           <path d="M 12 12 C 10 10 6.5 8.5 3.5 9.5 C 6.5 11.5 9.5 12 12 12" stroke="white" strokeWidth="1" strokeLinecap="round" fill="none"/>
         </svg>
-      </motion.div>
+      </div>
 
       {/* Interaction hint - fades out after first interaction */}
-      <motion.div
-        className="absolute bottom-4 right-4 flex items-center gap-2 pointer-events-none"
-        initial={{ opacity: 1 }}
-        animate={{ opacity: hasInteracted ? 0 : 1 }}
-        transition={{ duration: 0.3 }}
+      <div
+        className="ilogo-hint absolute bottom-4 right-4 flex items-center gap-2 pointer-events-none"
+        style={{ opacity: hasInteracted ? 0 : 1 }}
       >
         <span className="text-white/80 text-xs font-medium font-mono tracking-[0.06em] uppercase">
           Hover to interact
         </span>
         {/* Animated cursor icon */}
-        <motion.div
-          animate={{
-            y: [0, -4, 0],
-          }}
-          transition={{
-            duration: 1.2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        >
+        <div className="ilogo-cursor">
           <svg
             width="20"
             height="20"
@@ -111,15 +102,11 @@ export function InteractiveLogo({ className = "" }: InteractiveLogoProps) {
               strokeLinejoin="round"
             />
           </svg>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* Decorative ring */}
-      <motion.div
-        className="absolute w-64 h-64 rounded-full border border-white/10 pointer-events-none"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-      />
+      <div className="ilogo-ring absolute w-64 h-64 rounded-full border border-white/10 pointer-events-none" />
     </div>
   );
 }

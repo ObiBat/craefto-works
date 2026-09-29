@@ -5,13 +5,11 @@ export { Logo, LogoStatic } from "./logo";
 export { ProjectImagePlaceholder } from "./project-image-placeholder";
 export { InteractiveLogo } from "./interactive-logo";
 export { BrandMoment } from "./brand-moment";
-export { Metaballs } from "./metaballs";
 export { Input } from "./input";
 export { Textarea } from "./textarea";
 export { Select } from "./select";
 export { Separator } from "./separator";
 export { SectionLabel } from "./section-label";
-export { CookieConsent } from "./cookie-consent";
 export { BackToTop } from "./back-to-top";
 export {
   // Components
@@ -20,10 +18,7 @@ export {
   StaggeredItem,
   HeroText,
   PageTransition,
-  TextReveal,
   AnimatedCounter,
-  HoverCard,
-  Magnetic,
   // Variants
   fadeUp,
   fadeDown,
@@ -39,9 +34,4 @@ export {
   smoothTransition,
   springTransition,
   pageTransition,
-  // Hooks
-  useScrollAnimation,
-  useParallax,
-  useSmoothScroll,
-  useElementScroll,
 } from "./motion";

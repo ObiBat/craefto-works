@@ -1,38 +1,11 @@
-"use client";
-
 import * as React from "react";
-import {
-  motion,
-  useInView,
-  useScroll,
-  useTransform,
-  useSpring,
-  useReducedMotion,
-  type Variants,
-  type MotionValue,
-} from "framer-motion";
+import type { Variants } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-// ============================================================================
-// REDUCED MOTION CONTEXT
-// ============================================================================
-
-const MotionContext = React.createContext<{ prefersReducedMotion: boolean }>({
-  prefersReducedMotion: false,
-});
-
-export function useMotionPreference() {
-  return React.useContext(MotionContext);
-}
-
-export function MotionProvider({ children }: { children: React.ReactNode }) {
-  const prefersReducedMotion = useReducedMotion() ?? false;
-
-  return (
-    <MotionContext.Provider value={{ prefersReducedMotion }}>
-      {children}
-    </MotionContext.Provider>
-  );
-}
+// Motion for the public site is CSS-driven (see the editorial layer in
+// globals.css), so nothing here needs framer-motion at runtime. The variant
+// and transition presets below are plain objects kept for the admin
+// screens, which animate with framer-motion themselves.
 
 // ============================================================================
 // ANIMATION VARIANTS (GPU-optimized with transform3d)
@@ -126,68 +99,6 @@ export const pageTransition = {
 export const instantTransition = {
   duration: 0.01,
 };
-
-// ============================================================================
-// CUSTOM HOOKS
-// ============================================================================
-
-/**
- * Hook for scroll-triggered animations with reduced motion support
- */
-export function useScrollAnimation(options?: {
-  threshold?: number;
-  once?: boolean;
-}) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const prefersReducedMotion = useReducedMotion();
-  const isInView = useInView(ref, {
-    once: options?.once ?? true,
-    margin: "-80px",
-    amount: options?.threshold ?? 0.1,
-  });
-
-  return { ref, isInView: prefersReducedMotion ? true : isInView };
-}
-
-/**
- * Hook for parallax scroll effects (disabled for reduced motion)
- */
-export function useParallax(
-  value: MotionValue<number>,
-  distance: number
-): MotionValue<number> {
-  const prefersReducedMotion = useReducedMotion();
-  const transform = useTransform(value, [0, 1], [-distance, distance]);
-  const noTransform = useTransform(value, [0, 1], [0, 0]);
-  return prefersReducedMotion ? noTransform : transform;
-}
-
-/**
- * Hook for smooth scroll progress
- */
-export function useSmoothScroll() {
-  const { scrollYProgress } = useScroll();
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
-
-  return { scrollYProgress, smoothProgress };
-}
-
-/**
- * Hook for element scroll progress
- */
-export function useElementScroll(offset?: ["start end" | "end start", "start end" | "end start"]) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: offset ?? ["start end", "end start"],
-  });
-
-  return { ref, scrollYProgress };
-}
 
 // ============================================================================
 // COMPONENTS
@@ -302,58 +213,11 @@ export function HeroText({ children, delay = 0, className }: HeroTextProps) {
 }
 
 /**
- * Animated text reveal (character by character)
- */
-interface TextRevealProps {
-  text: string;
-  className?: string;
-  delay?: number;
-}
-
-export function TextReveal({ text, className, delay = 0 }: TextRevealProps) {
-  const words = text.split(" ");
-  const prefersReducedMotion = useReducedMotion();
-
-  if (prefersReducedMotion) {
-    return <span className={className}>{text}</span>;
-  }
-
-  return (
-    <motion.span
-      initial="hidden"
-      animate="visible"
-      variants={{
-        hidden: {},
-        visible: {
-          transition: {
-            staggerChildren: 0.05,
-            delayChildren: delay,
-          },
-        },
-      }}
-      className={className}
-      aria-label={text}
-    >
-      {words.map((word, i) => (
-        <span key={i} className="inline-block mr-[0.25em]" aria-hidden="true">
-          <motion.span
-            className="inline-block"
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0 },
-            }}
-            transition={smoothTransition}
-          >
-            {word}
-          </motion.span>
-        </span>
-      ))}
-    </motion.span>
-  );
-}
-
-/**
- * Animated counter with accessibility
+ * A number that counts up from zero when it scrolls into view. Pure CSS: the
+ * boot script marks it [data-in], and a registered custom property animates
+ * the digits (see "Counters" in globals.css). The real value is in the HTML,
+ * so it reads correctly without JavaScript, with reduced motion and to screen
+ * readers, and its width is reserved up front so nothing shifts as it counts.
  */
 interface AnimatedCounterProps {
   value: number;
@@ -370,179 +234,21 @@ export function AnimatedCounter({
   suffix = "",
   prefix = "",
 }: AnimatedCounterProps) {
-  const { ref, isInView } = useScrollAnimation();
-  const [count, setCount] = React.useState(0);
-  const [shouldAnimate, setShouldAnimate] = React.useState(false);
-  const prefersReducedMotion = useReducedMotion();
-
-  // Fallback: trigger animation after 1.5s if intersection observer hasn't fired
-  React.useEffect(() => {
-    const fallbackTimer = setTimeout(() => {
-      setShouldAnimate(true);
-    }, 1500);
-
-    return () => clearTimeout(fallbackTimer);
-  }, []);
-
-  // Trigger animation when in view OR fallback timer fires
-  React.useEffect(() => {
-    if (isInView) {
-      setShouldAnimate(true);
-    }
-  }, [isInView]);
-
-  // Run the animation
-  React.useEffect(() => {
-    if (!shouldAnimate) return;
-
-    if (prefersReducedMotion) {
-      setCount(value);
-      return;
-    }
-
-    let startTime: number;
-    let animationFrame: number;
-
-    const animate = (currentTime: number) => {
-      if (!startTime) startTime = currentTime;
-      const progress = Math.min((currentTime - startTime) / (duration * 1000), 1);
-
-      // Easing function
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(easeOut * value));
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
-      }
-    };
-
-    animationFrame = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationFrame) cancelAnimationFrame(animationFrame);
-    };
-  }, [shouldAnimate, value, duration, prefersReducedMotion]);
-
   return (
     <span
-      ref={ref}
-      className={className}
-      aria-label={`${prefix}${value}${suffix}`}
+      data-reveal="count"
+      className={cn("count-up", className)}
+      style={{ "--to": value, "--count-dur": `${duration}s` } as React.CSSProperties}
+      suppressHydrationWarning
     >
-      <span aria-hidden="true">{prefix}{count}{suffix}</span>
+      <span className="sr-only">{`${prefix}${value}${suffix}`}</span>
+      <span aria-hidden="true">
+        {prefix}
+        <span className="count-up-num">
+          <span className="count-up-value">{value}</span>
+        </span>
+        {suffix}
+      </span>
     </span>
-  );
-}
-
-/**
- * Hover card with lift effect (desktop only, touch-friendly)
- */
-interface HoverCardProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-export function HoverCard({ children, className }: HoverCardProps) {
-  const prefersReducedMotion = useReducedMotion();
-
-  if (prefersReducedMotion) {
-    return <div className={className}>{children}</div>;
-  }
-
-  return (
-    <motion.div
-      className={className}
-      whileHover={{
-        y: -4,
-        transition: { duration: 0.2, ease: "easeOut" },
-      }}
-      whileTap={{ scale: 0.98 }}
-      style={{ transform: "translateZ(0)" }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/**
- * Magnetic button effect (desktop only)
- */
-interface MagneticProps {
-  children: React.ReactNode;
-  className?: string;
-  strength?: number;
-}
-
-export function Magnetic({ children, className, strength = 0.3 }: MagneticProps) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const [position, setPosition] = React.useState({ x: 0, y: 0 });
-  const [isTouchDevice, setIsTouchDevice] = React.useState(false);
-  const prefersReducedMotion = useReducedMotion();
-
-  React.useEffect(() => {
-    setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0);
-  }, []);
-
-  const handleMouse = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current || isTouchDevice || prefersReducedMotion) return;
-    const { clientX, clientY } = e;
-    const { left, top, width, height } = ref.current.getBoundingClientRect();
-    const x = (clientX - (left + width / 2)) * strength;
-    const y = (clientY - (top + height / 2)) * strength;
-    setPosition({ x, y });
-  };
-
-  const reset = () => setPosition({ x: 0, y: 0 });
-
-  if (isTouchDevice || prefersReducedMotion) {
-    return <div ref={ref} className={className}>{children}</div>;
-  }
-
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouse}
-      onMouseLeave={reset}
-      animate={{ x: position.x, y: position.y }}
-      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
-      className={className}
-      style={{ transform: "translateZ(0)" }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/**
- * Smooth scroll link
- */
-interface SmoothScrollLinkProps {
-  href: string;
-  children: React.ReactNode;
-  className?: string;
-  offset?: number;
-}
-
-export function SmoothScrollLink({
-  href,
-  children,
-  className,
-  offset = 80
-}: SmoothScrollLinkProps) {
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (href.startsWith("#")) {
-      e.preventDefault();
-      const element = document.querySelector(href);
-      if (element) {
-        const top = element.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top, behavior: "smooth" });
-      }
-    }
-  };
-
-  return (
-    <a href={href} onClick={handleClick} className={className}>
-      {children}
-    </a>
   );
 }

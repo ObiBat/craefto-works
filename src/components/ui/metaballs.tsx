@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -180,16 +180,43 @@ interface MetaballsProps {
   className?: string;
 }
 
+type FrameLoop = "always" | "demand" | "never";
+
 export function Metaballs({ className }: MetaballsProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  // Render only while the artwork is on screen; with reduced motion, draw a
+  // single still frame (and redraw only on resize).
+  const [frameloop, setFrameloop] = useState<FrameLoop>("always");
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let onScreen = true;
+    const update = () => setFrameloop(reduce.matches ? "demand" : onScreen ? "always" : "never");
+    const io = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      update();
+    });
+    io.observe(root);
+    reduce.addEventListener("change", update);
+    update();
+    return () => {
+      io.disconnect();
+      reduce.removeEventListener("change", update);
+    };
+  }, []);
+
   return (
-    <div className={className}>
+    <div ref={rootRef} className={className}>
       <Canvas
+        frameloop={frameloop}
         camera={{ position: [0, 0, 1] }}
         dpr={[1, 1.5]} // Lower DPR for performance
         gl={{
           antialias: false,
           alpha: true,
-          powerPreference: "high-performance",
+          powerPreference: "default", // decorative: don't wake a discrete GPU
           stencil: false,
           depth: false,
         }}

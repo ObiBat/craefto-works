@@ -203,7 +203,7 @@ export function SelectedWork() {
     return () => ro.disconnect();
   }, []);
 
-  // Animation loop
+  // Animation loop: runs only while the strip is on screen.
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -231,8 +231,23 @@ export function SelectedWork() {
       frame = requestAnimationFrame(tick);
     };
 
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    const start = () => {
+      if (frame) return;
+      last = performance.now();
+      frame = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+    };
+    // Watch the strip's frame, not the track: the track is wider than the
+    // screen and always overlaps it sideways.
+    const io = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()));
+    io.observe(track.parentElement ?? track);
+    return () => {
+      io.disconnect();
+      stop();
+    };
   }, [reducedMotion]);
 
   const nudge = useCallback((direction: 1 | -1) => {

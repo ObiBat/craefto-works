@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
 import { SectionLabel } from "@/components/ui/section-label";
@@ -29,6 +28,7 @@ function AccordionItem({
 }) {
   const number = String(index + 1).padStart(2, "0");
   const price = priceFor(service.icon);
+  const panelId = useId();
 
   return (
     <div
@@ -39,9 +39,11 @@ function AccordionItem({
       )}
     >
       <button
+        type="button"
         onClick={onToggle}
         className="w-full py-6 sm:py-8 flex items-center gap-4 sm:gap-8 text-left group transition-colors"
         aria-expanded={isOpen}
+        aria-controls={panelId}
       >
         {/* Number */}
         <span
@@ -65,12 +67,11 @@ function AccordionItem({
           )}
         </div>
 
-        {/* Toggle Icon - green accent on hover */}
-        <motion.div
-          animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        {/* Toggle Icon - green accent on hover; turns into a cross when open */}
+        <div
+          data-open={isOpen ? "" : undefined}
           className={cn(
-            "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:bg-[hsl(var(--color-accent))] group-hover:text-white",
+            "acc-toggle w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 group-hover:bg-[hsl(var(--color-accent))] group-hover:text-white",
             isOpen
               ? "bg-[hsl(var(--color-accent))] text-white"
               : "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground))]"
@@ -89,88 +90,82 @@ function AccordionItem({
               d="M12 6v12m6-6H6"
             />
           </svg>
-        </motion.div>
+        </div>
       </button>
 
-      {/* Expandable Content */}
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden"
-          >
-            <div data-no-reveal className="pl-12 sm:pl-16 pb-8 sm:pb-10">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 pt-6">
-                {/* Description + CTA */}
-                <div className="flex flex-col gap-5 lg:col-span-1">
-                  <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
-                    {service.description}
-                  </p>
-                  
-                  {/* Pricing & Timeline */}
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-[hsl(var(--color-foreground-subtle))]">Starting from</span>
-                      <span className="font-semibold text-[hsl(var(--color-foreground))]">
-                        {price && formatPrice(price.min)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-[hsl(var(--color-foreground-subtle))]">Typical timeline</span>
-                      <span className="font-medium text-[hsl(var(--color-foreground))]">
-                        {price && weeksLabel(price)}
-                      </span>
-                    </div>
+      {/* Expandable content: always in the page (and in the HTML for search),
+          opened and closed by a CSS grid-row transition; inert while closed so
+          it's out of the tab order and hidden from screen readers. */}
+      <div id={panelId} data-open={isOpen ? "" : undefined} inert={!isOpen} className="acc-panel">
+        <div className="overflow-hidden">
+          <div data-no-reveal className="pl-12 sm:pl-16 pb-8 sm:pb-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 pt-6">
+              {/* Description + CTA */}
+              <div className="flex flex-col gap-5 lg:col-span-1">
+                <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
+                  {service.description}
+                </p>
+                
+                {/* Pricing & Timeline */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[hsl(var(--color-foreground-subtle))]">Starting from</span>
+                    <span className="font-semibold text-[hsl(var(--color-foreground))]">
+                      {price && formatPrice(price.min)}
+                    </span>
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <Link href={`/contact?service=${service.icon}`}>
-                      <Button size="sm" hoverText="Let's talk">
-                        Get a quote
-                      </Button>
-                    </Link>
-                    <Link
-                      href={service.href}
-                      className="inline-flex items-center justify-center gap-2 text-sm font-medium text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors py-2"
-                    >
-                      Learn more
-                      <svg
-                        className="w-4 h-4 transition-transform group-hover/link:translate-x-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M17 8l4 4m0 0l-4 4m4-4H3"
-                        />
-                      </svg>
-                    </Link>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[hsl(var(--color-foreground-subtle))]">Typical timeline</span>
+                    <span className="font-medium text-[hsl(var(--color-foreground))]">
+                      {price && weeksLabel(price)}
+                    </span>
                   </div>
                 </div>
 
-                {/* Capabilities */}
-                <div className="lg:col-span-2 flex flex-wrap items-start content-start justify-start lg:justify-end gap-2">
-                  {service.capabilities?.map((capability) => (
-                    <span
-                      key={capability}
-                      className="px-3 py-1.5 text-sm font-medium rounded-full border border-[hsl(var(--color-border))] text-[hsl(var(--color-foreground-muted))] bg-[hsl(var(--color-background))] whitespace-nowrap"
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <Link href={`/contact?service=${service.icon}`}>
+                    <Button size="sm" hoverText="Let's talk">
+                      Get a quote
+                    </Button>
+                  </Link>
+                  <Link
+                    href={service.href}
+                    className="inline-flex items-center justify-center gap-2 text-sm font-medium text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors py-2"
+                  >
+                    Learn more
+                    <svg
+                      className="w-4 h-4 transition-transform group-hover/link:translate-x-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      {capability}
-                    </span>
-                  ))}
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                      />
+                    </svg>
+                  </Link>
                 </div>
               </div>
+
+              {/* Capabilities */}
+              <div className="lg:col-span-2 flex flex-wrap items-start content-start justify-start lg:justify-end gap-2">
+                {service.capabilities?.map((capability) => (
+                  <span
+                    key={capability}
+                    className="px-3 py-1.5 text-sm font-medium rounded-full border border-[hsl(var(--color-border))] text-[hsl(var(--color-foreground-muted))] bg-[hsl(var(--color-background))] whitespace-nowrap"
+                  >
+                    {capability}
+                  </span>
+                ))}
+              </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

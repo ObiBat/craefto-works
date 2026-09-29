@@ -1233,7 +1233,7 @@ article img {
 
 /* ─────────────────────────────────────────────────────────────
    EDITORIAL LAYER — public site only (html.site, set by the boot
-   script in layout.tsx; admin and portal are never affected)
+   script in layout.tsx; admin is never affected)
    ───────────────────────────────────────────────────────────── */
 
 /* No rules, dividers or outlines: whitespace does the separating.
@@ -2041,5 +2041,183 @@ html.intro-delay .hero-in {
 @media (prefers-reduced-motion: reduce) {
   .brand-intro {
     display: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   INTERFACE MOTION WITHOUT A LIBRARY
+   Small transitions that used to run on framer-motion, now plain CSS
+   so the public pages don't ship an animation library.
+   ───────────────────────────────────────────────────────────── */
+
+/* Hero rotating line (<Hero>): all lines share one grid cell. The old line
+   lifts away, then the new one rises in from below. */
+.rotator {
+  display: grid;
+}
+.rotator > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity 900ms cubic-bezier(0.25, 1, 0.5, 1) 350ms,
+    transform 900ms cubic-bezier(0.25, 1, 0.5, 1) 350ms;
+}
+.rotator > [data-state="leaving"] {
+  opacity: 0;
+  transform: translate3d(0, -16px, 0);
+  transition:
+    opacity 450ms cubic-bezier(0.5, 0, 0.75, 0),
+    transform 450ms cubic-bezier(0.5, 0, 0.75, 0);
+}
+.rotator > [data-state="idle"] {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition: none;
+}
+
+/* Accordion (<ServicesOverview>): the panel opens by growing its grid row
+   from 0fr to 1fr, so it animates to its natural height. */
+.acc-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 550ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 400ms ease;
+}
+.acc-panel[data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.acc-panel > * {
+  min-height: 0;
+}
+.acc-toggle {
+  transition:
+    transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 300ms ease,
+    color 300ms ease;
+}
+.acc-toggle[data-open] {
+  transform: rotate(45deg);
+}
+
+/* Counters (<AnimatedCounter>): a registered integer property counts from 0
+   to --to once the boot script marks the counter [data-in]. The real value
+   stays in the HTML (hidden but still sizing the box), so the width is fixed
+   while it counts and it reads correctly without JavaScript or motion. */
+@property --count {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+@keyframes count-up {
+  from {
+    --count: 0;
+  }
+  to {
+    --count: var(--to);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  html.site.js .count-up-num {
+    display: inline-grid;
+  }
+  html.site.js .count-up-num > .count-up-value {
+    grid-area: 1 / 1;
+    visibility: hidden;
+  }
+  html.site.js .count-up-num::after {
+    grid-area: 1 / 1;
+    text-align: right;
+    content: counter(count-up);
+    counter-reset: count-up var(--count);
+    animation: count-up var(--count-dur, 2s) cubic-bezier(0.33, 1, 0.68, 1) var(--count-delay, 200ms) both paused;
+  }
+  html.site.js [data-reveal="count"][data-in] .count-up-num::after {
+    animation-play-state: running;
+  }
+  /* In the hero, count as the figures rise into place. */
+  html.site.js .hero-in .count-up-num::after {
+    --count-delay: calc(var(--hero-delay, 0s) + 400ms);
+  }
+  html.site.js.intro-delay .hero-in .count-up-num::after {
+    --count-delay: calc(var(--hero-delay, 0s) + 2.5s);
+  }
+}
+
+/* Back to top (<BackToTop>): always in the DOM, lifted in and out. Hidden
+   means visibility: hidden, so it also leaves the tab order. */
+.back-to-top {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 20px, 0) scale(0.8);
+  transition:
+    opacity 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    scale 200ms ease,
+    visibility 0s linear 300ms;
+}
+.back-to-top[data-shown] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    scale 200ms ease,
+    visibility 0s;
+}
+
+/* Contact form (<ContactForm>): the chosen form slides in from its side;
+   the thank-you panel settles in. */
+.form-swap-in {
+  animation: form-swap-in 450ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+@keyframes form-swap-in {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--swap-from, 20px), 0, 0);
+  }
+}
+.pop-in {
+  animation: pop-in 500ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* GlobFam's interactive mark (<InteractiveLogo>). */
+.ilogo-mark {
+  transition: transform 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ilogo-glow {
+  transition: opacity 200ms ease;
+}
+.ilogo-hint {
+  transition: opacity 300ms ease;
+}
+.ilogo-cursor {
+  animation: ilogo-bob 1.2s ease-in-out infinite;
+}
+@keyframes ilogo-bob {
+  50% {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+.ilogo-ring {
+  animation: ilogo-spin 30s linear infinite;
+}
+@keyframes ilogo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ilogo-cursor,
+  .ilogo-ring {
+    animation: none;
   }
 }
