@@ -1,0 +1,36 @@
+name: E2E
+
+# Vercel reports each deployment (preview and production) to GitHub; once one
+# is live, run the Playwright suite against it (see playwright.config.ts).
+#
+# Deployment URLs are behind Vercel Authentication, so this needs one repo
+# secret: VERCEL_AUTOMATION_BYPASS_SECRET (Vercel > Project Settings >
+# Deployment Protection > Protection Bypass for Automation).
+on:
+  deployment_status:
+
+jobs:
+  e2e:
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.deployment.sha }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+        env:
+          BASE_URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
