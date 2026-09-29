@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import { JOURNAL_OG_IMAGE } from "@/lib/seo";
 import Link from "next/link";
 import Image from "next/image";
 import { createServerClient } from "@/lib/supabase";
@@ -95,7 +96,7 @@ export async function generateMetadata({ params }: AuthorPageProps): Promise<Met
       description: author.bio || `Articles by ${author.name} on Craefto Journal.`,
       url: `https://www.craefto.com/journal/author/${author.slug}`,
       type: "profile",
-      images: author.avatar_url ? [{ url: author.avatar_url }] : undefined,
+      images: [JOURNAL_OG_IMAGE],
     },
   };
 }

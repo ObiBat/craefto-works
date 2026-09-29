@@ -6,6 +6,7 @@ export const metadata: Metadata = pageMetadata({
   description:
     "Start a project with Craefto. Tell us what you're building and we'll reply within one to two days.",
   path: "/contact",
+  image: "route",
 });
 
 export default function ContactLayout({

@@ -174,8 +174,8 @@ export async function generateMetadata({
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.craefto.com";
-  const ogImageUrl = `${baseUrl}/journal/${slug}/opengraph-image`;
-  
+  // The share image is the route's opengraph-image.tsx card.
+
   return {
     title: { absolute: article.meta_title ? `${article.meta_title} | Craefto` : `${article.title} | Craefto Journal` },
     description: article.meta_description || article.excerpt,
@@ -188,20 +188,11 @@ export async function generateMetadata({
       authors: [article.author_name],
       url: `${baseUrl}/journal/${slug}`,
       siteName: "Craefto",
-      images: [
-        {
-          url: ogImageUrl,
-          width: 1200,
-          height: 630,
-          alt: article.title,
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title: article.title,
       description: article.excerpt || undefined,
-      images: [ogImageUrl],
     },
   };
 }

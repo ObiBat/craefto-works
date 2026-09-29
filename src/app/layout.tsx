@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, DM_Sans, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import { BackToTop } from "@/components/ui";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { BackToTop } from "@/components/ui/back-to-top";
 import { AnalyticsProvider } from "@/components/analytics/analytics-provider";
 import { editorialBootScript } from "@/components/editorial/boot-script";
 import { SiteClassSync } from "@/components/editorial/site-class-sync";
@@ -105,15 +106,7 @@ export const metadata: Metadata = {
     title: "Craefto | Creative Tech Studio",
     description:
       "We design and build brands, products, and tools for founders and teams who value craft.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Craefto Creative Tech Studio",
-        type: "image/png",
-      },
-    ],
+    // The image comes from app/opengraph-image.tsx (and each route's own card).
   },
   twitter: {
     card: "summary_large_image",
@@ -122,7 +115,6 @@ export const metadata: Metadata = {
       "We design and build brands, products, and tools for founders and teams who value craft.",
     creator: "@craefto",
     site: "@craefto",
-    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -150,6 +142,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": "https://www.craefto.com/#organization",
   name: "Craefto",
   description:
     "Craefto is a creative tech studio. We design and build brands, products, and tools for founders and teams who value craft.",
@@ -237,9 +230,6 @@ export default function RootLayout({
     <html lang="en-AU" className={`${archivo.variable} ${dmSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: editorialBootScript }} />
-        {/* Preconnect for fonts */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* Structured Data */}
         <script
           type="application/ld+json"
@@ -247,17 +237,6 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased">
-        {/* Subdomain path fixer: redirect clean URLs to /portal/* before React hydrates */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){
-              var h=location.hostname;
-              if(h.indexOf('project-portal')===0&&location.pathname.indexOf('/portal')!==0&&location.pathname!=='/login'){
-                location.replace('/portal'+location.pathname+location.search+location.hash);
-              }
-            })();`,
-          }}
-        />
         {/* Skip Link for Accessibility */}
         <a
           href="#main-content"
@@ -273,6 +252,8 @@ export default function RootLayout({
         <ScrollFallback />
         <AnalyticsProvider />
         <Analytics />
+        {/* Core Web Vitals from real visits (Vercel dashboard > Speed Insights) */}
+        <SpeedInsights />
       </body>
     </html>
   );

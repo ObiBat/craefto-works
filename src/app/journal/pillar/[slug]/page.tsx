@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import { JOURNAL_OG_IMAGE } from "@/lib/seo";
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase";
 import { ArticleCard } from "@/components/journal/article-card";
@@ -91,6 +92,7 @@ export async function generateMetadata({ params }: PillarPageProps): Promise<Met
       description: pillar.description || `Articles about ${pillar.name} from Craefto.`,
       url: `https://www.craefto.com/journal/pillar/${pillar.slug}`,
       type: "website",
+      images: [JOURNAL_OG_IMAGE],
     },
   };
 }

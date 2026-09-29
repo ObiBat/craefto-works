@@ -6,6 +6,7 @@ export const metadata: Metadata = pageMetadata({
   description:
     "Selected brand, web and product work by Craefto, each built as a system rather than a one-off.",
   path: "/work",
+  image: "route",
 });
 
 export default function WorkLayout({

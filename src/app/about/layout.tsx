@@ -6,6 +6,7 @@ export const metadata: Metadata = pageMetadata({
   description:
     "Craefto is a creative tech studio in Sydney building brands, products and systems for founders and teams who think long-term.",
   path: "/about",
+  image: "route",
 });
 
 export default function AboutLayout({

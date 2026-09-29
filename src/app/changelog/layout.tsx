@@ -6,6 +6,7 @@ export const metadata: Metadata = pageMetadata({
   description:
     "Every improvement, feature and refinement shipped to craefto.com. Building in public since January 2026.",
   path: "/changelog",
+  image: "route",
 });
 
 export default function ChangelogLayout({

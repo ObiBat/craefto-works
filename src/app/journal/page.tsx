@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     description:
       "Insights on systems thinking, applied AI, product craft and creative technology from the Craefto team.",
     path: "/journal",
+    image: "route",
   }),
   alternates: {
     canonical: "/journal",

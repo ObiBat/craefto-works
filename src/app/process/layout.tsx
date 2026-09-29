@@ -6,6 +6,7 @@ export const metadata: Metadata = pageMetadata({
   description:
     "Every Craefto project follows four clear phases, from understanding your goals to launch and growth. No surprises, no scope creep, fixed pricing.",
   path: "/process",
+  image: "route",
 });
 
 export default function ProcessLayout({

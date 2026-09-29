@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Badge, Separator, PageTransition, AnimatedSection, HeroText, StaggeredGrid, StaggeredItem, ProjectImagePlaceholder, InteractiveLogo, BrandMoment } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { RevealText } from "@/components/editorial/reveal-text";
 
 import { caseStudies, getCaseStudy, PROJECTS_WITH_REAL_IMAGES, type CaseStudy } from "@/content/case-studies";
+
+// Blurred previews keyed by image path (see npm run images:placeholders).
+const BlurContext = createContext<Record<string, string>>({});
 
 // Helper component to render real image or placeholder
 function ProjectImage({
@@ -27,6 +30,7 @@ function ProjectImage({
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
+  const blur = useContext(BlurContext)[src ?? ""];
   const hasRealImages =
     PROJECTS_WITH_REAL_IMAGES.includes(project.slug) &&
     src?.includes("/images/projects/") &&
@@ -40,6 +44,8 @@ function ProjectImage({
         fill
         className={`object-cover ${className}`}
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+        placeholder={blur ? "blur" : "empty"}
+        blurDataURL={blur}
         onError={() => setFailed(true)}
       />
     );
@@ -55,7 +61,7 @@ function ProjectImage({
   );
 }
 
-export function CaseStudyView({ slug }: { slug: string }) {
+export function CaseStudyView({ slug, placeholders = {} }: { slug: string; placeholders?: Record<string, string> }) {
   // The server page only renders known slugs (dynamicParams = false).
   const project = getCaseStudy(slug) as CaseStudy;
 
@@ -67,7 +73,7 @@ export function CaseStudyView({ slug }: { slug: string }) {
     : featuredProjects[0];
 
   return (
-    <>
+    <BlurContext.Provider value={placeholders}>
       <Header />
       <PageTransition>
         <main id="main-content" className="pt-16">
@@ -455,6 +461,8 @@ export function CaseStudyView({ slug }: { slug: string }) {
                           fill
                           className="object-cover"
                           sizes="(max-width: 768px) 100vw, 1200px"
+                          placeholder={placeholders[nextProject.heroImage] ? "blur" : "empty"}
+                          blurDataURL={placeholders[nextProject.heroImage]}
                         />
                       ) : (
                         <ProjectImagePlaceholder
@@ -512,6 +520,6 @@ export function CaseStudyView({ slug }: { slug: string }) {
         </main>
       </PageTransition>
       <Footer />
-    </>
+    </BlurContext.Provider>
   );
 }

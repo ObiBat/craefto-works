@@ -6,6 +6,7 @@ export const metadata: Metadata = pageMetadata({
   description:
     "Brand identity, web design and development, digital products, AI automation and security audits, with transparent pricing from one team.",
   path: "/services",
+  image: "route",
 });
 
 export default function ServicesLayout({
