@@ -69,9 +69,12 @@ agent_feedback           - AI agent performance tracking
 
 ### Running the Pipeline
 
+> **Auth:** every `/api/admin/*` endpoint needs either a signed-in admin browser session or `Authorization: Bearer $ADMIN_API_TOKEN` (set `ADMIN_API_TOKEN` in Vercel and `.env.local`). Unauthenticated calls get a 401.
+
 ```bash
 # Via API
 curl -X POST /api/admin/pipeline/agent \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"action": "topic_scout", "input": {"pillar": "engineering"}}'
 ```

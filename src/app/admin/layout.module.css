@@ -1,0 +1,23 @@
+/*
+ * globals.css styles bare h1–h6 and p elements for the public site in rules that
+ * sit outside any cascade layer, and unlayered rules beat Tailwind's layered
+ * utilities. Inside the admin shell that silently broke two things:
+ *
+ * - Headings ignored their own text-* / leading-* / tracking-* classes and took
+ *   the fluid editorial scale instead (page titles up to 72px, card titles 44px).
+ * - `text-wrap: pretty | balance` also sets text-wrap-mode: wrap, so `truncate`
+ *   and `whitespace-nowrap` never stopped a paragraph or heading from wrapping.
+ *
+ * Hand exactly those properties back to the cascade layers so the utility
+ * classes on each element apply as written. Font family, weight, colour and the
+ * pretty/balance wrapping style still come from globals.css.
+ */
+.shell :is(h1, h2, h3) {
+  font-size: revert-layer;
+  line-height: revert-layer;
+  letter-spacing: revert-layer;
+}
+
+.shell :is(p, h1, h2, h3, h4, h5, h6) {
+  text-wrap-mode: revert-layer;
+}

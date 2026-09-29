@@ -2,12 +2,16 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
+// Credentials come from the environment, never from this file:
+//   SUPABASE_DB_URL="postgresql://…" node scripts/run-migration.js
+// (Supabase dashboard > Project Settings > Database > Connection string.)
+if (!process.env.SUPABASE_DB_URL) {
+  console.error('Set SUPABASE_DB_URL to the database connection string.');
+  process.exit(1);
+}
+
 const pool = new Pool({
-  host: 'db.vugaieeadequzuplvcqp.supabase.co',
-  port: 5432,
-  database: 'postgres',
-  user: 'postgres',
-  password: '27u6uhsGIwVwJGIo',
+  connectionString: process.env.SUPABASE_DB_URL,
   ssl: { rejectUnauthorized: false }
 });
 

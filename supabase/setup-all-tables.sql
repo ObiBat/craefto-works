@@ -260,7 +260,7 @@ CREATE INDEX IF NOT EXISTS idx_article_performance_trend ON article_performance(
 CREATE INDEX IF NOT EXISTS idx_agent_feedback_agent ON agent_feedback(agent_type);
 
 -- =====================================================
--- ROW LEVEL SECURITY (Allow all for service role)
+-- ROW LEVEL SECURITY (service role only)
 -- =====================================================
 ALTER TABLE content_agent_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE content_insights ENABLE ROW LEVEL SECURITY;
@@ -274,18 +274,9 @@ ALTER TABLE article_performance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE article_ab_tests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agent_feedback ENABLE ROW LEVEL SECURITY;
 
--- Allow all operations (adjust for production)
-CREATE POLICY "Allow all for content_agent_runs" ON content_agent_runs FOR ALL USING (true);
-CREATE POLICY "Allow all for content_insights" ON content_insights FOR ALL USING (true);
-CREATE POLICY "Allow all for content_briefs" ON content_briefs FOR ALL USING (true);
-CREATE POLICY "Allow all for content_drafts" ON content_drafts FOR ALL USING (true);
-CREATE POLICY "Allow all for content_reviews" ON content_reviews FOR ALL USING (true);
-CREATE POLICY "Allow all for content_queue" ON content_queue FOR ALL USING (true);
-CREATE POLICY "Allow all for article_views" ON article_views FOR ALL USING (true);
-CREATE POLICY "Allow all for article_events" ON article_events FOR ALL USING (true);
-CREATE POLICY "Allow all for article_performance" ON article_performance FOR ALL USING (true);
-CREATE POLICY "Allow all for article_ab_tests" ON article_ab_tests FOR ALL USING (true);
-CREATE POLICY "Allow all for agent_feedback" ON agent_feedback FOR ALL USING (true);
+-- No policies: the app reaches these tables only with the service-role key,
+-- which bypasses RLS. A "FOR ALL USING (true)" policy would let anyone with
+-- the public anon key read and write every row (see migration 013).
 
 -- =====================================================
 -- SEED DATA - Content Pillars (if not exists)

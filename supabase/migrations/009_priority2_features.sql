@@ -207,17 +207,9 @@ ALTER TABLE analytics_goals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE funnel_stages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE funnel_conversions ENABLE ROW LEVEL SECURITY;
 
--- Allow all for admin (adjust for production)
-CREATE POLICY "Allow all for pipeline_schedules" ON pipeline_schedules FOR ALL USING (true);
-CREATE POLICY "Allow all for batch_operations" ON batch_operations FOR ALL USING (true);
-CREATE POLICY "Allow all for clients" ON clients FOR ALL USING (true);
-CREATE POLICY "Allow all for projects" ON projects FOR ALL USING (true);
-CREATE POLICY "Allow all for milestones" ON milestones FOR ALL USING (true);
-CREATE POLICY "Allow all for client_documents" ON client_documents FOR ALL USING (true);
-CREATE POLICY "Allow all for invoices" ON invoices FOR ALL USING (true);
-CREATE POLICY "Allow all for analytics_goals" ON analytics_goals FOR ALL USING (true);
-CREATE POLICY "Allow all for funnel_stages" ON funnel_stages FOR ALL USING (true);
-CREATE POLICY "Allow all for funnel_conversions" ON funnel_conversions FOR ALL USING (true);
+-- No policies: the app reaches these tables only with the service-role key,
+-- which bypasses RLS. A "FOR ALL USING (true)" policy would let anyone with
+-- the public anon key read and write every row (see migration 013).
 
 -- =====================================================
 -- SEED DATA

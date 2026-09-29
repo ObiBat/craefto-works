@@ -56,8 +56,11 @@ The Trend Scanner identifies content opportunities.
 4. Click "Run Scan"
 
 **Via API:**
+> **Auth:** every `/api/admin/*` endpoint needs either a signed-in admin browser session or `Authorization: Bearer $ADMIN_API_TOKEN` (set `ADMIN_API_TOKEN` in Vercel and `.env.local`). Unauthenticated calls get a 401.
+
 ```bash
 curl -X POST http://localhost:3000/api/admin/pipeline \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "scan",
@@ -83,6 +86,7 @@ curl -X POST http://localhost:3000/api/admin/pipeline \
 ```bash
 # Approve an insight
 curl -X POST http://localhost:3000/api/admin/pipeline/insights \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "approve",
@@ -104,6 +108,7 @@ After approval, the SEO Strategist creates a detailed brief.
 **Via API:**
 ```bash
 curl -X POST http://localhost:3000/api/admin/pipeline \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"action": "process_next"}'
 ```
@@ -130,10 +135,11 @@ The Editorial Writer creates the full article.
 **Via API:**
 ```bash
 # Get briefs
-curl http://localhost:3000/api/admin/pipeline/briefs
+curl http://localhost:3000/api/admin/pipeline/briefs -H "Authorization: Bearer $ADMIN_API_TOKEN"
 
 # Generate draft from brief
 curl -X POST http://localhost:3000/api/admin/pipeline/briefs \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "generate_draft",
@@ -161,6 +167,7 @@ The Editor Guardian reviews the draft.
 **Via API:**
 ```bash
 curl -X POST http://localhost:3000/api/admin/pipeline/drafts \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "review",
@@ -190,6 +197,7 @@ If the review suggests changes:
 **Via API:**
 ```bash
 curl -X POST http://localhost:3000/api/admin/pipeline/drafts \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "revise",
@@ -212,11 +220,13 @@ When the draft is ready:
 ```bash
 # Approve draft
 curl -X POST http://localhost:3000/api/admin/pipeline/drafts \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"action": "approve", "draftId": "uuid-here"}'
 
 # Publish to journal
 curl -X POST http://localhost:3000/api/admin/pipeline/drafts \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"action": "publish", "draftId": "uuid-here"}'
 ```
@@ -293,6 +303,7 @@ Run the complete pipeline from scan to publish:
 
 ```bash
 curl -X POST http://localhost:3000/api/admin/pipeline \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "action": "run_full",

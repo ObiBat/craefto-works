@@ -1,8 +1,9 @@
 # DocuSeal Self-Hosted E-Signature Service
 # https://www.docuseal.com
 #
-# Usage:
-#   docker-compose -f docker-compose.docuseal.yml up -d
+# Usage (secrets come from the environment or a git-ignored .env file):
+#   DOCUSEAL_SECRET_KEY_BASE=$(openssl rand -hex 64) DOCUSEAL_DB_PASSWORD=... \
+#     docker-compose -f docker-compose.docuseal.yml up -d
 #
 # Access DocuSeal at: http://localhost:3001
 # First run: Create admin account at the setup page
@@ -16,11 +17,11 @@ services:
     ports:
       - "3001:3000"
     environment:
-      # Required: Generate with `openssl rand -hex 64`
-      - SECRET_KEY_BASE=${DOCUSEAL_SECRET_KEY:-your_64_character_secret_key_here_generate_with_openssl_rand_hex_64}
+      # Required: generate with `openssl rand -hex 64`
+      - SECRET_KEY_BASE=${DOCUSEAL_SECRET_KEY_BASE:?set DOCUSEAL_SECRET_KEY_BASE}
 
       # Database connection (uses the db service below)
-      - DATABASE_URL=postgres://docuseal:docuseal_password@docuseal-db:5432/docuseal
+      - DATABASE_URL=postgres://docuseal:${DOCUSEAL_DB_PASSWORD:?set DOCUSEAL_DB_PASSWORD}@docuseal-db:5432/docuseal
 
       # Host configuration (for email links)
       - HOST=${DOCUSEAL_HOST:-http://localhost:3001}
@@ -35,7 +36,7 @@ services:
       # - SMTP_ADDRESS=smtp.example.com
       # - SMTP_PORT=587
       # - SMTP_USERNAME=your_smtp_user
-      # - SMTP_PASSWORD=your_smtp_password
+      # - SMTP_PASSWORD=${DOCUSEAL_SMTP_PASSWORD}
       # - SMTP_DOMAIN=example.com
       # - SMTP_FROM=noreply@example.com
     volumes:
@@ -58,7 +59,7 @@ services:
     environment:
       - POSTGRES_DB=docuseal
       - POSTGRES_USER=docuseal
-      - POSTGRES_PASSWORD=docuseal_password
+      - POSTGRES_PASSWORD=${DOCUSEAL_DB_PASSWORD:?set DOCUSEAL_DB_PASSWORD}
     volumes:
       - docuseal_postgres:/var/lib/postgresql/data
     restart: unless-stopped

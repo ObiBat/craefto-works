@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { CommandPalette } from "@/components/admin/CommandPalette";
 import { NavIcon, IconMenu, IconX, IconLogout } from "@/components/admin/icons";
+import styles from "./layout.module.css";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Command Center", icon: "command" },
@@ -17,16 +18,9 @@ const NAV_ITEMS = [
   { href: "/admin/proposals", label: "Proposals", icon: "file" },
 ];
 
-// Keep legacy routes accessible (not in sidebar but still functional)
-const LEGACY_ROUTES = [
-  "/admin/documents",
-  "/admin/subscribers",
-  "/admin/journal",
-  "/admin/pipeline",
-  "/admin/analytics",
-  "/admin/intelligence",
-  "/admin/client-hub",
-];
+// Legacy routes stay accessible by URL but are intentionally not in the sidebar:
+// /admin/documents, /admin/subscribers, /admin/journal, /admin/pipeline,
+// /admin/analytics, /admin/intelligence, /admin/client-hub
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -38,13 +32,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [error, setError] = React.useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
-  React.useEffect(() => {
-    const authToken = sessionStorage.getItem("admin_auth");
-    if (authToken === "authenticated") {
-      setIsAuthenticated(true);
+  // The session is an httpOnly cookie the server checks on every admin API
+  // call (src/proxy.ts); ask the server whether it's still valid.
+  const checkSession = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/auth", { cache: "no-store" });
+      setIsAuthenticated(res.ok);
+    } catch {
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
+
+  React.useEffect(() => {
+    // Leftover flag from the old browser-only gate.
+    sessionStorage.removeItem("admin_auth");
+    void checkSession();
+    // Coming back to the tab after the session expired shows the sign-in form.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void checkSession();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [checkSession]);
 
   React.useEffect(() => {
     setMobileMenuOpen(false);
@@ -61,15 +72,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
 
     if (res.ok) {
-      sessionStorage.setItem("admin_auth", "authenticated");
+      setPassword("");
       setIsAuthenticated(true);
     } else {
       setError("Invalid password");
     }
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("admin_auth");
+  const handleLogout = async () => {
+    await fetch("/api/admin/auth", { method: "DELETE" }).catch(() => {});
     setIsAuthenticated(false);
     router.push("/admin");
   };
@@ -84,7 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[hsl(var(--color-background))] flex items-center justify-center p-4">
+      <div className={`${styles.shell} min-h-screen bg-[hsl(var(--color-background))] flex items-center justify-center p-4`}>
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-[family-name:var(--font-heading)] font-semibold tracking-tight mb-1 text-[hsl(var(--color-foreground))]">Craefto</h1>
@@ -119,7 +130,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--color-background))]">
+    <div className={`${styles.shell} min-h-screen bg-[hsl(var(--color-background))]`}>
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 px-4 flex items-center justify-between bg-[hsl(var(--color-background-subtle))] border-b border-[hsl(var(--color-border))]">
         <div className="flex items-center gap-2">

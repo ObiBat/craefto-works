@@ -47,10 +47,11 @@ export async function POST(request: NextRequest) {
     initClients();
     const rawBody = await request.text();
 
-    // Verify webhook signature if configured
+    // Verify the webhook signature when a secret is configured. A missing
+    // signature is rejected too, or anyone could post forged signing events.
     const signature = request.headers.get('x-docuseal-signature');
-    if (process.env.DOCUSEAL_WEBHOOK_SECRET && signature) {
-      const isValid = verifyWebhookSignature(rawBody, signature);
+    if (process.env.DOCUSEAL_WEBHOOK_SECRET) {
+      const isValid = !!signature && verifyWebhookSignature(rawBody, signature);
       if (!isValid) {
         console.error('Invalid webhook signature');
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
