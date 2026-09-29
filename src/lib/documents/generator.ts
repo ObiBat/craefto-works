@@ -269,7 +269,7 @@ export async function loadTemplate(documentType: DocumentType): Promise<string> 
   try {
     const html = await fs.readFile(templatePath, 'utf-8');
     return html;
-  } catch (error) {
+  } catch {
     throw new Error(`Failed to load template: ${templatePath}`);
   }
 }

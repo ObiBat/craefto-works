@@ -3,6 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
+import { Button } from "@/components/ui/button";
+import {
+  PageContainer,
+  PageHeader,
+  Card,
+  StatCard,
+  EmptyState,
+  FilterBar,
+  FilterChip,
+} from "@/components/admin/ui";
+import { IconChart, IconX } from "@/components/admin/icons";
 
 interface ABTest {
   id: string;
@@ -31,6 +42,11 @@ interface Article {
   slug: string;
 }
 
+const MODAL_TITLE = "font-[family-name:var(--font-heading)] text-lg font-semibold text-[hsl(var(--color-foreground))]";
+const FIELD_LABEL = "block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-1.5";
+const FIELD =
+  "w-full px-4 py-2.5 rounded-xl bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] text-sm text-[hsl(var(--color-foreground))] placeholder:text-[hsl(var(--color-foreground-subtle))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))]/40 focus:border-[hsl(var(--color-accent))]/40";
+
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString("en-US", {
     month: "short",
@@ -43,15 +59,15 @@ function calculateCTR(clicks: number, views: number): number {
   return views > 0 ? (clicks / views) * 100 : 0;
 }
 
-function StatusBadge({ status }: { status: string }) {
+function TestStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     active: "bg-green-500/10 text-green-600 border-green-500/20",
     completed: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-    cancelled: "bg-[#71717a]/10 text-[hsl(var(--color-foreground-subtle))] border-[#71717a]/20",
+    cancelled: "bg-[hsl(var(--color-foreground-subtle))]/10 text-[hsl(var(--color-foreground-subtle))] border-[hsl(var(--color-foreground-subtle))]/20",
   };
 
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium border ${styles[status] || styles.cancelled}`}>
+    <span className={`inline-flex items-center shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium border ${styles[status] || styles.cancelled}`}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
@@ -59,8 +75,8 @@ function StatusBadge({ status }: { status: string }) {
 
 function WinnerBadge({ variant, confidence }: { variant: string; confidence: number | null }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="px-2 py-0.5 rounded text-xs font-medium bg-[hsl(var(--color-accent))]/10 text-[hsl(var(--color-accent))] border border-[hsl(var(--color-accent))]/20">
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium bg-[hsl(var(--color-accent))]/10 text-[hsl(var(--color-accent))] border border-[hsl(var(--color-accent))]/20">
         Winner: Variant {variant.toUpperCase()}
       </span>
       {confidence !== null && (
@@ -211,111 +227,93 @@ export default function ABTestingPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))] mb-2">
-          <Link href="/admin/analytics" className="hover:text-[hsl(var(--color-foreground))]">
-            Analytics
-          </Link>
-          <span>/</span>
-          <span className="text-[hsl(var(--color-foreground))]">A/B Testing</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <h1 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl tracking-tight font-semibold">A/B Testing</h1>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-[hsl(var(--color-accent))] text-black rounded-xl font-medium hover:bg-[hsl(var(--color-accent-hover))] transition-colors"
-          >
+    <PageContainer>
+      <PageHeader
+        title="A/B Testing"
+        breadcrumb={
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
+            <Link href="/admin/analytics" className="inline-flex items-center hover:text-[hsl(var(--color-foreground))] transition-colors">
+              Analytics
+            </Link>
+            <span>/</span>
+            <span className="text-[hsl(var(--color-foreground))]">A/B Testing</span>
+          </nav>
+        }
+        actions={
+          <Button variant="accent" size="sm" onClick={() => setShowCreateModal(true)}>
             New Test
-          </button>
-        </div>
-      </div>
+          </Button>
+        }
+      />
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-4">
-          <p className="text-3xl font-semibold text-[hsl(var(--color-foreground))]">{tests.length}</p>
-          <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Total Tests</p>
-        </div>
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-4">
-          <p className="text-3xl font-semibold text-[hsl(var(--color-accent))]">{activeTests}</p>
-          <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Active Tests</p>
-        </div>
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-4">
-          <p className="text-3xl font-semibold text-blue-600">{completedTests}</p>
-          <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Completed Tests</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard label="Total Tests" value={tests.length} />
+        <StatCard label="Active Tests" value={activeTests} accent="success" />
+        <StatCard label="Completed Tests" value={completedTests} />
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 border-b border-[hsl(var(--color-border))] pb-4">
+      <FilterBar>
         {(["all", "active", "completed"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-              filter === f
-                ? "bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground))]"
-                : "text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))]"
-            }`}
-          >
+          <FilterChip key={f} active={filter === f} onClick={() => setFilter(f)}>
             {f.charAt(0).toUpperCase() + f.slice(1)}
             {f === "active" && activeTests > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 bg-[hsl(var(--color-accent))]/20 text-[hsl(var(--color-accent))] text-xs rounded">
+              <span className="ml-2 px-1.5 py-0.5 bg-[hsl(var(--color-accent))]/20 text-[hsl(var(--color-accent))] text-xs tabular-nums rounded-md">
                 {activeTests}
               </span>
             )}
-          </button>
+          </FilterChip>
         ))}
-      </div>
+      </FilterBar>
 
       {/* Tests List */}
-      <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden">
-        {filteredTests.length === 0 ? (
-          <div className="px-6 py-12 text-center text-[hsl(var(--color-foreground-subtle))]">
-            <p className="text-lg mb-2">No tests found</p>
-            <p className="text-sm">
-              {filter === "active"
-                ? "Start a new A/B test to optimize your content."
-                : "No tests match the current filter."}
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-[#27272a]">
+      {filteredTests.length === 0 ? (
+        <EmptyState
+          icon={<IconChart size={48} />}
+          title="No tests found"
+          description={
+            filter === "active"
+              ? "Start a new A/B test to optimize your content."
+              : "No tests match the current filter."
+          }
+        />
+      ) : (
+        <Card padding="none" className="overflow-hidden">
+          <div className="divide-y divide-[hsl(var(--color-border))]/30">
             {filteredTests.map((test) => (
               <button
                 key={test.id}
                 onClick={() => setSelectedTest(test)}
-                className="w-full px-6 py-4 flex items-center gap-6 hover:bg-[hsl(var(--color-background-subtle))] transition-colors text-left"
+                className="w-full px-6 py-4 flex flex-col gap-4 md:flex-row md:items-center md:gap-6 hover:bg-[hsl(var(--color-background-muted))]/30 transition-colors text-left"
               >
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 md:flex-1">
                   <div className="flex items-center gap-3 mb-1">
                     <p className="font-medium text-[hsl(var(--color-foreground))] truncate">
                       {test.journal_articles?.title || "Unknown Article"}
                     </p>
-                    <StatusBadge status={test.status} />
+                    <TestStatusBadge status={test.status} />
                   </div>
                   <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">
                     Testing: {test.test_name} | Started {formatDate(test.created_at)}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-8 text-sm">
+                <div className="flex items-center gap-6 md:gap-8 text-sm shrink-0">
                   <div className="text-center">
-                    <p className="text-[hsl(var(--color-foreground))] font-medium">
+                    <p className="text-[hsl(var(--color-foreground))] font-medium tabular-nums">
                       {calculateCTR(test.variant_a_clicks, test.variant_a_views).toFixed(1)}%
                     </p>
                     <p className="text-[hsl(var(--color-foreground-subtle))]">Variant A</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[hsl(var(--color-foreground))] font-medium">
+                    <p className="text-[hsl(var(--color-foreground))] font-medium tabular-nums">
                       {calculateCTR(test.variant_b_clicks, test.variant_b_views).toFixed(1)}%
                     </p>
                     <p className="text-[hsl(var(--color-foreground-subtle))]">Variant B</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[hsl(var(--color-foreground))] font-medium">
+                    <p className="text-[hsl(var(--color-foreground))] font-medium tabular-nums">
                       {test.variant_a_views + test.variant_b_views}
                     </p>
                     <p className="text-[hsl(var(--color-foreground-subtle))]">Impressions</p>
@@ -328,31 +326,33 @@ export default function ABTestingPage() {
               </button>
             ))}
           </div>
-        )}
-      </div>
+        </Card>
+      )}
 
       {/* Create Test Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl max-w-lg w-full">
-            <div className="p-6 border-b border-[hsl(var(--color-border))] flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Create A/B Test</h2>
-              <button
+          <div className="bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))]/50 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[hsl(var(--color-border))]/30 flex items-center justify-between gap-4">
+              <h2 className={MODAL_TITLE}>Create A/B Test</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                aria-label="Close"
                 onClick={() => setShowCreateModal(false)}
-                className="p-2 text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))] rounded-xl transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                <IconX size={20} />
+              </Button>
             </div>
 
             <form onSubmit={handleCreateTest} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
+                <label htmlFor="ab-test-article" className={FIELD_LABEL}>
                   Article
                 </label>
                 <select
+                  id="ab-test-article"
                   value={formArticle}
                   onChange={(e) => {
                     setFormArticle(e.target.value);
@@ -361,7 +361,7 @@ export default function ABTestingPage() {
                       setFormVariantA(article.title);
                     }
                   }}
-                  className="w-full px-3 py-2 bg-[hsl(var(--color-background-subtle))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:border-[hsl(var(--color-accent))] focus:outline-none"
+                  className={FIELD}
                   required
                 >
                   <option value="">Select an article...</option>
@@ -374,13 +374,14 @@ export default function ABTestingPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
+                <label htmlFor="ab-test-type" className={FIELD_LABEL}>
                   Test Type
                 </label>
                 <select
+                  id="ab-test-type"
                   value={formTestName}
                   onChange={(e) => setFormTestName(e.target.value)}
-                  className="w-full px-3 py-2 bg-[hsl(var(--color-background-subtle))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:border-[hsl(var(--color-accent))] focus:outline-none"
+                  className={FIELD}
                 >
                   <option value="title">Title</option>
                   <option value="excerpt">Excerpt</option>
@@ -389,13 +390,14 @@ export default function ABTestingPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
+                <label htmlFor="ab-test-variant-a" className={FIELD_LABEL}>
                   Variant A (Control)
                 </label>
                 <textarea
+                  id="ab-test-variant-a"
                   value={formVariantA}
                   onChange={(e) => setFormVariantA(e.target.value)}
-                  className="w-full px-3 py-2 bg-[hsl(var(--color-background-subtle))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:border-[hsl(var(--color-accent))] focus:outline-none resize-none"
+                  className={`${FIELD} resize-none`}
                   rows={2}
                   placeholder="Original text..."
                   required
@@ -403,34 +405,32 @@ export default function ABTestingPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
+                <label htmlFor="ab-test-variant-b" className={FIELD_LABEL}>
                   Variant B (Test)
                 </label>
                 <textarea
+                  id="ab-test-variant-b"
                   value={formVariantB}
                   onChange={(e) => setFormVariantB(e.target.value)}
-                  className="w-full px-3 py-2 bg-[hsl(var(--color-background-subtle))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:border-[hsl(var(--color-accent))] focus:outline-none resize-none"
+                  className={`${FIELD} resize-none`}
                   rows={2}
                   placeholder="Alternative text to test..."
                   required
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4">
-                <button
+              <div className="flex flex-wrap justify-end gap-3 pt-4">
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors"
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="px-4 py-2 bg-[hsl(var(--color-accent))] text-black rounded-xl font-medium hover:bg-[hsl(var(--color-accent-hover))] transition-colors disabled:opacity-50"
-                >
+                </Button>
+                <Button type="submit" variant="accent" size="sm" disabled={creating}>
                   {creating ? "Creating..." : "Create Test"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -440,25 +440,26 @@ export default function ABTestingPage() {
       {/* Test Detail Modal */}
       {selectedTest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6 border-b border-[hsl(var(--color-border))] flex items-center justify-between sticky top-0 bg-[hsl(var(--color-background-muted))]">
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-xl font-semibold">Test Details</h2>
-                  <StatusBadge status={selectedTest.status} />
+          <div className="bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))]/50 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[hsl(var(--color-border))]/30 flex items-start justify-between gap-4 sticky top-0 z-10 bg-[hsl(var(--color-background))]">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3 mb-1">
+                  <h2 className={MODAL_TITLE}>Test Details</h2>
+                  <TestStatusBadge status={selectedTest.status} />
                 </div>
-                <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">
+                <p className="text-sm text-[hsl(var(--color-foreground-subtle))] break-words">
                   {selectedTest.journal_articles?.title || "Unknown Article"}
                 </p>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                aria-label="Close"
                 onClick={() => setSelectedTest(null)}
-                className="p-2 text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))] rounded-xl transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                <IconX size={20} />
+              </Button>
             </div>
 
             <div className="p-6 space-y-6">
@@ -470,28 +471,28 @@ export default function ABTestingPage() {
               )}
 
               {/* Variants Comparison */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className={`bg-[hsl(var(--color-background-subtle))] rounded-xl p-4 border ${
                   selectedTest.winner === "a" ? "border-[hsl(var(--color-accent))]" : "border-[hsl(var(--color-border))]"
                 }`}>
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between gap-3 mb-3">
                     <span className="text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Variant A (Control)</span>
                     {selectedTest.winner === "a" && (
                       <span className="text-xs text-[hsl(var(--color-accent))]">WINNER</span>
                     )}
                   </div>
-                  <p className="text-[hsl(var(--color-foreground))] mb-4">{selectedTest.variant_a}</p>
+                  <p className="text-[hsl(var(--color-foreground))] mb-4 break-words">{selectedTest.variant_a}</p>
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <p className="text-xl font-semibold text-[hsl(var(--color-foreground))]">{selectedTest.variant_a_views}</p>
+                      <p className="text-xl font-semibold tabular-nums text-[hsl(var(--color-foreground))]">{selectedTest.variant_a_views}</p>
                       <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">Views</p>
                     </div>
                     <div>
-                      <p className="text-xl font-semibold text-[hsl(var(--color-foreground))]">{selectedTest.variant_a_clicks}</p>
+                      <p className="text-xl font-semibold tabular-nums text-[hsl(var(--color-foreground))]">{selectedTest.variant_a_clicks}</p>
                       <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">Clicks</p>
                     </div>
                     <div>
-                      <p className="text-xl font-semibold text-[hsl(var(--color-accent))]">
+                      <p className="text-xl font-semibold tabular-nums text-[hsl(var(--color-accent))]">
                         {calculateCTR(selectedTest.variant_a_clicks, selectedTest.variant_a_views).toFixed(2)}%
                       </p>
                       <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">CTR</p>
@@ -502,24 +503,24 @@ export default function ABTestingPage() {
                 <div className={`bg-[hsl(var(--color-background-subtle))] rounded-xl p-4 border ${
                   selectedTest.winner === "b" ? "border-[hsl(var(--color-accent))]" : "border-[hsl(var(--color-border))]"
                 }`}>
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between gap-3 mb-3">
                     <span className="text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Variant B (Test)</span>
                     {selectedTest.winner === "b" && (
                       <span className="text-xs text-[hsl(var(--color-accent))]">WINNER</span>
                     )}
                   </div>
-                  <p className="text-[hsl(var(--color-foreground))] mb-4">{selectedTest.variant_b}</p>
+                  <p className="text-[hsl(var(--color-foreground))] mb-4 break-words">{selectedTest.variant_b}</p>
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <p className="text-xl font-semibold text-[hsl(var(--color-foreground))]">{selectedTest.variant_b_views}</p>
+                      <p className="text-xl font-semibold tabular-nums text-[hsl(var(--color-foreground))]">{selectedTest.variant_b_views}</p>
                       <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">Views</p>
                     </div>
                     <div>
-                      <p className="text-xl font-semibold text-[hsl(var(--color-foreground))]">{selectedTest.variant_b_clicks}</p>
+                      <p className="text-xl font-semibold tabular-nums text-[hsl(var(--color-foreground))]">{selectedTest.variant_b_clicks}</p>
                       <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">Clicks</p>
                     </div>
                     <div>
-                      <p className="text-xl font-semibold text-[hsl(var(--color-accent))]">
+                      <p className="text-xl font-semibold tabular-nums text-[hsl(var(--color-accent))]">
                         {calculateCTR(selectedTest.variant_b_clicks, selectedTest.variant_b_views).toFixed(2)}%
                       </p>
                       <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">CTR</p>
@@ -529,7 +530,7 @@ export default function ABTestingPage() {
               </div>
 
               {/* Meta Info */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-[hsl(var(--color-foreground-subtle))]">Test Type:</span>
                   <span className="text-[hsl(var(--color-foreground))] ml-2 capitalize">{selectedTest.test_name}</span>
@@ -546,7 +547,7 @@ export default function ABTestingPage() {
                 )}
                 <div>
                   <span className="text-[hsl(var(--color-foreground-subtle))]">Total Impressions:</span>
-                  <span className="text-[hsl(var(--color-foreground))] ml-2">
+                  <span className="text-[hsl(var(--color-foreground))] ml-2 tabular-nums">
                     {selectedTest.variant_a_views + selectedTest.variant_b_views}
                   </span>
                 </div>
@@ -554,25 +555,24 @@ export default function ABTestingPage() {
 
               {/* Actions */}
               {selectedTest.status === "active" && (
-                <div className="flex justify-end gap-3 pt-4 border-t border-[hsl(var(--color-border))]">
-                  <button
+                <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-[hsl(var(--color-border))]/30">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:bg-red-500/10"
                     onClick={() => handleCancelTest(selectedTest.id)}
-                    className="px-4 py-2 text-red-600 hover:text-red-300 transition-colors"
                   >
                     Cancel Test
-                  </button>
-                  <button
-                    onClick={() => handleEndTest(selectedTest.id)}
-                    className="px-4 py-2 bg-[hsl(var(--color-accent))] text-black rounded-xl font-medium hover:bg-[hsl(var(--color-accent-hover))] transition-colors"
-                  >
+                  </Button>
+                  <Button variant="accent" size="sm" onClick={() => handleEndTest(selectedTest.id)}>
                     End Test & Declare Winner
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

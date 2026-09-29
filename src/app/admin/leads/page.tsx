@@ -173,66 +173,68 @@ export default function LeadsPage() {
 
       {/* Leads Table */}
       <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-[hsl(var(--color-border))]">
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Lead</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Service</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Budget</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Score</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Stage</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Date</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[hsl(var(--color-border))]">
-            {filteredLeads.length > 0 ? (
-              filteredLeads.map((lead) => (
-                <tr key={lead.id} className="hover:bg-[hsl(var(--color-background-subtle))] transition-colors">
-                  <td className="px-6 py-4">
-                    <Link href={`/admin/leads/${lead.id}`} className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[hsl(var(--color-accent))]/20 flex items-center justify-center text-[hsl(var(--color-accent))] font-medium text-sm">
-                        {lead.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-medium text-[hsl(var(--color-foreground))] hover:text-[hsl(var(--color-accent))] transition-colors">{lead.name}</p>
-                        <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">{lead.company || lead.email}</p>
-                      </div>
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{formatService(lead.service_interest)}</td>
-                  <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{formatBudget(lead.budget_range)}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-[hsl(var(--color-background-subtle))] flex items-center justify-center text-sm font-medium">
-                        {lead.score}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <select
-                      value={lead.stage?.id || ""}
-                      onChange={(e) => handleStageChange(lead.id, e.target.value)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-medium border cursor-pointer focus:outline-none ${getStageColor(lead.stage?.color || null)}`}
-                    >
-                      {stages.map((stage) => (
-                        <option key={stage.id} value={stage.id} className="bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))]">
-                          {stage.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-6 py-4 text-[hsl(var(--color-foreground-subtle))] text-sm">{formatDate(lead.created_at)}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-[hsl(var(--color-foreground-subtle))]">
-                  {search || filter !== "all" ? "No leads match your filters" : "No leads yet"}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px]">
+            <thead>
+              <tr className="border-b border-[hsl(var(--color-border))]">
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Lead</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Service</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Budget</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Score</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Stage</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Date</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[hsl(var(--color-border))]">
+              {filteredLeads.length > 0 ? (
+                filteredLeads.map((lead) => (
+                  <tr key={lead.id} className="hover:bg-[hsl(var(--color-background-subtle))] transition-colors">
+                    <td className="px-6 py-4">
+                      <Link href={`/admin/leads/${lead.id}`} className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[hsl(var(--color-accent))]/20 flex items-center justify-center text-[hsl(var(--color-accent))] font-medium text-sm">
+                          {lead.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-[hsl(var(--color-foreground))] hover:text-[hsl(var(--color-accent))] transition-colors">{lead.name}</p>
+                          <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">{lead.company || lead.email}</p>
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{formatService(lead.service_interest)}</td>
+                    <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{formatBudget(lead.budget_range)}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-[hsl(var(--color-background-subtle))] flex items-center justify-center text-sm font-medium">
+                          {lead.score}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <select
+                        value={lead.stage?.id || ""}
+                        onChange={(e) => handleStageChange(lead.id, e.target.value)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium border cursor-pointer focus:outline-none ${getStageColor(lead.stage?.color || null)}`}
+                      >
+                        {stages.map((stage) => (
+                          <option key={stage.id} value={stage.id} className="bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))]">
+                            {stage.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 text-[hsl(var(--color-foreground-subtle))] text-sm">{formatDate(lead.created_at)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-[hsl(var(--color-foreground-subtle))]">
+                    {search || filter !== "all" ? "No leads match your filters" : "No leads yet"}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

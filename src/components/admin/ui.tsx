@@ -12,7 +12,7 @@ export function PageContainer({ children, className }: { children: React.ReactNo
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   eyebrow?: string;
   actions?: React.ReactNode;
   breadcrumb?: React.ReactNode;
@@ -23,13 +23,13 @@ export function PageHeader({ title, subtitle, eyebrow, actions, breadcrumb }: Pa
     <div className="space-y-3">
       {breadcrumb && <div>{breadcrumb}</div>}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
+        <div className="min-w-0">
           {eyebrow && (
             <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[hsl(var(--color-foreground-subtle))] mb-1">
               {eyebrow}
             </p>
           )}
-          <h1 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl tracking-tight font-semibold text-[hsl(var(--color-foreground))]">
+          <h1 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl tracking-tight font-semibold text-[hsl(var(--color-foreground))] break-words">
             {title}
           </h1>
           {subtitle && (
@@ -38,7 +38,7 @@ export function PageHeader({ title, subtitle, eyebrow, actions, breadcrumb }: Pa
             </p>
           )}
         </div>
-        {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
+        {actions && <div className="flex flex-wrap items-center gap-3 shrink-0">{actions}</div>}
       </div>
     </div>
   );
@@ -59,8 +59,8 @@ export function Section({ title, description, actions, children, id, className }
   return (
     <section id={id} className={cn("space-y-4", className)}>
       {(title || actions) && (
-        <div className="flex items-center justify-between gap-4">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0">
             {title && (
               <h2 className="font-[family-name:var(--font-heading)] text-xl md:text-2xl tracking-tight font-semibold text-[hsl(var(--color-foreground))]">
                 {title}
@@ -70,7 +70,7 @@ export function Section({ title, description, actions, children, id, className }
               <p className="text-sm text-[hsl(var(--color-foreground-muted))] mt-0.5">{description}</p>
             )}
           </div>
-          {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
+          {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
         </div>
       )}
       {children}
@@ -116,23 +116,25 @@ interface StatCardProps {
   trend?: "up" | "down";
   icon?: React.ReactNode;
   href?: string;
-  accent?: "success" | "warning";
+  accent?: "success" | "warning" | "error";
 }
+
+const STAT_ACCENT = {
+  success: "text-[hsl(var(--color-success))]",
+  warning: "text-[hsl(var(--color-warning))]",
+  error: "text-[hsl(var(--color-error))]",
+} as const;
 
 export function StatCard({ label, value, icon, accent }: StatCardProps) {
   return (
     <div className="bg-[hsl(var(--color-background-subtle))]/50 backdrop-blur-sm border border-[hsl(var(--color-border))]/50 rounded-2xl p-6 hover:border-[hsl(var(--color-border-strong))]/60 hover:bg-[hsl(var(--color-background-subtle))]/80 hover:shadow-lg hover:shadow-black/5 transition-all duration-200">
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-xs text-[hsl(var(--color-foreground-muted))] mb-2">{label}</p>
           <p
             className={cn(
-              "text-3xl font-semibold tracking-tight tabular-nums font-mono",
-              accent === "warning"
-                ? "text-amber-400"
-                : accent === "success"
-                  ? "text-emerald-400"
-                  : "text-[hsl(var(--color-foreground))]"
+              "text-3xl font-semibold tracking-tight tabular-nums font-mono break-words",
+              accent ? STAT_ACCENT[accent] : "text-[hsl(var(--color-foreground))]"
             )}
           >
             {value}
@@ -180,7 +182,7 @@ export function FilterBar({ children, className }: { children: React.ReactNode; 
   return (
     <div
       className={cn(
-        "flex gap-2 overflow-x-auto -mx-4 px-4 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
+        "flex gap-2 overflow-x-auto -mx-4 px-4 pb-2 max-w-[calc(100%+2rem)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
         className
       )}
     >
@@ -201,7 +203,9 @@ interface FilterChipProps {
 export function FilterChip({ active, onClick, children, className }: FilterChipProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={active ?? false}
       className={cn(
         "px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors shrink-0",
         active
@@ -222,9 +226,11 @@ interface SearchInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  /** Accessible name for the input. Defaults to the placeholder. */
+  label?: string;
 }
 
-export function SearchInput({ value, onChange, placeholder = "Search...", className }: SearchInputProps) {
+export function SearchInput({ value, onChange, placeholder = "Search...", className, label }: SearchInputProps) {
   return (
     <div className={cn("relative flex-1 max-w-sm", className)}>
       <IconSearch
@@ -233,6 +239,7 @@ export function SearchInput({ value, onChange, placeholder = "Search...", classN
       />
       <input
         type="text"
+        aria-label={label ?? placeholder}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -248,9 +255,9 @@ type StatusVariant = "neutral" | "success" | "warning" | "error" | "info" | "acc
 
 const STATUS_STYLES: Record<StatusVariant, string> = {
   neutral: "bg-[hsl(var(--color-foreground-subtle))]/10 text-[hsl(var(--color-foreground-muted))] border-[hsl(var(--color-border))]/30",
-  success: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  warning: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-  error: "bg-red-500/15 text-red-400 border-red-500/20",
+  success: "bg-[hsl(var(--color-success-subtle))] text-[hsl(var(--color-success))] border-[hsl(var(--color-success))]/20",
+  warning: "bg-[hsl(var(--color-warning-subtle))] text-[hsl(var(--color-warning))] border-[hsl(var(--color-warning))]/20",
+  error: "bg-[hsl(var(--color-error-subtle))] text-[hsl(var(--color-error))] border-[hsl(var(--color-error))]/20",
   info: "bg-blue-500/15 text-blue-400 border-blue-500/20",
   accent: "bg-[hsl(var(--color-accent))]/15 text-[hsl(var(--color-accent))] border-[hsl(var(--color-accent))]/20",
 };

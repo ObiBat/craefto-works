@@ -3,6 +3,16 @@
 import * as React from "react";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
+import { Button } from "@/components/ui/button";
+import {
+  PageContainer,
+  PageHeader,
+  Card,
+  StatCard,
+  FilterBar,
+  FilterChip,
+} from "@/components/admin/ui";
+import { IconX } from "@/components/admin/icons";
 
 interface ArticlePerformance {
   id: string;
@@ -29,6 +39,8 @@ interface DailyView {
   unique_visitors: number;
 }
 
+const CARD_TITLE = "font-[family-name:var(--font-heading)] text-lg font-semibold text-[hsl(var(--color-foreground))]";
+
 function formatNumber(num: number): string {
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
   if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
@@ -48,7 +60,7 @@ function TrendIndicator({ current, previous }: { current: number; previous: numb
   const isPositive = change >= 0;
 
   return (
-    <span className={`text-xs font-medium ${isPositive ? "text-green-600" : "text-red-600"}`}>
+    <span className={`shrink-0 whitespace-nowrap text-xs font-medium tabular-nums ${isPositive ? "text-green-600" : "text-red-600"}`}>
       {isPositive ? "↑" : "↓"} {Math.abs(change).toFixed(0)}%
     </span>
   );
@@ -122,50 +134,40 @@ export default function ContentAnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))] mb-2">
-          <Link href="/admin/analytics" className="hover:text-[hsl(var(--color-foreground))]">
-            Analytics
-          </Link>
-          <span>/</span>
-          <span className="text-[hsl(var(--color-foreground))]">Content Performance</span>
-        </div>
-        <h1 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl tracking-tight font-semibold">Content Performance</h1>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Content Performance"
+        breadcrumb={
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
+            <Link href="/admin/analytics" className="inline-flex items-center hover:text-[hsl(var(--color-foreground))] transition-colors">
+              Analytics
+            </Link>
+            <span>/</span>
+            <span className="text-[hsl(var(--color-foreground))]">Content Performance</span>
+          </nav>
+        }
+      />
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-4">
-          <p className="text-3xl font-semibold text-[hsl(var(--color-foreground))]">{formatNumber(totalViews)}</p>
-          <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Total Views</p>
-        </div>
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-4">
-          <p className="text-3xl font-semibold text-[hsl(var(--color-foreground))]">{formatNumber(totalVisitors)}</p>
-          <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Unique Visitors</p>
-        </div>
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-4">
-          <p className="text-3xl font-semibold text-[hsl(var(--color-foreground))]">{topArticles.length}</p>
-          <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Articles Tracked</p>
-        </div>
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-4">
-          <p className="text-3xl font-semibold text-[hsl(var(--color-foreground))]">
-            {avgTimeOnPage ? `${Math.floor(avgTimeOnPage / 60)}:${(avgTimeOnPage % 60).toString().padStart(2, "0")}` : "—"}
-          </p>
-          <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Avg. Time on Page</p>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Total Views" value={formatNumber(totalViews)} />
+        <StatCard label="Unique Visitors" value={formatNumber(totalVisitors)} />
+        <StatCard label="Articles Tracked" value={topArticles.length} />
+        <StatCard
+          label="Avg. Time on Page"
+          value={avgTimeOnPage ? `${Math.floor(avgTimeOnPage / 60)}:${(avgTimeOnPage % 60).toString().padStart(2, "0")}` : "—"}
+        />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Articles */}
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[hsl(var(--color-border))]">
-            <h2 className="text-lg font-semibold">Top Articles</h2>
+        <Card padding="none" className="overflow-hidden">
+          <div className="p-6 border-b border-[hsl(var(--color-border))]/30">
+            <h2 className={CARD_TITLE}>Top Articles</h2>
           </div>
-          <div className="divide-y divide-[#27272a]">
+          <div className="divide-y divide-[hsl(var(--color-border))]/30">
             {topArticles.length === 0 ? (
-              <div className="px-6 py-8 text-center text-[hsl(var(--color-foreground-subtle))]">
+              <div className="px-6 py-8 text-center text-sm text-[hsl(var(--color-foreground-subtle))]">
                 No analytics data yet
               </div>
             ) : (
@@ -173,13 +175,13 @@ export default function ContentAnalyticsPage() {
                 <button
                   key={article.id}
                   onClick={() => setSelectedArticle(article.article_id)}
-                  className="w-full px-6 py-3 flex items-center gap-4 hover:bg-[hsl(var(--color-background-subtle))] transition-colors text-left"
+                  className="w-full px-6 py-3 flex items-center gap-4 hover:bg-[hsl(var(--color-background-muted))]/30 transition-colors text-left"
                 >
-                  <span className="text-lg font-semibold text-[hsl(var(--color-foreground-subtle))] w-6">
+                  <span className="text-lg font-semibold tabular-nums text-[hsl(var(--color-foreground-subtle))] w-6 shrink-0">
                     {index + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-[hsl(var(--color-foreground))] truncate">
+                    <p className="text-sm font-medium text-[hsl(var(--color-foreground))] truncate">
                       {article.journal_articles?.title || "Unknown"}
                     </p>
                     <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">
@@ -194,17 +196,17 @@ export default function ContentAnalyticsPage() {
               ))
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Trending Now */}
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[hsl(var(--color-border))]">
-            <h2 className="text-lg font-semibold">Trending Now</h2>
-            <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">Based on recent engagement</p>
+        <Card padding="none" className="overflow-hidden">
+          <div className="p-6 border-b border-[hsl(var(--color-border))]/30">
+            <h2 className={CARD_TITLE}>Trending Now</h2>
+            <p className="text-sm text-[hsl(var(--color-foreground-subtle))] mt-0.5">Based on recent engagement</p>
           </div>
-          <div className="divide-y divide-[#27272a]">
+          <div className="divide-y divide-[hsl(var(--color-border))]/30">
             {trending.length === 0 ? (
-              <div className="px-6 py-8 text-center text-[hsl(var(--color-foreground-subtle))]">
+              <div className="px-6 py-8 text-center text-sm text-[hsl(var(--color-foreground-subtle))]">
                 No trending data yet
               </div>
             ) : (
@@ -212,36 +214,36 @@ export default function ContentAnalyticsPage() {
                 <button
                   key={article.id}
                   onClick={() => setSelectedArticle(article.article_id)}
-                  className="w-full px-6 py-3 flex items-center gap-4 hover:bg-[hsl(var(--color-background-subtle))] transition-colors text-left"
+                  className="w-full px-6 py-3 flex items-center gap-4 hover:bg-[hsl(var(--color-background-muted))]/30 transition-colors text-left"
                 >
-                  <span className="text-lg font-semibold text-[hsl(var(--color-accent))] w-6">
+                  <span className="text-lg font-semibold tabular-nums text-[hsl(var(--color-accent))] w-6 shrink-0">
                     {index + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-[hsl(var(--color-foreground))] truncate">
+                    <p className="text-sm font-medium text-[hsl(var(--color-foreground))] truncate">
                       {article.journal_articles?.title || "Unknown"}
                     </p>
                     <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">
                       {formatNumber(article.views_last_7_days)} views this week
                     </p>
                   </div>
-                  <span className="text-xs text-[hsl(var(--color-accent))] bg-[hsl(var(--color-accent))]/10 px-2 py-1 rounded">
+                  <span className="shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium tabular-nums text-[hsl(var(--color-accent))] bg-[hsl(var(--color-accent))]/10">
                     Score: {article.trend_score.toFixed(0)}
                   </span>
                 </button>
               ))
             )}
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Article Detail Modal */}
       {selectedArticle && articleDetails && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl max-w-3xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6 border-b border-[hsl(var(--color-border))] flex items-center justify-between sticky top-0 bg-[hsl(var(--color-background-muted))]">
-              <div>
-                <h2 className="text-xl font-semibold">
+          <div className="bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))]/50 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[hsl(var(--color-border))]/30 flex items-start justify-between gap-4 sticky top-0 z-10 bg-[hsl(var(--color-background))]">
+              <div className="min-w-0">
+                <h2 className={`${CARD_TITLE} break-words`}>
                   {articleDetails.performance?.journal_articles?.title || "Article Details"}
                 </h2>
                 {articleDetails.performance?.journal_articles?.slug && (
@@ -255,59 +257,52 @@ export default function ContentAnalyticsPage() {
                   </a>
                 )}
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                aria-label="Close"
                 onClick={() => setSelectedArticle(null)}
-                className="p-2 text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))] rounded-xl transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                <IconX size={20} />
+              </Button>
             </div>
 
             <div className="p-6 space-y-6">
               {/* Time Range Selector */}
-              <div className="flex gap-2">
+              <FilterBar>
                 {(["7", "30", "90"] as const).map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setTimeRange(range)}
-                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
-                      timeRange === range
-                        ? "bg-[hsl(var(--color-accent))] text-black"
-                        : "bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))]"
-                    }`}
-                  >
+                  <FilterChip key={range} active={timeRange === range} onClick={() => setTimeRange(range)}>
                     {range} Days
-                  </button>
+                  </FilterChip>
                 ))}
-              </div>
+              </FilterBar>
 
               {/* Stats Grid */}
               {articleDetails.performance && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-[hsl(var(--color-background-subtle))] rounded-xl p-4">
-                    <p className="text-2xl font-semibold text-[hsl(var(--color-foreground))]">
+                  <div className="rounded-xl bg-[hsl(var(--color-background-muted))]/40 p-4">
+                    <p className="text-2xl font-semibold tabular-nums text-[hsl(var(--color-foreground))]">
                       {formatNumber(articleDetails.performance.total_views)}
                     </p>
                     <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Total Views</p>
                   </div>
-                  <div className="bg-[hsl(var(--color-background-subtle))] rounded-xl p-4">
-                    <p className="text-2xl font-semibold text-[hsl(var(--color-foreground))]">
+                  <div className="rounded-xl bg-[hsl(var(--color-background-muted))]/40 p-4">
+                    <p className="text-2xl font-semibold tabular-nums text-[hsl(var(--color-foreground))]">
                       {formatNumber(articleDetails.performance.unique_visitors)}
                     </p>
                     <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Unique Visitors</p>
                   </div>
-                  <div className="bg-[hsl(var(--color-background-subtle))] rounded-xl p-4">
-                    <p className="text-2xl font-semibold text-[hsl(var(--color-foreground))]">
+                  <div className="rounded-xl bg-[hsl(var(--color-background-muted))]/40 p-4">
+                    <p className="text-2xl font-semibold tabular-nums text-[hsl(var(--color-foreground))]">
                       {articleDetails.performance.avg_scroll_depth
                         ? `${articleDetails.performance.avg_scroll_depth.toFixed(0)}%`
                         : "—"}
                     </p>
                     <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Avg. Scroll Depth</p>
                   </div>
-                  <div className="bg-[hsl(var(--color-background-subtle))] rounded-xl p-4">
-                    <p className="text-2xl font-semibold text-[hsl(var(--color-foreground))]">
+                  <div className="rounded-xl bg-[hsl(var(--color-background-muted))]/40 p-4">
+                    <p className="text-2xl font-semibold tabular-nums text-[hsl(var(--color-foreground))]">
                       {articleDetails.performance.share_count}
                     </p>
                     <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Shares</p>
@@ -318,7 +313,7 @@ export default function ContentAnalyticsPage() {
               {/* Daily Views Chart (Simple Bar Chart) */}
               {articleDetails.dailyViews.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-4">Daily Views</h3>
+                  <h3 className="text-base font-semibold text-[hsl(var(--color-foreground))] mb-4">Daily Views</h3>
                   <div className="flex items-end gap-1 h-32">
                     {articleDetails.dailyViews.slice(0, 30).reverse().map((day, index) => {
                       const maxViews = Math.max(...articleDetails.dailyViews.map((d) => d.view_count));
@@ -330,7 +325,7 @@ export default function ContentAnalyticsPage() {
                           style={{ height: `${Math.max(height, 4)}%` }}
                           title={`${formatDate(day.view_date)}: ${day.view_count} views`}
                         >
-                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-[hsl(var(--color-background-subtle))] px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-[hsl(var(--color-background-subtle))] border border-[hsl(var(--color-border))] shadow-sm px-2 py-1 rounded-lg text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
                             {formatDate(day.view_date)}: {day.view_count}
                           </div>
                         </div>
@@ -343,6 +338,6 @@ export default function ContentAnalyticsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

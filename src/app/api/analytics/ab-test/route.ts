@@ -3,21 +3,6 @@ import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-interface ABTest {
-  id: string;
-  article_id: string;
-  test_name: string;
-  variant_a: string;
-  variant_b: string;
-  variant_a_views: number;
-  variant_b_views: number;
-  variant_a_clicks: number;
-  variant_b_clicks: number;
-  winner: string | null;
-  confidence: number | null;
-  status: string;
-}
-
 /**
  * GET /api/analytics/ab-test - Get active A/B tests or specific test
  */

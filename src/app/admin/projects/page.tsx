@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminLoader } from "@/components/admin/AdminLoader";
-import { PageHeader, EmptyState } from "@/components/admin/ui";
+import { EmptyState } from "@/components/admin/ui";
 import { IconPlus, IconFolder } from "@/components/admin/icons";
 
 interface Project {
@@ -121,7 +121,7 @@ export default function ProjectsPage() {
   const [clients, setClients] = React.useState<Client[]>([]);
   const [saving, setSaving] = React.useState(false);
 
-  async function fetchProjects() {
+  const fetchProjects = React.useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (filter !== "all") params.set("status", filter);
@@ -136,11 +136,11 @@ export default function ProjectsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filter, sort]);
 
   React.useEffect(() => {
     fetchProjects();
-  }, [filter, sort]);
+  }, [fetchProjects]);
 
   async function openForm() {
     setForm(EMPTY_FORM);

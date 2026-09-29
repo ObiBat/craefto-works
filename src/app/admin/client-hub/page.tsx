@@ -1,6 +1,16 @@
 "use client";
 
 import * as React from "react";
+import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, Section, Card, StatCard } from "@/components/admin/ui";
+import {
+  IconFileText,
+  IconMail,
+  IconClock,
+  IconCheckCircle,
+  IconChevronRight,
+  IconExternal,
+} from "@/components/admin/icons";
 
 const STATS = [
   { value: "8", label: "Template Systems", icon: "document" },
@@ -88,29 +98,13 @@ const TEMPLATES = [
 function StatIcon({ icon }: { icon: string }) {
   switch (icon) {
     case "document":
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      );
+      return <IconFileText size={20} />;
     case "mail":
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      );
+      return <IconMail size={20} />;
     case "clock":
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      );
+      return <IconClock size={20} />;
     case "check":
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      );
+      return <IconCheckCircle size={20} />;
     default:
       return null;
   }
@@ -148,38 +142,33 @@ function getColorClasses(color: string) {
 
 export default function ClientHubPage() {
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl tracking-tight font-semibold mb-1">Client Operations Hub</h1>
-        <p className="text-[hsl(var(--color-foreground-muted))]">
-          Templates and tools for client acquisition, qualification, and onboarding
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Client Operations Hub"
+        subtitle="Templates and tools for client acquisition, qualification, and onboarding"
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {STATS.map((stat, index) => (
-          <div
+          <StatCard
             key={index}
-            className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-4 text-center"
-          >
-            <div className="w-10 h-10 mx-auto mb-3 bg-[hsl(var(--color-accent))]/10 rounded-xl flex items-center justify-center text-[hsl(var(--color-accent))]">
-              <StatIcon icon={stat.icon} />
-            </div>
-            <p className="text-2xl font-semibold text-[hsl(var(--color-foreground))]">{stat.value}</p>
-            <p className="text-sm text-[hsl(var(--color-foreground-muted))]">{stat.label}</p>
-          </div>
+            label={stat.label}
+            value={stat.value}
+            icon={<StatIcon icon={stat.icon} />}
+          />
         ))}
       </div>
 
       {/* Client Journey */}
-      <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6">
-        <h2 className="text-lg font-semibold mb-4">Client Journey</h2>
-        <div className="flex items-center justify-between overflow-x-auto pb-2">
+      <Card>
+        <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-[hsl(var(--color-foreground))] mb-5">
+          Client Journey
+        </h2>
+        <div className="grid grid-cols-3 gap-y-5 sm:flex sm:items-center sm:justify-between sm:overflow-x-auto sm:pb-2">
           {JOURNEY_STEPS.map((step, index) => (
-            <div key={step} className="flex items-center">
-              <div className="flex flex-col items-center min-w-[100px]">
+            <div key={step} className="flex items-center justify-center sm:justify-start">
+              <div className="flex flex-col items-center text-center sm:min-w-[100px]">
                 <div className="w-10 h-10 rounded-full border-2 border-[hsl(var(--color-accent))] bg-[hsl(var(--color-background))] flex items-center justify-center text-[hsl(var(--color-accent))] font-semibold text-sm">
                   {index + 1}
                 </div>
@@ -191,11 +180,10 @@ export default function ClientHubPage() {
             </div>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Templates Grid */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Templates & Tools</h2>
+      <Section title="Templates & Tools">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {TEMPLATES.map((template) => {
             const colors = getColorClasses(template.color);
@@ -205,67 +193,56 @@ export default function ClientHubPage() {
                 href={template.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden hover:border-[hsl(var(--color-accent))]/50 transition-all hover:shadow-md"
+                className="group flex flex-col bg-[hsl(var(--color-background-subtle))]/50 backdrop-blur-sm border border-[hsl(var(--color-border))]/50 rounded-2xl overflow-hidden hover:border-[hsl(var(--color-border-strong))]/60 hover:bg-[hsl(var(--color-background-subtle))]/80 hover:shadow-lg hover:shadow-black/5 transition-all duration-200"
               >
-                <div className="p-4 border-b border-[hsl(var(--color-border))]">
+                <div className="p-5 border-b border-[hsl(var(--color-border))]/30">
                   <div className="flex items-start gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${colors.bg}`}>
-                      <svg className={`w-5 h-5 ${colors.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                      <IconFileText size={20} className={colors.text} />
                     </div>
-                    <div>
-                      <h3 className="font-medium text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors">
+                    <div className="min-w-0">
+                      <h3 className="text-base font-semibold text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors">
                         {template.title}
                       </h3>
                       <span className="text-xs text-[hsl(var(--color-foreground-subtle))]">{template.subtitle}</span>
                     </div>
                   </div>
                 </div>
-                <div className="p-4">
+                <div className="p-5 flex-1">
                   <p className="text-sm text-[hsl(var(--color-foreground-muted))] mb-3">{template.description}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {template.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 text-xs bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground-subtle))] rounded-full"
+                        className="px-2 py-0.5 text-xs bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))] rounded-full"
                       >
                         {tag}
                       </span>
                     ))}
                   </div>
                 </div>
-                <div className="px-4 py-3 bg-[hsl(var(--color-background-subtle))] flex items-center justify-between">
+                <div className="px-5 py-3 border-t border-[hsl(var(--color-border))]/30 flex items-center justify-between">
                   <span className="text-sm font-medium text-[hsl(var(--color-accent))] flex items-center gap-1">
                     View template
-                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <IconChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </span>
-                  <svg className="w-4 h-4 text-[hsl(var(--color-foreground-subtle))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
+                  <IconExternal size={16} className="text-[hsl(var(--color-foreground-subtle))]" />
                 </div>
               </a>
             );
           })}
         </div>
-      </div>
+      </Section>
 
       {/* Full Hub Link */}
-      <div className="text-center pt-4">
-        <a
-          href="/client-hub/index.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors"
-        >
-          <span>Open full Client Hub</span>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-        </a>
+      <div className="text-center">
+        <Button asChild variant="ghost" size="sm" className="text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))]">
+          <a href="/client-hub/index.html" target="_blank" rel="noopener noreferrer">
+            <span>Open full Client Hub</span>
+            <IconExternal size={16} />
+          </a>
+        </Button>
       </div>
-    </div>
+    </PageContainer>
   );
 }

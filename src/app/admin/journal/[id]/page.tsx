@@ -4,6 +4,9 @@ import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
+import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, Card } from "@/components/admin/ui";
+import { IconChevronLeft } from "@/components/admin/icons";
 
 interface Author {
   id: string;
@@ -51,6 +54,10 @@ function calculateReadingTime(content: string): number {
   const words = content.trim().split(/\s+/).length;
   return Math.ceil(words / wordsPerMinute);
 }
+
+const LABEL_CLASS = "block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-1.5";
+const INPUT_CLASS =
+  "w-full px-4 py-2.5 rounded-xl bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] text-sm text-[hsl(var(--color-foreground))] placeholder:text-[hsl(var(--color-foreground-subtle))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))]/40 focus:border-[hsl(var(--color-accent))]/40";
 
 export default function ArticleEditorPage() {
   const router = useRouter();
@@ -111,6 +118,7 @@ export default function ArticleEditorPage() {
       }
     }
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per isNew and deliberately reads the initial author/pillar ids; adding them as deps would refetch authors and pillars whenever the form changes them
   }, [isNew]);
 
   // Fetch article if editing
@@ -141,7 +149,7 @@ export default function ArticleEditorPage() {
         } else {
           setError("Failed to load article");
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load article");
       } finally {
         setLoading(false);
@@ -201,7 +209,7 @@ export default function ArticleEditorPage() {
       if (isNew) {
         router.push(`/admin/journal/${data.article.id}`);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to save article");
     } finally {
       setSaving(false);
@@ -223,7 +231,7 @@ export default function ArticleEditorPage() {
       } else {
         setError("Failed to delete article");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to delete article");
     }
   };
@@ -233,285 +241,300 @@ export default function ArticleEditorPage() {
   }
 
   return (
-    <div className="max-w-4xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
+    <PageContainer className="max-w-4xl">
+      <PageHeader
+        breadcrumb={
           <Link
             href="/admin/journal"
-            className="p-2 text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))] rounded-xl transition-colors"
+            aria-label="Back to journal"
+            className="inline-flex items-center justify-center p-2 -ml-2 rounded-xl text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))] transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+            <IconChevronLeft size={20} />
           </Link>
-          <h1 className="text-2xl font-semibold">
-            {isNew ? "New Article" : "Edit Article"}
-          </h1>
-        </div>
-        {!isNew && (
-          <button
-            onClick={handleDelete}
-            className="px-4 py-2 text-red-600 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors"
-          >
-            Delete
-          </button>
-        )}
-      </div>
+        }
+        title={isNew ? "New Article" : "Edit Article"}
+        actions={
+          !isNew ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              className="text-red-600 hover:bg-red-500/10"
+            >
+              Delete
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Alerts */}
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600">
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600">
           {error}
         </div>
       )}
       {success && (
-        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-600">
+        <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-600">
           {success}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-            Title *
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))]"
-            placeholder="Article title"
-          />
-        </div>
-
-        {/* Slug */}
-        <div>
-          <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-            Slug *
-          </label>
-          <input
-            type="text"
-            name="slug"
-            value={formData.slug}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))]"
-            placeholder="article-slug"
-          />
-        </div>
-
-        {/* Subtitle */}
-        <div>
-          <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-            Subtitle
-          </label>
-          <input
-            type="text"
-            name="subtitle"
-            value={formData.subtitle || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))]"
-            placeholder="A brief subtitle for the article"
-          />
-        </div>
-
-        {/* Author & Pillar */}
-        <div className="grid grid-cols-2 gap-4">
+        <Card className="space-y-6">
+          {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-              Author *
-            </label>
-            <select
-              name="author_id"
-              value={formData.author_id}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))]"
-            >
-              <option value="">Select author</option>
-              {authors.map((author) => (
-                <option key={author.id} value={author.id}>
-                  {author.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-              Pillar *
-            </label>
-            <select
-              name="pillar_id"
-              value={formData.pillar_id}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))]"
-            >
-              <option value="">Select pillar</option>
-              {pillars.map((pillar) => (
-                <option key={pillar.id} value={pillar.id}>
-                  {pillar.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Content Type & Status */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-              Content Type
-            </label>
-            <select
-              name="content_type"
-              value={formData.content_type}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))]"
-            >
-              <option value="article">Article</option>
-              <option value="deep_dive">Deep Dive</option>
-              <option value="case_study">Case Study</option>
-              <option value="tutorial">Tutorial</option>
-              <option value="opinion">Opinion</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-              Status
-            </label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))]"
-            >
-              <option value="draft">Draft</option>
-              <option value="review">Review</option>
-              <option value="approved">Approved</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Featured Image */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-              Featured Image URL
+            <label htmlFor="article-title" className={LABEL_CLASS}>
+              Title *
             </label>
             <input
-              type="url"
-              name="featured_image_url"
-              value={formData.featured_image_url || ""}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))]"
-              placeholder="https://..."
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-              Image Alt Text
-            </label>
-            <input
+              id="article-title"
               type="text"
-              name="featured_image_alt"
-              value={formData.featured_image_alt || ""}
+              name="title"
+              value={formData.title}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))]"
-              placeholder="Describe the image"
+              required
+              className={INPUT_CLASS}
+              placeholder="Article title"
             />
           </div>
-        </div>
 
-        {/* Excerpt */}
-        <div>
-          <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-            Excerpt
-          </label>
-          <textarea
-            name="excerpt"
-            value={formData.excerpt || ""}
-            onChange={handleChange}
-            rows={3}
-            className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))] resize-none"
-            placeholder="A brief summary of the article"
-          />
-        </div>
+          {/* Slug */}
+          <div>
+            <label htmlFor="article-slug" className={LABEL_CLASS}>
+              Slug *
+            </label>
+            <input
+              id="article-slug"
+              type="text"
+              name="slug"
+              value={formData.slug}
+              onChange={handleChange}
+              required
+              className={INPUT_CLASS}
+              placeholder="article-slug"
+            />
+          </div>
 
-        {/* Content */}
-        <div>
-          <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
-            Content (MDX)
-            <span className="text-[hsl(var(--color-foreground-subtle))] ml-2">
-              {formData.reading_time} min read
-            </span>
-          </label>
-          <textarea
-            name="content"
-            value={formData.content || ""}
-            onChange={handleChange}
-            rows={20}
-            className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] font-mono text-sm focus:outline-none focus:border-[hsl(var(--color-accent))] resize-y"
-            placeholder="Write your article content in MDX format..."
-          />
-        </div>
+          {/* Subtitle */}
+          <div>
+            <label htmlFor="article-subtitle" className={LABEL_CLASS}>
+              Subtitle
+            </label>
+            <input
+              id="article-subtitle"
+              type="text"
+              name="subtitle"
+              value={formData.subtitle || ""}
+              onChange={handleChange}
+              className={INPUT_CLASS}
+              placeholder="A brief subtitle for the article"
+            />
+          </div>
+
+          {/* Author & Pillar */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="article-author" className={LABEL_CLASS}>
+                Author *
+              </label>
+              <select
+                id="article-author"
+                name="author_id"
+                value={formData.author_id}
+                onChange={handleChange}
+                required
+                className={INPUT_CLASS}
+              >
+                <option value="">Select author</option>
+                {authors.map((author) => (
+                  <option key={author.id} value={author.id}>
+                    {author.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="article-pillar" className={LABEL_CLASS}>
+                Pillar *
+              </label>
+              <select
+                id="article-pillar"
+                name="pillar_id"
+                value={formData.pillar_id}
+                onChange={handleChange}
+                required
+                className={INPUT_CLASS}
+              >
+                <option value="">Select pillar</option>
+                {pillars.map((pillar) => (
+                  <option key={pillar.id} value={pillar.id}>
+                    {pillar.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Content Type & Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="article-content-type" className={LABEL_CLASS}>
+                Content Type
+              </label>
+              <select
+                id="article-content-type"
+                name="content_type"
+                value={formData.content_type}
+                onChange={handleChange}
+                className={INPUT_CLASS}
+              >
+                <option value="article">Article</option>
+                <option value="deep_dive">Deep Dive</option>
+                <option value="case_study">Case Study</option>
+                <option value="tutorial">Tutorial</option>
+                <option value="opinion">Opinion</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="article-status" className={LABEL_CLASS}>
+                Status
+              </label>
+              <select
+                id="article-status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className={INPUT_CLASS}
+              >
+                <option value="draft">Draft</option>
+                <option value="review">Review</option>
+                <option value="approved">Approved</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Featured Image */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="article-featured-image-url" className={LABEL_CLASS}>
+                Featured Image URL
+              </label>
+              <input
+                id="article-featured-image-url"
+                type="url"
+                name="featured_image_url"
+                value={formData.featured_image_url || ""}
+                onChange={handleChange}
+                className={INPUT_CLASS}
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <label htmlFor="article-featured-image-alt" className={LABEL_CLASS}>
+                Image Alt Text
+              </label>
+              <input
+                id="article-featured-image-alt"
+                type="text"
+                name="featured_image_alt"
+                value={formData.featured_image_alt || ""}
+                onChange={handleChange}
+                className={INPUT_CLASS}
+                placeholder="Describe the image"
+              />
+            </div>
+          </div>
+
+          {/* Excerpt */}
+          <div>
+            <label htmlFor="article-excerpt" className={LABEL_CLASS}>
+              Excerpt
+            </label>
+            <textarea
+              id="article-excerpt"
+              name="excerpt"
+              value={formData.excerpt || ""}
+              onChange={handleChange}
+              rows={3}
+              className={`${INPUT_CLASS} resize-none`}
+              placeholder="A brief summary of the article"
+            />
+          </div>
+
+          {/* Content */}
+          <div>
+            <label htmlFor="article-content" className={LABEL_CLASS}>
+              Content (MDX)
+              <span className="text-[hsl(var(--color-foreground-subtle))] ml-2">
+                {formData.reading_time} min read
+              </span>
+            </label>
+            <textarea
+              id="article-content"
+              name="content"
+              value={formData.content || ""}
+              onChange={handleChange}
+              rows={20}
+              className={`${INPUT_CLASS} font-mono resize-y`}
+              placeholder="Write your article content in MDX format..."
+            />
+          </div>
+        </Card>
 
         {/* SEO */}
-        <div className="border-t border-[hsl(var(--color-border))] pt-6">
-          <h3 className="text-lg font-medium mb-4">SEO Settings</h3>
+        <Card className="space-y-4">
+          <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-[hsl(var(--color-foreground))]">
+            SEO Settings
+          </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
+              <label htmlFor="article-meta-title" className={LABEL_CLASS}>
                 Meta Title
               </label>
               <input
+                id="article-meta-title"
                 type="text"
                 name="meta_title"
                 value={formData.meta_title || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))]"
+                className={INPUT_CLASS}
                 placeholder="SEO title (defaults to article title)"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-2">
+              <label htmlFor="article-meta-description" className={LABEL_CLASS}>
                 Meta Description
               </label>
               <textarea
+                id="article-meta-description"
                 name="meta_description"
                 value={formData.meta_description || ""}
                 onChange={handleChange}
                 rows={2}
-                className="w-full px-4 py-3 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:border-[hsl(var(--color-accent))] resize-none"
+                className={`${INPUT_CLASS} resize-none`}
                 placeholder="SEO description (defaults to excerpt)"
               />
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Submit */}
-        <div className="flex items-center justify-end gap-4 pt-6 border-t border-[hsl(var(--color-border))]">
-          <Link
-            href="/admin/journal"
-            className="px-6 py-3 text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors"
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))]"
           >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-3 bg-[hsl(var(--color-accent))] text-black font-medium rounded-xl hover:bg-[hsl(var(--color-accent-hover))] transition-colors disabled:opacity-50"
-          >
+            <Link href="/admin/journal">Cancel</Link>
+          </Button>
+          <Button type="submit" variant="accent" size="sm" disabled={saving}>
             {saving ? "Saving..." : isNew ? "Create Article" : "Save Changes"}
-          </button>
+          </Button>
         </div>
       </form>
-    </div>
+    </PageContainer>
   );
 }

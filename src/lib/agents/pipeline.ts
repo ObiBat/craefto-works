@@ -7,7 +7,6 @@ import { editorGuardian } from "./editor-guardian";
 import type {
   ContentQueueItem,
   PipelineStage,
-  QueueStatus,
   ContentInsight,
   ContentBrief,
   ContentDraft,

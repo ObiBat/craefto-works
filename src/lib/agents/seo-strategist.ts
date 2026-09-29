@@ -96,8 +96,8 @@ export class SEOStrategistAgent extends BaseAgent<SEOStrategistInput, SEOStrateg
     // Parse response
     const response = parseJSONResponse<SEOStrategistOutput>(content);
 
-    // Update brief with SEO data
-    const context = this.getContext();
+    // Update brief with SEO data (getContext() throws if called outside run())
+    this.getContext();
     await supabase
       .from("content_briefs")
       .update({

@@ -267,7 +267,7 @@ export async function generateFeedbackSummary(agentType: string) {
     weakestTypes,
     commonIssues,
     commonStrengths,
-    improvementSuggestions: generateImprovementSuggestions(weakestTypes, commonIssues),
+    improvementSuggestions: generateImprovementSuggestions(weakestTypes),
   };
 }
 
@@ -292,8 +292,7 @@ function extractCommonPatterns(texts: string[]): string[] {
 }
 
 function generateImprovementSuggestions(
-  weakestTypes: { type: string; avgScore: number }[],
-  commonIssues: string[]
+  weakestTypes: { type: string; avgScore: number }[]
 ): string[] {
   const suggestions: string[] = [];
 

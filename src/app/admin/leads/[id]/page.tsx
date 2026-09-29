@@ -4,8 +4,20 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { AdminLoader } from "@/components/admin/AdminLoader";
-import { PageHeader, DetailSection, InfoField } from "@/components/admin/ui";
-import { IconChevronLeft, IconFileText, IconLightbulb, IconMail, IconArrowRight, IconEdit, IconInfo } from "@/components/admin/icons";
+import {
+  IconChevronLeft,
+  IconFileText,
+  IconLightbulb,
+  IconMail,
+  IconArrowRight,
+  IconEdit,
+  IconInfo,
+  IconSpinner,
+  IconCheck,
+  IconAlertTriangle,
+  IconLinkedIn,
+  IconPhone,
+} from "@/components/admin/icons";
 
 interface Lead {
   id: string;
@@ -303,11 +315,12 @@ export default function LeadDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-center gap-4 min-w-0">
           <Link
             href="/admin/leads"
-            className="p-2 hover:bg-[hsl(var(--color-background-subtle))] rounded-xl transition-colors"
+            aria-label="Back to leads"
+            className="inline-flex items-center justify-center p-2 hover:bg-[hsl(var(--color-background-subtle))] rounded-xl transition-colors"
           >
             <IconChevronLeft size={16} />
           </Link>
@@ -322,12 +335,13 @@ export default function LeadDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-[hsl(var(--color-background-subtle))] rounded-xl">
             <span className="text-[hsl(var(--color-foreground-muted))] text-sm">Score:</span>
             <span className="font-semibold text-[hsl(var(--color-foreground))]">{lead.score}</span>
           </div>
           <select
+            aria-label="Lead stage"
             value={lead.stage?.id || ""}
             onChange={(e) => handleStageChange(e.target.value)}
             className={`px-4 py-2 rounded-xl text-sm font-medium border cursor-pointer focus:outline-none ${getStageColor(lead.stage?.color || null)}`}
@@ -434,10 +448,7 @@ export default function LeadDetailPage() {
                 >
                   {analyzing ? (
                     <span className="flex items-center gap-2">
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
+                      <IconSpinner size={16} />
                       Analyzing...
                     </span>
                   ) : (
@@ -499,9 +510,7 @@ export default function LeadDetailPage() {
                       <div className="space-y-1">
                         {analysis.green_flags.map((flag, i) => (
                           <div key={i} className="flex items-center gap-2 text-green-600 text-sm">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <IconCheck size={16} className="shrink-0" />
                             {flag}
                           </div>
                         ))}
@@ -514,9 +523,7 @@ export default function LeadDetailPage() {
                       <div className="space-y-1">
                         {analysis.red_flags.map((flag, i) => (
                           <div key={i} className="flex items-center gap-2 text-red-600 text-sm">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
+                            <IconAlertTriangle size={16} className="shrink-0" />
                             {flag}
                           </div>
                         ))}
@@ -528,9 +535,7 @@ export default function LeadDetailPage() {
                 {/* Review Status */}
                 {analysis.requires_review && (
                   <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-center gap-2 text-yellow-600">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
+                    <IconAlertTriangle size={20} className="shrink-0" />
                     <span className="text-sm font-medium">This lead requires human review</span>
                   </div>
                 )}
@@ -576,9 +581,7 @@ export default function LeadDetailPage() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-sm text-[hsl(var(--color-accent))] hover:underline mt-2"
                         >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                          </svg>
+                          <IconLinkedIn size={16} />
                           View on LinkedIn
                         </a>
                       )}
@@ -606,7 +609,7 @@ export default function LeadDetailPage() {
                             'bg-gray-400'
                           }`} />
                           {flag.flag}
-                          <span className="ml-auto text-xs opacity-60 uppercase">{flag.severity}</span>
+                          <span className="ml-auto text-xs opacity-60 capitalize">{flag.severity}</span>
                         </div>
                       ))}
                     </div>
@@ -662,9 +665,7 @@ export default function LeadDetailPage() {
               </div>
             ) : (
               <div className="text-center py-8 text-[hsl(var(--color-foreground-subtle))]">
-                <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
+                <IconLightbulb size={48} className="mx-auto mb-3 opacity-50" />
                 <p>Click &quot;Run Analysis&quot; to get AI-powered insights</p>
               </div>
             )}
@@ -730,9 +731,7 @@ export default function LeadDetailPage() {
                 href={`mailto:${lead.email}`}
                 className="flex items-center gap-3 px-4 py-3 bg-[hsl(var(--color-background-subtle))] hover:bg-[hsl(var(--color-border))] rounded-xl transition-colors"
               >
-                <svg className="w-5 h-5 text-[hsl(var(--color-foreground-muted))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+                <IconMail size={20} className="text-[hsl(var(--color-foreground-muted))]" />
                 <span>Send Email</span>
               </a>
               {lead.phone && (
@@ -740,9 +739,7 @@ export default function LeadDetailPage() {
                   href={`tel:${lead.phone}`}
                   className="flex items-center gap-3 px-4 py-3 bg-[hsl(var(--color-background-subtle))] hover:bg-[hsl(var(--color-border))] rounded-xl transition-colors"
                 >
-                  <svg className="w-5 h-5 text-[hsl(var(--color-foreground-muted))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
+                  <IconPhone size={20} className="text-[hsl(var(--color-foreground-muted))]" />
                   <span>Call</span>
                 </a>
               )}

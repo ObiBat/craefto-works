@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { AdminLoader } from "@/components/admin/AdminLoader";
 import { PageHeader, StatCard, EmptyState } from "@/components/admin/ui";
@@ -262,13 +263,13 @@ export default function FinancesPage() {
           <div className="bg-[hsl(var(--color-background-subtle))]/50 backdrop-blur-sm border border-[hsl(var(--color-border))]/50 rounded-2xl">
             <div className="p-6 border-b border-[hsl(var(--color-border))]/30 flex items-center justify-between">
               <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold">All Invoices</h2>
-              <a
+              <Link
                 href="/admin/documents/new"
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[hsl(var(--color-accent))] text-white hover:bg-[hsl(var(--color-accent-hover))] transition-colors text-xs font-medium"
               >
                 <IconPlus size={14} />
                 Create Invoice
-              </a>
+              </Link>
             </div>
             {data.invoices.length > 0 ? (
               <div className="overflow-x-auto">
@@ -317,12 +318,12 @@ export default function FinancesPage() {
                 title="No invoices yet"
                 description="Create your first invoice to get started"
                 action={
-                  <a
+                  <Link
                     href="/admin/documents/new"
                     className="px-5 py-2.5 bg-[hsl(var(--color-accent))] hover:bg-[hsl(var(--color-accent-hover))] text-white rounded-xl text-sm font-medium transition-colors"
                   >
                     Create Invoice
-                  </a>
+                  </Link>
                 }
               />
             )}

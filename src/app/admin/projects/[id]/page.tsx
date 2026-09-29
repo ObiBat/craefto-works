@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminLoader } from "@/components/admin/AdminLoader";
-import { PageHeader, DetailSection, EmptyState } from "@/components/admin/ui";
-import { IconChevronLeft, IconPlus, IconClock, IconCheck } from "@/components/admin/icons";
+import { EmptyState } from "@/components/admin/ui";
+import { IconChevronRight, IconPlus, IconClock, IconEdit, IconUsers, IconClipboard } from "@/components/admin/icons";
 
 interface Assignment {
   id: string;
@@ -142,7 +142,6 @@ function Initials({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const [project, setProject] = React.useState<Project | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [showTimeForm, setShowTimeForm] = React.useState(false);
@@ -156,7 +155,7 @@ export default function ProjectDetailPage() {
   const [editing, setEditing] = React.useState(false);
   const [editForm, setEditForm] = React.useState({ status: "", health: "", priority: "", progress: 0 });
 
-  async function fetchProject() {
+  const fetchProject = React.useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/projects/${id}`);
       if (res.ok) {
@@ -168,11 +167,11 @@ export default function ProjectDetailPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
 
   React.useEffect(() => {
     fetchProject();
-  }, [id]);
+  }, [fetchProject]);
 
   async function handleLogTime() {
     if (!timeForm.contractor_id || !timeForm.hours) return;
@@ -272,13 +271,11 @@ export default function ProjectDetailPage() {
       <motion.div variants={fadeUp} className="flex items-center gap-2 text-sm">
         <Link
           href="/admin/projects"
-          className="text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors"
+          className="inline-flex items-center text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors"
         >
           Projects
         </Link>
-        <svg className="w-4 h-4 text-[hsl(var(--color-foreground-subtle))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-        </svg>
+        <IconChevronRight size={16} className="text-[hsl(var(--color-foreground-subtle))] shrink-0" />
         <span className="text-[hsl(var(--color-foreground))] font-medium truncate">{project.name}</span>
       </motion.div>
 
@@ -290,7 +287,7 @@ export default function ProjectDetailPage() {
             {project.client && (
               <Link
                 href={`/admin/clients/${project.client.id}`}
-                className="text-sm text-[hsl(var(--color-accent))] hover:underline"
+                className="inline-flex items-center text-sm text-[hsl(var(--color-accent))] hover:underline"
               >
                 {project.client.name}
               </Link>
@@ -315,9 +312,7 @@ export default function ProjectDetailPage() {
           onClick={openEdit}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-transparent border border-[hsl(var(--color-border))]/50 text-sm text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:border-[hsl(var(--color-border-strong))]/60 hover:bg-[hsl(var(--color-background-subtle))]/50 transition-all duration-200 shrink-0"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
+          <IconEdit size={16} />
           Edit
         </button>
       </motion.div>
@@ -432,15 +427,11 @@ export default function ProjectDetailPage() {
                 </div>
               ))
             ) : (
-              <div className="min-h-[200px] flex flex-col items-center justify-center p-8">
-                <div className="border-2 border-dashed border-[hsl(var(--color-border))]/30 rounded-2xl p-6 flex flex-col items-center">
-                  <svg className="w-12 h-12 mb-3 text-[hsl(var(--color-foreground-subtle))]" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                  <p className="text-lg font-medium text-[hsl(var(--color-foreground-muted))] mb-1">No team members assigned</p>
-                  <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">Assign contractors to this project</p>
-                </div>
-              </div>
+              <EmptyState
+                icon={<IconUsers size={48} />}
+                title="No team members assigned"
+                description="Assign contractors to this project"
+              />
             )}
           </div>
         </motion.div>
@@ -491,15 +482,11 @@ export default function ProjectDetailPage() {
                 );
               })
           ) : (
-            <div className="min-h-[200px] flex flex-col items-center justify-center p-8">
-              <div className="border-2 border-dashed border-[hsl(var(--color-border))]/30 rounded-2xl p-6 flex flex-col items-center">
-                <svg className="w-12 h-12 mb-3 text-[hsl(var(--color-foreground-subtle))]" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <p className="text-lg font-medium text-[hsl(var(--color-foreground-muted))] mb-1">No milestones defined</p>
-                <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">Add milestones to track deliverables</p>
-              </div>
-            </div>
+            <EmptyState
+              icon={<IconClipboard size={48} />}
+              title="No milestones defined"
+              description="Add milestones to track deliverables"
+            />
           )}
         </div>
       </motion.div>

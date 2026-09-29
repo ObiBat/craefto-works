@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { AdminLoader } from "@/components/admin/AdminLoader";
 import { IconDollar, IconFolder, IconUsers, IconChart, IconPlus, IconClock, IconFileText, IconUserPlus, IconCalendar } from "@/components/admin/icons";
-import { StatCard, EmptyState, Card } from "@/components/admin/ui";
+import { StatCard, EmptyState } from "@/components/admin/ui";
 
 interface OpsStats {
   monthlyRevenue: number;

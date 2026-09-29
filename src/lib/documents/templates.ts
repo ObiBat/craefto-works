@@ -305,6 +305,7 @@ export function getDefaultScopeItems(
 
 export function getDefaultPricingTiers(
   budgetRange: string | null,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- part of the exported signature (re-exported from lib/documents); not used yet
   serviceType: string | null
 ): PricingTier[] {
   const budget = BUDGET_TO_TIER[budgetRange || 'discuss'];
@@ -385,6 +386,7 @@ export function getDefaultPaymentSchedule(totalAmount: number): PaymentMilestone
 // DEFAULT SOW PHASES
 // ============================================
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- part of the exported signature (re-exported from lib/documents); not used yet
 export function getDefaultSOWPhases(serviceType: string): SOWPhase[] {
   const phases: SOWPhase[] = [
     {
@@ -532,6 +534,7 @@ export function generateDefaultProposalContent(
 export function generateDefaultSOWContent(
   lead: LeadForDocument,
   proposalContent?: Partial<ProposalContent>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- callers (generator.ts, admin documents API) pass the lead analysis; not used yet
   analysis?: LeadAnalysisForDocument
 ): SOWContent {
   const today = new Date();

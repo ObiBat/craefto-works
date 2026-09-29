@@ -3,6 +3,25 @@
 import * as React from "react";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
+import { Button } from "@/components/ui/button";
+import {
+  PageContainer,
+  PageHeader,
+  Card,
+  StatCard,
+  EmptyState,
+  FilterBar,
+  FilterChip,
+} from "@/components/admin/ui";
+import {
+  IconCheck,
+  IconChevronRight,
+  IconFlame,
+  IconLightbulb,
+  IconSearch,
+  IconSpinner,
+  IconX,
+} from "@/components/admin/icons";
 
 interface Insight {
   id: string;
@@ -26,12 +45,16 @@ interface Stats {
   used: number;
 }
 
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
+const MODAL_PANEL_CLASS =
+  "bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))]/50 rounded-2xl shadow-2xl w-full";
+
+const MODAL_TITLE_CLASS =
+  "font-[family-name:var(--font-heading)] text-lg font-semibold text-[hsl(var(--color-foreground))]";
+
+const SUBHEADING_CLASS = "text-base font-semibold text-[hsl(var(--color-foreground))]";
+
+const CHECKBOX_CLASS =
+  "w-4 h-4 rounded border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-accent))] focus:ring-[hsl(var(--color-accent))] accent-[hsl(var(--color-accent))]";
 
 function getUrgencyIcon(urgency: string) {
   const icons: Record<string, { color: string; label: string }> = {
@@ -183,7 +206,7 @@ export default function InsightsPage() {
 
   const handleBatchAction = async (action: "approve" | "reject") => {
     if (selectedIds.size === 0) return;
-    
+
     setBatchLoading(true);
     try {
       const res = await fetch("/api/admin/pipeline/batch", {
@@ -206,7 +229,7 @@ export default function InsightsPage() {
       } else {
         showNotification("error", data.error || `Failed to ${action} insights`);
       }
-    } catch (error) {
+    } catch {
       showNotification("error", `Failed to ${action} insights`);
     } finally {
       setBatchLoading(false);
@@ -218,299 +241,290 @@ export default function InsightsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-subtle))] mb-1">
-            <Link href="/admin/pipeline" className="hover:text-[hsl(var(--color-foreground))] transition-colors">Pipeline</Link>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-            </svg>
-            <span className="text-[hsl(var(--color-foreground))]">Insights</span>
-          </div>
-          <h1 className="text-2xl font-semibold">Content Insights</h1>
-          <p className="text-[hsl(var(--color-foreground-subtle))] text-sm mt-1">AI-discovered content opportunities and trends</p>
-        </div>
-        <button
-          onClick={() => handleAction("scan", "")}
-          disabled={actionLoading !== null}
-          className="px-4 py-2.5 bg-[hsl(var(--color-accent))] text-black font-medium rounded-xl hover:bg-[hsl(var(--color-accent-hover))] transition-colors disabled:opacity-50 inline-flex items-center gap-2"
-        >
-          {actionLoading === "scan" ? (
-            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          )}
-          Scan for Trends
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {[
-          { label: "Total", value: stats.total, color: "text-[hsl(var(--color-foreground))]" },
-          { label: "New", value: stats.new, color: "text-blue-600" },
-          { label: "Approved", value: stats.approved, color: "text-green-600" },
-          { label: "Rejected", value: stats.rejected, color: "text-red-600" },
-          { label: "Used", value: stats.used, color: "text-purple-600" },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-4">
-            <p className="text-[hsl(var(--color-foreground-subtle))] text-xs mb-1">{stat.label}</p>
-            <p className={`text-2xl font-semibold ${stat.color}`}>{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-2 border-b border-[hsl(var(--color-border))] pb-4">
-        {["all", "new", "approved", "rejected", "used"].map((status) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-              statusFilter === status
-                ? "bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground))]"
-                : "text-[hsl(var(--color-foreground-subtle))] hover:text-[hsl(var(--color-foreground))]"
-            }`}
-          >
-            {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {/* Batch Actions Toolbar */}
-      {insights.some(i => i.status === "new") && (
-        <div className="flex items-center gap-4 p-4 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={selectedIds.size > 0 && selectedIds.size === insights.filter(i => i.status === "new").length}
-              onChange={toggleSelectAll}
-              className="w-4 h-4 rounded border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-accent))] focus:ring-[hsl(var(--color-accent))]"
-            />
-            <span className="text-sm text-[hsl(var(--color-foreground-muted))]">
-              {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all new"}
-            </span>
-          </label>
-          
-          {selectedIds.size > 0 && (
-            <>
-              <div className="h-4 w-px bg-[hsl(var(--color-border))]" />
-              <button
-                onClick={() => handleBatchAction("approve")}
-                disabled={batchLoading}
-                className="px-3 py-1.5 bg-[hsl(var(--color-accent))] text-black text-sm font-medium rounded-lg hover:bg-[hsl(var(--color-accent-hover))] transition-colors disabled:opacity-50"
-              >
-                {batchLoading ? "Processing..." : `Approve ${selectedIds.size}`}
-              </button>
-              <button
-                onClick={() => handleBatchAction("reject")}
-                disabled={batchLoading}
-                className="px-3 py-1.5 bg-red-500/15 text-red-600 text-sm font-medium rounded-lg hover:bg-red-500/25 transition-colors disabled:opacity-50"
-              >
-                Reject {selectedIds.size}
-              </button>
-              <button
-                onClick={() => setSelectedIds(new Set())}
-                className="px-3 py-1.5 text-[hsl(var(--color-foreground-muted))] text-sm hover:text-[hsl(var(--color-foreground))] transition-colors"
-              >
-                Clear
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Insights List */}
-      <div className="space-y-3">
-        {insights.length === 0 ? (
-          <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-12 text-center">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[hsl(var(--color-background-subtle))] flex items-center justify-center">
-              <svg className="w-6 h-6 text-[hsl(var(--color-foreground-subtle))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
+    <>
+      <PageContainer>
+        <PageHeader
+          breadcrumb={
+            <div className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-subtle))]">
+              <Link href="/admin/pipeline" className="inline-flex items-center hover:text-[hsl(var(--color-foreground))] transition-colors">Pipeline</Link>
+              <IconChevronRight size={16} />
+              <span className="text-[hsl(var(--color-foreground))]">Insights</span>
             </div>
-            <p className="text-[hsl(var(--color-foreground))] font-medium mb-2">No insights yet</p>
-            <p className="text-[hsl(var(--color-foreground-subtle))] text-sm mb-4">Run a trend scan to discover content opportunities</p>
-            <button
+          }
+          title="Content Insights"
+          subtitle="AI-discovered content opportunities and trends"
+          actions={
+            <Button
+              variant="accent"
+              size="sm"
               onClick={() => handleAction("scan", "")}
               disabled={actionLoading !== null}
-              className="px-4 py-2 bg-[hsl(var(--color-accent))] text-black text-sm font-medium rounded-xl hover:bg-[hsl(var(--color-accent-hover))] transition-colors"
             >
+              {actionLoading === "scan" ? <IconSpinner size={16} /> : <IconSearch size={16} />}
               Scan for Trends
-            </button>
-          </div>
-        ) : (
-          insights.map((insight) => {
-            const statusConfig = getStatusConfig(insight.status);
-            const urgencyConfig = getUrgencyIcon(insight.urgency);
-            const isSelected = selectedIds.has(insight.id);
+            </Button>
+          }
+        />
 
-            return (
-              <div
-                key={insight.id}
-                className={`bg-[hsl(var(--color-background-muted))] border rounded-xl p-5 transition-colors ${
-                  isSelected ? "border-[hsl(var(--color-accent))]" : "border-[hsl(var(--color-border))] hover:border-[hsl(var(--color-border))]"
-                }`}
-              >
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex gap-3 flex-1 min-w-0">
-                    {insight.status === "new" && (
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelect(insight.id)}
-                        className="mt-1 w-4 h-4 rounded border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-accent))] focus:ring-[hsl(var(--color-accent))] flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                    {/* Tags Row */}
-                    <div className="flex items-center gap-2 mb-3 flex-wrap">
-                      <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
-                        {statusConfig.label}
-                      </span>
-                      <span className={`flex items-center gap-1 text-xs ${urgencyConfig.color}`}>
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
-                        </svg>
-                        {urgencyConfig.label}
-                      </span>
-                      {insight.journal_pillars && (
-                        <span className="px-2.5 py-1 rounded-md text-xs bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground-muted))]">
-                          {insight.journal_pillars.name}
-                        </span>
-                      )}
-                      <span className="text-xs text-[hsl(var(--color-foreground-subtle))]">
-                        {Math.round((insight.relevance_score || 0) * 100)}% relevance
-                      </span>
-                    </div>
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+          {[
+            { label: "Total", value: stats.total },
+            { label: "New", value: stats.new },
+            { label: "Approved", value: stats.approved, accent: "success" as const },
+            { label: "Rejected", value: stats.rejected, accent: "error" as const },
+            { label: "Used", value: stats.used },
+          ].map((stat) => (
+            <StatCard key={stat.label} label={stat.label} value={stat.value} accent={stat.accent} />
+          ))}
+        </div>
 
-                    {/* Title & Summary */}
-                    <h3 className="text-base font-medium text-[hsl(var(--color-foreground))] mb-2 line-clamp-1">{insight.title}</h3>
-                    <p className="text-[hsl(var(--color-foreground-muted))] text-sm mb-3 line-clamp-2">{insight.summary}</p>
+        {/* Filters */}
+        <FilterBar>
+          {["all", "new", "approved", "rejected", "used"].map((status) => (
+            <FilterChip key={status} active={statusFilter === status} onClick={() => setStatusFilter(status)}>
+              {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+            </FilterChip>
+          ))}
+        </FilterBar>
 
-                    {/* Keywords */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {insight.target_keywords.slice(0, 4).map((keyword, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-[hsl(var(--color-background-subtle))] rounded text-xs text-[hsl(var(--color-foreground-subtle))]">
-                          {keyword}
-                        </span>
-                      ))}
-                      {insight.target_keywords.length > 4 && (
-                        <span className="text-xs text-[hsl(var(--color-foreground-subtle))]">+{insight.target_keywords.length - 4} more</span>
-                      )}
-                    </div>
-                    </div>
-                  </div>
+        {/* Batch Actions Toolbar */}
+        {insights.some(i => i.status === "new") && (
+          <Card padding="compact" className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedIds.size > 0 && selectedIds.size === insights.filter(i => i.status === "new").length}
+                onChange={toggleSelectAll}
+                className={CHECKBOX_CLASS}
+              />
+              <span className="text-sm text-[hsl(var(--color-foreground-muted))]">
+                {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all new"}
+              </span>
+            </label>
 
-                  {/* Actions */}
-                  <div className="flex flex-col gap-2 flex-shrink-0">
-                    {insight.status === "new" && (
-                      <>
-                        <button
-                          onClick={() => handleAction("approve", insight.id)}
-                          disabled={actionLoading === insight.id}
-                          className="px-4 py-2 bg-[hsl(var(--color-accent))] text-black text-sm font-medium rounded-xl hover:bg-[hsl(var(--color-accent-hover))] transition-colors disabled:opacity-50"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => setSelectedInsight(insight)}
-                          className="px-4 py-2 bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground))] text-sm font-medium rounded-xl hover:bg-[hsl(var(--color-border))] transition-colors"
-                        >
-                          Review
-                        </button>
-                      </>
-                    )}
-                    {insight.status === "approved" && (
-                      <button
-                        onClick={() => handleAction("synthesize", insight.id)}
-                        disabled={actionLoading === insight.id}
-                        className="px-4 py-2 bg-blue-500 text-[hsl(var(--color-foreground))] text-sm font-medium rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
-                      >
-                        Create Brief
-                      </button>
-                    )}
-                    {insight.status === "rejected" && (
-                      <span className="text-xs text-[hsl(var(--color-foreground-subtle))] text-center">Rejected</span>
-                    )}
-                    {insight.status === "used" && (
-                      <span className="text-xs text-purple-600 text-center">Brief created</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Key Points (collapsed by default) */}
-                {insight.key_points.length > 0 && insight.status === "new" && (
-                  <details className="mt-4 pt-4 border-t border-[hsl(var(--color-border))]">
-                    <summary className="text-xs text-[hsl(var(--color-foreground-subtle))] cursor-pointer hover:text-[hsl(var(--color-foreground))] transition-colors">
-                      {insight.key_points.length} key points
-                    </summary>
-                    <ul className="mt-3 space-y-1.5">
-                      {insight.key_points.map((point, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
-                          <span className="text-[hsl(var(--color-foreground-subtle))]">•</span>
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-              </div>
-            );
-          })
+            {selectedIds.size > 0 && (
+              <>
+                <div className="hidden sm:block h-4 w-px bg-[hsl(var(--color-border))]" />
+                <Button
+                  variant="accent"
+                  size="sm"
+                  className="h-8 px-3 text-xs"
+                  onClick={() => handleBatchAction("approve")}
+                  disabled={batchLoading}
+                >
+                  {batchLoading ? "Processing..." : `Approve ${selectedIds.size}`}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-xs bg-red-500/15 text-red-600 hover:bg-red-500/25"
+                  onClick={() => handleBatchAction("reject")}
+                  disabled={batchLoading}
+                >
+                  Reject {selectedIds.size}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-xs text-[hsl(var(--color-foreground-muted))]"
+                  onClick={() => setSelectedIds(new Set())}
+                >
+                  Clear
+                </Button>
+              </>
+            )}
+          </Card>
         )}
-      </div>
+
+        {/* Insights List */}
+        <div className="space-y-3">
+          {insights.length === 0 ? (
+            <EmptyState
+              icon={<IconLightbulb size={48} />}
+              title="No insights yet"
+              description="Run a trend scan to discover content opportunities"
+              action={
+                <Button
+                  variant="accent"
+                  size="sm"
+                  onClick={() => handleAction("scan", "")}
+                  disabled={actionLoading !== null}
+                >
+                  Scan for Trends
+                </Button>
+              }
+            />
+          ) : (
+            insights.map((insight) => {
+              const statusConfig = getStatusConfig(insight.status);
+              const urgencyConfig = getUrgencyIcon(insight.urgency);
+              const isSelected = selectedIds.has(insight.id);
+
+              return (
+                <Card
+                  key={insight.id}
+                  className={`p-5 transition-colors ${isSelected ? "border-[hsl(var(--color-accent))]" : ""}`}
+                >
+                  <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
+                    <div className="flex gap-3 flex-1 min-w-0">
+                      {insight.status === "new" && (
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelect(insight.id)}
+                          aria-label={`Select ${insight.title}`}
+                          className={`mt-1 flex-shrink-0 ${CHECKBOX_CLASS}`}
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        {/* Tags Row */}
+                        <div className="flex items-center gap-2 mb-3 flex-wrap">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
+                            {statusConfig.label}
+                          </span>
+                          <span className={`flex items-center gap-1 text-xs ${urgencyConfig.color}`}>
+                            <IconFlame size={14} />
+                            {urgencyConfig.label}
+                          </span>
+                          {insight.journal_pillars && (
+                            <span className="px-2.5 py-1 rounded-full text-xs bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))]">
+                              {insight.journal_pillars.name}
+                            </span>
+                          )}
+                          <span className="text-xs text-[hsl(var(--color-foreground-subtle))]">
+                            {Math.round((insight.relevance_score || 0) * 100)}% relevance
+                          </span>
+                        </div>
+
+                        {/* Title & Summary */}
+                        <h3 className={`${SUBHEADING_CLASS} mb-2 line-clamp-1`}>{insight.title}</h3>
+                        <p className="text-[hsl(var(--color-foreground-muted))] text-sm mb-3 line-clamp-2">{insight.summary}</p>
+
+                        {/* Keywords */}
+                        <div className="flex flex-wrap gap-1.5">
+                          {insight.target_keywords.slice(0, 4).map((keyword, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-[hsl(var(--color-background-muted))] rounded text-xs text-[hsl(var(--color-foreground-subtle))]">
+                              {keyword}
+                            </span>
+                          ))}
+                          {insight.target_keywords.length > 4 && (
+                            <span className="text-xs text-[hsl(var(--color-foreground-subtle))]">+{insight.target_keywords.length - 4} more</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-row flex-wrap items-center gap-2 sm:flex-col sm:items-stretch sm:flex-shrink-0">
+                      {insight.status === "new" && (
+                        <>
+                          <Button
+                            variant="accent"
+                            size="sm"
+                            className="h-8 px-3 text-xs"
+                            onClick={() => handleAction("approve", insight.id)}
+                            disabled={actionLoading === insight.id}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-8 px-3 text-xs"
+                            onClick={() => setSelectedInsight(insight)}
+                          >
+                            Review
+                          </Button>
+                        </>
+                      )}
+                      {insight.status === "approved" && (
+                        <Button
+                          variant="accent"
+                          size="sm"
+                          className="h-8 px-3 text-xs"
+                          onClick={() => handleAction("synthesize", insight.id)}
+                          disabled={actionLoading === insight.id}
+                        >
+                          Create Brief
+                        </Button>
+                      )}
+                      {insight.status === "rejected" && (
+                        <span className="text-xs text-[hsl(var(--color-foreground-subtle))] sm:text-center">Rejected</span>
+                      )}
+                      {insight.status === "used" && (
+                        <span className="text-xs text-purple-600 sm:text-center">Brief created</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Key Points (collapsed by default) */}
+                  {insight.key_points.length > 0 && insight.status === "new" && (
+                    <details className="mt-4 pt-4 border-t border-[hsl(var(--color-border))]/50">
+                      <summary className="text-xs text-[hsl(var(--color-foreground-subtle))] cursor-pointer hover:text-[hsl(var(--color-foreground))] transition-colors">
+                        {insight.key_points.length} key points
+                      </summary>
+                      <ul className="mt-3 space-y-1.5">
+                        {insight.key_points.map((point, i) => (
+                          <li key={i} className="flex gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
+                            <span className="text-[hsl(var(--color-foreground-subtle))]">•</span>
+                            {point}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                </Card>
+              );
+            })
+          )}
+        </div>
+      </PageContainer>
 
       {/* Review Modal */}
       {selectedInsight && !showRejectModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-[hsl(var(--color-border))]">
+          <div className={`${MODAL_PANEL_CLASS} max-w-2xl max-h-[85vh] overflow-hidden flex flex-col`}>
+            <div className="p-6 border-b border-[hsl(var(--color-border))]/50">
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="flex-1 min-w-0 pr-4">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
                     {(() => {
                       const cfg = getStatusConfig(selectedInsight.status);
                       return (
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${cfg.bg} ${cfg.text}`}>
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${cfg.bg} ${cfg.text}`}>
                           {cfg.label}
                         </span>
                       );
                     })()}
                     {selectedInsight.journal_pillars && (
-                      <span className="px-2 py-0.5 rounded text-xs bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground-muted))]">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))]">
                         {selectedInsight.journal_pillars.name}
                       </span>
                     )}
                   </div>
-                  <h2 className="text-xl font-semibold text-[hsl(var(--color-foreground))]">{selectedInsight.title}</h2>
+                  <h2 className={`${MODAL_TITLE_CLASS} break-words`}>{selectedInsight.title}</h2>
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  aria-label="Close"
                   onClick={() => setSelectedInsight(null)}
-                  className="p-2 text-[hsl(var(--color-foreground-subtle))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))] rounded-xl transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                  <IconX size={20} />
+                </Button>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <div>
-                <h3 className="text-sm font-medium text-[hsl(var(--color-foreground-subtle))] mb-2">Summary</h3>
+                <h3 className={`${SUBHEADING_CLASS} mb-2`}>Summary</h3>
                 <p className="text-[hsl(var(--color-foreground))]">{selectedInsight.summary}</p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-[hsl(var(--color-foreground-subtle))] mb-2">Key Points</h3>
+                <h3 className={`${SUBHEADING_CLASS} mb-2`}>Key Points</h3>
                 <ul className="space-y-2">
                   {selectedInsight.key_points.map((point, i) => (
                     <li key={i} className="flex gap-3 text-[hsl(var(--color-foreground-muted))]">
@@ -522,17 +536,17 @@ export default function InsightsPage() {
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-[hsl(var(--color-foreground-subtle))] mb-2">Target Keywords</h3>
+                <h3 className={`${SUBHEADING_CLASS} mb-2`}>Target Keywords</h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedInsight.target_keywords.map((keyword, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-[hsl(var(--color-background-subtle))] rounded-xl text-sm text-[hsl(var(--color-foreground-muted))]">
+                    <span key={i} className="px-3 py-1.5 bg-[hsl(var(--color-background-muted))] rounded-xl text-sm text-[hsl(var(--color-foreground-muted))]">
                       {keyword}
                     </span>
                   ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[hsl(var(--color-border))]">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-[hsl(var(--color-border))]/50 break-words">
                 <div>
                   <p className="text-xs text-[hsl(var(--color-foreground-subtle))] mb-1">Relevance</p>
                   <p className="text-lg font-semibold text-[hsl(var(--color-foreground))]">{Math.round((selectedInsight.relevance_score || 0) * 100)}%</p>
@@ -550,26 +564,26 @@ export default function InsightsPage() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-[hsl(var(--color-border))] flex justify-end gap-3 bg-[hsl(var(--color-background-muted))]">
-              <button
-                onClick={() => setSelectedInsight(null)}
-                className="px-4 py-2.5 bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground))] font-medium rounded-xl hover:bg-[hsl(var(--color-border))] transition-colors"
-              >
+            <div className="p-6 border-t border-[hsl(var(--color-border))]/50 flex flex-wrap justify-end gap-3">
+              <Button variant="secondary" size="sm" onClick={() => setSelectedInsight(null)}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="bg-red-500/15 text-red-600 hover:bg-red-500/25"
                 onClick={() => setShowRejectModal(true)}
-                className="px-4 py-2.5 bg-red-500/15 text-red-600 font-medium rounded-xl hover:bg-red-500/25 transition-colors"
               >
                 Reject
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="accent"
+                size="sm"
                 onClick={() => handleAction("approve", selectedInsight.id)}
                 disabled={actionLoading === selectedInsight.id}
-                className="px-4 py-2.5 bg-[hsl(var(--color-accent))] text-black font-medium rounded-xl hover:bg-[hsl(var(--color-accent-hover))] transition-colors disabled:opacity-50"
               >
                 Approve Insight
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -578,9 +592,9 @@ export default function InsightsPage() {
       {/* Reject Modal */}
       {showRejectModal && selectedInsight && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-2xl max-w-md w-full">
-            <div className="p-6 border-b border-[hsl(var(--color-border))]">
-              <h2 className="text-lg font-semibold text-[hsl(var(--color-foreground))]">Reject Insight</h2>
+          <div className={`${MODAL_PANEL_CLASS} max-w-md max-h-[90vh] overflow-y-auto`}>
+            <div className="p-6 border-b border-[hsl(var(--color-border))]/50">
+              <h2 className={MODAL_TITLE_CLASS}>Reject Insight</h2>
               <p className="text-sm text-[hsl(var(--color-foreground-subtle))] mt-1">Why is this insight not suitable?</p>
             </div>
             <div className="p-6">
@@ -588,26 +602,30 @@ export default function InsightsPage() {
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="Enter reason for rejection..."
-                className="w-full h-32 px-4 py-3 bg-[hsl(var(--color-background-subtle))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] placeholder-[hsl(var(--color-foreground-subtle))] focus:outline-none focus:border-[hsl(var(--color-border))] resize-none"
+                aria-label="Reason for rejection"
+                className="w-full h-32 px-4 py-2.5 rounded-xl bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] text-sm text-[hsl(var(--color-foreground))] placeholder:text-[hsl(var(--color-foreground-subtle))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))]/40 focus:border-[hsl(var(--color-accent))]/40 resize-none"
               />
             </div>
-            <div className="p-6 border-t border-[hsl(var(--color-border))] flex justify-end gap-3">
-              <button
+            <div className="p-6 border-t border-[hsl(var(--color-border))]/50 flex flex-wrap justify-end gap-3">
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   setShowRejectModal(false);
                   setRejectReason("");
                 }}
-                className="px-4 py-2 bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground))] font-medium rounded-xl hover:bg-[hsl(var(--color-border))] transition-colors"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="bg-red-500 text-[hsl(var(--color-foreground))] hover:bg-red-600"
                 onClick={handleReject}
                 disabled={!rejectReason.trim() || actionLoading === selectedInsight.id}
-                className="px-4 py-2 bg-red-500 text-[hsl(var(--color-foreground))] font-medium rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50"
               >
                 Reject Insight
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -615,9 +633,9 @@ export default function InsightsPage() {
 
       {/* Notification Toast */}
       {notification && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+        <div className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 rounded-xl bg-[hsl(var(--color-background))] shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-300">
           <div
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
               notification.type === "success"
                 ? "bg-green-500/15 border-green-500/30 text-green-600"
                 : notification.type === "error"
@@ -625,34 +643,22 @@ export default function InsightsPage() {
                 : "bg-blue-500/15 border-blue-500/30 text-blue-600"
             }`}
           >
-            {notification.type === "success" && (
-              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-            {notification.type === "error" && (
-              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
-            {notification.type === "info" && (
-              <svg className="w-5 h-5 flex-shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            )}
+            {notification.type === "success" && <IconCheck size={20} className="flex-shrink-0" />}
+            {notification.type === "error" && <IconX size={20} className="flex-shrink-0" />}
+            {notification.type === "info" && <IconSpinner size={20} className="flex-shrink-0" />}
             <span className="text-sm font-medium">{notification.message}</span>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-auto h-7 w-7 shrink-0 text-current hover:bg-[hsl(var(--color-foreground))]/5"
+              aria-label="Dismiss notification"
               onClick={() => setNotification(null)}
-              className="ml-2 p-1 hover:bg-white/10 rounded transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <IconX size={16} />
+            </Button>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

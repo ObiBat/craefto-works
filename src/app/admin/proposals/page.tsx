@@ -55,11 +55,6 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const } },
 };
 
-function formatDate(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-AU", { month: "short", day: "numeric", year: "numeric" });
-}
-
 function formatRelativeDate(dateString: string) {
   const date = new Date(dateString);
   const now = new Date();
@@ -235,7 +230,7 @@ export default function ProposalsPage() {
 
                     {/* Type badge + status */}
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-[hsl(var(--color-foreground-subtle))]">
+                      <span className="text-xs font-medium text-[hsl(var(--color-foreground-subtle))]">
                         {typeName}
                       </span>
                       <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusConf.color}`}>

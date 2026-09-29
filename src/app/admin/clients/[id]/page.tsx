@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AdminLoader } from "@/components/admin/AdminLoader";
-import { PageHeader, StatCard, FilterChip, EmptyState } from "@/components/admin/ui";
 import { IconChevronRight, IconPlus, IconCheck, IconFileText } from "@/components/admin/icons";
 
 interface Milestone {
@@ -370,7 +369,7 @@ export default function ClientDetailPage() {
                         <div className="space-y-4">
                           {project.milestones
                             .sort((a, b) => a.sort_order - b.sort_order)
-                            .map((milestone, idx) => {
+                            .map((milestone) => {
                               const isCompleted = milestone.status === "completed";
                               const isOverdue = milestone.status === "overdue" || 
                                 (milestone.due_date && new Date(milestone.due_date) < new Date() && !isCompleted);
@@ -388,9 +387,7 @@ export default function ClientDetailPage() {
                                     }`}
                                   >
                                     {isCompleted && (
-                                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                      </svg>
+                                      <IconCheck size={12} className="text-white [stroke-width:3]" />
                                     )}
                                   </div>
 
@@ -457,35 +454,37 @@ export default function ClientDetailPage() {
               <p className="text-[hsl(var(--color-foreground-muted))]">No invoices yet</p>
             </div>
           ) : (
-            <table className="w-full">
-              <thead className="bg-[hsl(var(--color-background-subtle))]">
-                <tr>
-                  <th className="text-left text-xs font-semibold text-[hsl(var(--color-foreground-muted))] px-6 py-3">Invoice</th>
-                  <th className="text-left text-xs font-semibold text-[hsl(var(--color-foreground-muted))] px-6 py-3">Amount</th>
-                  <th className="text-left text-xs font-semibold text-[hsl(var(--color-foreground-muted))] px-6 py-3">Status</th>
-                  <th className="text-left text-xs font-semibold text-[hsl(var(--color-foreground-muted))] px-6 py-3">Due Date</th>
-                  <th className="text-left text-xs font-semibold text-[hsl(var(--color-foreground-muted))] px-6 py-3">Paid</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[hsl(var(--color-border))]">
-                {client.invoices.map((invoice) => {
-                  const statusConfig = getInvoiceStatusConfig(invoice.status);
-                  return (
-                    <tr key={invoice.id} className="hover:bg-[hsl(var(--color-background-subtle))]">
-                      <td className="px-6 py-4 font-medium text-[hsl(var(--color-foreground))]">{invoice.invoice_number}</td>
-                      <td className="px-6 py-4 text-[hsl(var(--color-foreground))]">{formatCurrency(invoice.amount, invoice.currency)}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
-                          {invoice.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{formatDate(invoice.due_date)}</td>
-                      <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{formatDate(invoice.paid_at)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead className="bg-[hsl(var(--color-background-subtle))]">
+                  <tr>
+                    <th className="text-left text-xs font-semibold text-[hsl(var(--color-foreground-muted))] px-6 py-3">Invoice</th>
+                    <th className="text-left text-xs font-semibold text-[hsl(var(--color-foreground-muted))] px-6 py-3">Amount</th>
+                    <th className="text-left text-xs font-semibold text-[hsl(var(--color-foreground-muted))] px-6 py-3">Status</th>
+                    <th className="text-left text-xs font-semibold text-[hsl(var(--color-foreground-muted))] px-6 py-3">Due Date</th>
+                    <th className="text-left text-xs font-semibold text-[hsl(var(--color-foreground-muted))] px-6 py-3">Paid</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[hsl(var(--color-border))]">
+                  {client.invoices.map((invoice) => {
+                    const statusConfig = getInvoiceStatusConfig(invoice.status);
+                    return (
+                      <tr key={invoice.id} className="hover:bg-[hsl(var(--color-background-subtle))]">
+                        <td className="px-6 py-4 font-medium text-[hsl(var(--color-foreground))]">{invoice.invoice_number}</td>
+                        <td className="px-6 py-4 text-[hsl(var(--color-foreground))]">{formatCurrency(invoice.amount, invoice.currency)}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
+                            {invoice.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{formatDate(invoice.due_date)}</td>
+                        <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{formatDate(invoice.paid_at)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

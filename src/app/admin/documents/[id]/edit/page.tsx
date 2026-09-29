@@ -4,6 +4,10 @@ import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
+import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, Card } from "@/components/admin/ui";
+import { IconChevronLeft, IconX } from "@/components/admin/icons";
+import { cn } from "@/lib/utils";
 
 interface Document {
   id: string;
@@ -162,6 +166,28 @@ function getFieldType(key: string): "textarea" | "currency" | "date" | "number" 
 }
 
 // ============================================
+// SHARED STYLES
+// ============================================
+
+const CARD_TITLE_CLASS =
+  "font-[family-name:var(--font-heading)] text-lg font-semibold text-[hsl(var(--color-foreground))]";
+const SUBSECTION_TITLE_CLASS = "text-base font-semibold text-[hsl(var(--color-foreground))] mb-3";
+const LABEL_CLASS = "block text-sm font-medium text-[hsl(var(--color-foreground-muted))]";
+const SMALL_LABEL_CLASS = "text-xs text-[hsl(var(--color-foreground-muted))]";
+const ITEM_TITLE_CLASS = "text-xs font-medium text-[hsl(var(--color-foreground-muted))]";
+const INPUT_CLASS =
+  "w-full px-4 py-2.5 rounded-xl bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] text-sm text-[hsl(var(--color-foreground))] placeholder:text-[hsl(var(--color-foreground-subtle))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))]/40 focus:border-[hsl(var(--color-accent))]/40";
+// Denser variant for the nested list editors
+const COMPACT_INPUT_CLASS =
+  "w-full min-w-0 px-3 py-2 rounded-lg bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] text-sm text-[hsl(var(--color-foreground))] placeholder:text-[hsl(var(--color-foreground-subtle))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))]/40 focus:border-[hsl(var(--color-accent))]/40";
+const ITEM_PANEL_CLASS = "rounded-xl bg-[hsl(var(--color-background-muted))]/40 p-4 space-y-2";
+const CHECKBOX_CLASS = "rounded border-[hsl(var(--color-border))] accent-[hsl(var(--color-accent))]";
+const REMOVE_BUTTON_CLASS = "h-8 w-8 shrink-0 text-red-500 hover:bg-red-500/10";
+const REMOVE_TEXT_BUTTON_CLASS = "h-7 w-7 shrink-0 text-base text-red-400 hover:text-red-600 hover:bg-red-500/10";
+const ADD_BUTTON_CLASS = "h-8 px-3 -ml-3 text-sm text-[hsl(var(--color-accent))]";
+const ADD_SMALL_BUTTON_CLASS = "h-7 px-2.5 -ml-2.5 text-xs text-[hsl(var(--color-accent))]";
+
+// ============================================
 // ARRAY EDITORS
 // ============================================
 
@@ -176,9 +202,9 @@ function StringArrayEditor({
 }) {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium">{label}</label>
+      <label className={LABEL_CLASS}>{label}</label>
       {items.map((item, index) => (
-        <div key={index} className="flex gap-2">
+        <div key={index} className="flex items-center gap-2">
           <input
             type="text"
             value={item}
@@ -187,25 +213,24 @@ function StringArrayEditor({
               updated[index] = e.target.value;
               onChange(updated);
             }}
-            className="flex-1 px-3 py-2 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))]"
+            aria-label={`${label} ${index + 1}`}
+            className={cn(COMPACT_INPUT_CLASS, "flex-1")}
           />
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onChange(items.filter((_, i) => i !== index))}
-            className="px-2 py-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+            className={REMOVE_BUTTON_CLASS}
             title="Remove"
+            aria-label={`Remove ${label} ${index + 1}`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            <IconX size={16} />
+          </Button>
         </div>
       ))}
-      <button
-        onClick={() => onChange([...items, ""])}
-        className="text-sm text-[hsl(var(--color-accent))] hover:underline"
-      >
+      <Button variant="ghost" size="sm" onClick={() => onChange([...items, ""])} className={ADD_BUTTON_CLASS}>
         + Add item
-      </button>
+      </Button>
     </div>
   );
 }
@@ -219,21 +244,22 @@ function TimelineEditor({
 }) {
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium">Timeline Phases</label>
+      <label className={LABEL_CLASS}>Timeline Phases</label>
       {phases.map((phase, index) => (
-        <div key={index} className="p-3 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg space-y-2">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-medium text-[hsl(var(--color-foreground-muted))]">Phase {index + 1}</span>
-            <button
+        <div key={index} className={ITEM_PANEL_CLASS}>
+          <div className="flex justify-between items-center">
+            <span className={ITEM_TITLE_CLASS}>Phase {index + 1}</span>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => onChange(phases.filter((_, i) => i !== index))}
-              className="text-red-500 hover:bg-red-500/10 rounded p-1"
+              className={REMOVE_BUTTON_CLASS}
+              aria-label={`Remove phase ${index + 1}`}
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <IconX size={12} />
+            </Button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input
               type="text"
               value={phase.name}
@@ -243,7 +269,8 @@ function TimelineEditor({
                 onChange(updated);
               }}
               placeholder="Phase name"
-              className="px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+              aria-label={`Phase ${index + 1} name`}
+              className={COMPACT_INPUT_CLASS}
             />
             <input
               type="text"
@@ -254,7 +281,8 @@ function TimelineEditor({
                 onChange(updated);
               }}
               placeholder="Duration (e.g., 2 weeks)"
-              className="px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+              aria-label={`Phase ${index + 1} duration`}
+              className={COMPACT_INPUT_CLASS}
             />
           </div>
           <textarea
@@ -266,10 +294,11 @@ function TimelineEditor({
             }}
             placeholder="Description"
             rows={2}
-            className="w-full px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))] resize-none"
+            aria-label={`Phase ${index + 1} description`}
+            className={cn(COMPACT_INPUT_CLASS, "resize-none")}
           />
           <div className="flex items-center gap-2">
-            <label className="text-xs text-[hsl(var(--color-foreground-muted))]">Color:</label>
+            <label className={SMALL_LABEL_CLASS}>Color:</label>
             <input
               type="color"
               value={phase.color}
@@ -278,17 +307,20 @@ function TimelineEditor({
                 updated[index] = { ...phase, color: e.target.value };
                 onChange(updated);
               }}
+              aria-label={`Phase ${index + 1} color`}
               className="w-8 h-6 rounded border border-[hsl(var(--color-border))] cursor-pointer"
             />
           </div>
         </div>
       ))}
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => onChange([...phases, { name: "", duration: "", color: "#3B82F6", description: "" }])}
-        className="text-sm text-[hsl(var(--color-accent))] hover:underline"
+        className={ADD_BUTTON_CLASS}
       >
         + Add phase
-      </button>
+      </Button>
     </div>
   );
 }
@@ -302,10 +334,10 @@ function ScopeEditor({
 }) {
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium">Scope & Deliverables</label>
+      <label className={LABEL_CLASS}>Scope & Deliverables</label>
       {items.map((item, index) => (
-        <div key={index} className="p-3 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg space-y-2">
-          <div className="flex justify-between items-start">
+        <div key={index} className={ITEM_PANEL_CLASS}>
+          <div className="flex justify-between items-center">
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -315,18 +347,19 @@ function ScopeEditor({
                   updated[index] = { ...item, included: e.target.checked };
                   onChange(updated);
                 }}
-                className="rounded"
+                className={CHECKBOX_CLASS}
               />
-              <span className="text-xs font-medium text-[hsl(var(--color-foreground-muted))]">Included</span>
+              <span className={ITEM_TITLE_CLASS}>Included</span>
             </label>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => onChange(items.filter((_, i) => i !== index))}
-              className="text-red-500 hover:bg-red-500/10 rounded p-1"
+              className={REMOVE_BUTTON_CLASS}
+              aria-label={`Remove deliverable ${index + 1}`}
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <IconX size={12} />
+            </Button>
           </div>
           <input
             type="text"
@@ -337,7 +370,8 @@ function ScopeEditor({
               onChange(updated);
             }}
             placeholder="Deliverable name"
-            className="w-full px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+            aria-label={`Deliverable ${index + 1} name`}
+            className={COMPACT_INPUT_CLASS}
           />
           <input
             type="text"
@@ -348,16 +382,19 @@ function ScopeEditor({
               onChange(updated);
             }}
             placeholder="Description"
-            className="w-full px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+            aria-label={`Deliverable ${index + 1} description`}
+            className={COMPACT_INPUT_CLASS}
           />
         </div>
       ))}
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => onChange([...items, { deliverable: "", description: "", included: true }])}
-        className="text-sm text-[hsl(var(--color-accent))] hover:underline"
+        className={ADD_BUTTON_CLASS}
       >
         + Add deliverable
-      </button>
+      </Button>
     </div>
   );
 }
@@ -371,10 +408,18 @@ function PricingTiersEditor({
 }) {
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium">Pricing Tiers</label>
+      <label className={LABEL_CLASS}>Pricing Tiers</label>
       {tiers.map((tier, index) => (
-        <div key={index} className={`p-3 border rounded-lg space-y-2 ${tier.recommended ? "bg-[hsl(var(--color-accent))]/5 border-[hsl(var(--color-accent))]/30" : "bg-[hsl(var(--color-background))] border-[hsl(var(--color-border))]"}`}>
-          <div className="flex justify-between items-start">
+        <div
+          key={index}
+          className={cn(
+            "rounded-xl p-4 space-y-2",
+            tier.recommended
+              ? "bg-[hsl(var(--color-accent))]/5 ring-1 ring-[hsl(var(--color-accent))]/30"
+              : "bg-[hsl(var(--color-background-muted))]/40"
+          )}
+        >
+          <div className="flex justify-between items-center">
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -384,20 +429,21 @@ function PricingTiersEditor({
                   updated[index] = { ...tier, recommended: e.target.checked };
                   onChange(updated);
                 }}
-                className="rounded"
+                className={CHECKBOX_CLASS}
               />
-              <span className="text-xs font-medium text-[hsl(var(--color-foreground-muted))]">Recommended</span>
+              <span className={ITEM_TITLE_CLASS}>Recommended</span>
             </label>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => onChange(tiers.filter((_, i) => i !== index))}
-              className="text-red-500 hover:bg-red-500/10 rounded p-1"
+              className={REMOVE_BUTTON_CLASS}
+              aria-label={`Remove tier ${index + 1}`}
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <IconX size={12} />
+            </Button>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <input
               type="text"
               value={tier.name}
@@ -407,10 +453,11 @@ function PricingTiersEditor({
                 onChange(updated);
               }}
               placeholder="Tier name"
-              className="px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+              aria-label={`Tier ${index + 1} name`}
+              className={COMPACT_INPUT_CLASS}
             />
             <div className="relative">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[hsl(var(--color-foreground-muted))] text-sm">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[hsl(var(--color-foreground-muted))] text-sm">$</span>
               <input
                 type="number"
                 value={tier.price}
@@ -419,7 +466,8 @@ function PricingTiersEditor({
                   updated[index] = { ...tier, price: parseFloat(e.target.value) || 0 };
                   onChange(updated);
                 }}
-                className="w-full pl-6 pr-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+                aria-label={`Tier ${index + 1} price`}
+                className={cn(COMPACT_INPUT_CLASS, "pl-7")}
               />
             </div>
             <input
@@ -431,13 +479,14 @@ function PricingTiersEditor({
                 onChange(updated);
               }}
               placeholder="Duration"
-              className="px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+              aria-label={`Tier ${index + 1} duration`}
+              className={COMPACT_INPUT_CLASS}
             />
           </div>
           <div className="space-y-1">
-            <span className="text-xs text-[hsl(var(--color-foreground-muted))]">Features:</span>
+            <span className={SMALL_LABEL_CLASS}>Features:</span>
             {tier.features.map((feature, fi) => (
-              <div key={fi} className="flex gap-1">
+              <div key={fi} className="flex items-center gap-1">
                 <input
                   type="text"
                   value={feature}
@@ -448,39 +497,47 @@ function PricingTiersEditor({
                     updated[index] = { ...tier, features };
                     onChange(updated);
                   }}
-                  className="flex-1 px-2 py-1 border border-[hsl(var(--color-border))] rounded text-xs focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+                  aria-label={`Tier ${index + 1} feature ${fi + 1}`}
+                  className={cn(COMPACT_INPUT_CLASS, "flex-1 py-1.5 text-xs")}
                 />
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => {
                     const updated = [...tiers];
                     updated[index] = { ...tier, features: tier.features.filter((_, i) => i !== fi) };
                     onChange(updated);
                   }}
-                  className="text-red-400 hover:text-red-600 px-1"
+                  className={REMOVE_TEXT_BUTTON_CLASS}
+                  aria-label={`Remove feature ${fi + 1}`}
                 >
                   &times;
-                </button>
+                </Button>
               </div>
             ))}
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 const updated = [...tiers];
                 updated[index] = { ...tier, features: [...tier.features, ""] };
                 onChange(updated);
               }}
-              className="text-xs text-[hsl(var(--color-accent))] hover:underline"
+              className={ADD_SMALL_BUTTON_CLASS}
             >
               + Add feature
-            </button>
+            </Button>
           </div>
         </div>
       ))}
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => onChange([...tiers, { name: "", price: 0, duration: "", features: [""], recommended: false }])}
-        className="text-sm text-[hsl(var(--color-accent))] hover:underline"
+        className={ADD_BUTTON_CLASS}
       >
         + Add tier
-      </button>
+      </Button>
     </div>
   );
 }
@@ -494,19 +551,20 @@ function PaymentScheduleEditor({
 }) {
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium">Payment Schedule</label>
+      <label className={LABEL_CLASS}>Payment Schedule</label>
       {schedule.map((item, index) => (
-        <div key={index} className="p-3 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg space-y-2">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-medium text-[hsl(var(--color-foreground-muted))]">Milestone {index + 1}</span>
-            <button
+        <div key={index} className={ITEM_PANEL_CLASS}>
+          <div className="flex justify-between items-center">
+            <span className={ITEM_TITLE_CLASS}>Milestone {index + 1}</span>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => onChange(schedule.filter((_, i) => i !== index))}
-              className="text-red-500 hover:bg-red-500/10 rounded p-1"
+              className={REMOVE_BUTTON_CLASS}
+              aria-label={`Remove milestone ${index + 1}`}
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <IconX size={12} />
+            </Button>
           </div>
           <input
             type="text"
@@ -517,11 +575,12 @@ function PaymentScheduleEditor({
               onChange(updated);
             }}
             placeholder="Description (e.g., Project Kickoff)"
-            className="w-full px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+            aria-label={`Milestone ${index + 1} description`}
+            className={COMPACT_INPUT_CLASS}
           />
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="text-xs text-[hsl(var(--color-foreground-muted))]">Percentage</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <label className={SMALL_LABEL_CLASS}>Percentage</label>
               <div className="relative">
                 <input
                   type="number"
@@ -531,15 +590,16 @@ function PaymentScheduleEditor({
                     updated[index] = { ...item, percentage: parseFloat(e.target.value) || 0 };
                     onChange(updated);
                   }}
-                  className="w-full px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+                  aria-label={`Milestone ${index + 1} percentage`}
+                  className={cn(COMPACT_INPUT_CLASS, "pr-7")}
                 />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[hsl(var(--color-foreground-muted))]">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[hsl(var(--color-foreground-muted))]">%</span>
               </div>
             </div>
-            <div>
-              <label className="text-xs text-[hsl(var(--color-foreground-muted))]">Amount</label>
+            <div className="space-y-1">
+              <label className={SMALL_LABEL_CLASS}>Amount</label>
               <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[hsl(var(--color-foreground-muted))]">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[hsl(var(--color-foreground-muted))]">$</span>
                 <input
                   type="number"
                   value={item.amount}
@@ -548,12 +608,13 @@ function PaymentScheduleEditor({
                     updated[index] = { ...item, amount: parseFloat(e.target.value) || 0 };
                     onChange(updated);
                   }}
-                  className="w-full pl-5 pr-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+                  aria-label={`Milestone ${index + 1} amount`}
+                  className={cn(COMPACT_INPUT_CLASS, "pl-6")}
                 />
               </div>
             </div>
-            <div>
-              <label className="text-xs text-[hsl(var(--color-foreground-muted))]">Due On</label>
+            <div className="space-y-1">
+              <label className={SMALL_LABEL_CLASS}>Due On</label>
               <input
                 type="text"
                 value={item.dueOn || ""}
@@ -563,18 +624,21 @@ function PaymentScheduleEditor({
                   onChange(updated);
                 }}
                 placeholder="e.g., signing"
-                className="w-full px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+                aria-label={`Milestone ${index + 1} due on`}
+                className={COMPACT_INPUT_CLASS}
               />
             </div>
           </div>
         </div>
       ))}
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => onChange([...schedule, { description: "", percentage: 0, amount: 0, dueOn: "" }])}
-        className="text-sm text-[hsl(var(--color-accent))] hover:underline"
+        className={ADD_BUTTON_CLASS}
       >
         + Add milestone
-      </button>
+      </Button>
     </div>
   );
 }
@@ -588,21 +652,22 @@ function SOWPhasesEditor({
 }) {
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium">Project Phases</label>
+      <label className={LABEL_CLASS}>Project Phases</label>
       {phases.map((phase, index) => (
-        <div key={index} className="p-3 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg space-y-2">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-medium text-[hsl(var(--color-foreground-muted))]">Phase {phase.number}</span>
-            <button
+        <div key={index} className={ITEM_PANEL_CLASS}>
+          <div className="flex justify-between items-center">
+            <span className={ITEM_TITLE_CLASS}>Phase {phase.number}</span>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => onChange(phases.filter((_, i) => i !== index))}
-              className="text-red-500 hover:bg-red-500/10 rounded p-1"
+              className={REMOVE_BUTTON_CLASS}
+              aria-label={`Remove phase ${phase.number}`}
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <IconX size={12} />
+            </Button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input
               type="text"
               value={phase.name}
@@ -612,7 +677,8 @@ function SOWPhasesEditor({
                 onChange(updated);
               }}
               placeholder="Phase name"
-              className="px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+              aria-label={`Phase ${phase.number} name`}
+              className={COMPACT_INPUT_CLASS}
             />
             <input
               type="text"
@@ -623,13 +689,14 @@ function SOWPhasesEditor({
                 onChange(updated);
               }}
               placeholder="Duration"
-              className="px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+              aria-label={`Phase ${phase.number} duration`}
+              className={COMPACT_INPUT_CLASS}
             />
           </div>
           <div className="space-y-1">
-            <span className="text-xs text-[hsl(var(--color-foreground-muted))]">Deliverables:</span>
+            <span className={SMALL_LABEL_CLASS}>Deliverables:</span>
             {phase.deliverables.map((d, di) => (
-              <div key={di} className="flex gap-1">
+              <div key={di} className="flex items-center gap-1">
                 <input
                   type="text"
                   value={d}
@@ -640,39 +707,47 @@ function SOWPhasesEditor({
                     updated[index] = { ...phase, deliverables };
                     onChange(updated);
                   }}
-                  className="flex-1 px-2 py-1 border border-[hsl(var(--color-border))] rounded text-xs focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+                  aria-label={`Phase ${phase.number} deliverable ${di + 1}`}
+                  className={cn(COMPACT_INPUT_CLASS, "flex-1 py-1.5 text-xs")}
                 />
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => {
                     const updated = [...phases];
                     updated[index] = { ...phase, deliverables: phase.deliverables.filter((_, i) => i !== di) };
                     onChange(updated);
                   }}
-                  className="text-red-400 hover:text-red-600 px-1"
+                  className={REMOVE_TEXT_BUTTON_CLASS}
+                  aria-label={`Remove deliverable ${di + 1}`}
                 >
                   &times;
-                </button>
+                </Button>
               </div>
             ))}
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 const updated = [...phases];
                 updated[index] = { ...phase, deliverables: [...phase.deliverables, ""] };
                 onChange(updated);
               }}
-              className="text-xs text-[hsl(var(--color-accent))] hover:underline"
+              className={ADD_SMALL_BUTTON_CLASS}
             >
               + Add deliverable
-            </button>
+            </Button>
           </div>
         </div>
       ))}
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => onChange([...phases, { name: "", number: phases.length + 1, deliverables: [""], duration: "" }])}
-        className="text-sm text-[hsl(var(--color-accent))] hover:underline"
+        className={ADD_BUTTON_CLASS}
       >
         + Add phase
-      </button>
+      </Button>
     </div>
   );
 }
@@ -686,19 +761,20 @@ function LineItemsEditor({
 }) {
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium">Line Items</label>
+      <label className={LABEL_CLASS}>Line Items</label>
       {items.map((item, index) => (
-        <div key={index} className="p-3 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg space-y-2">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-medium text-[hsl(var(--color-foreground-muted))]">Item {index + 1}</span>
-            <button
+        <div key={index} className={ITEM_PANEL_CLASS}>
+          <div className="flex justify-between items-center">
+            <span className={ITEM_TITLE_CLASS}>Item {index + 1}</span>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => onChange(items.filter((_, i) => i !== index))}
-              className="text-red-500 hover:bg-red-500/10 rounded p-1"
+              className={REMOVE_BUTTON_CLASS}
+              aria-label={`Remove item ${index + 1}`}
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <IconX size={12} />
+            </Button>
           </div>
           <input
             type="text"
@@ -709,11 +785,12 @@ function LineItemsEditor({
               onChange(updated);
             }}
             placeholder="Description"
-            className="w-full px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+            aria-label={`Item ${index + 1} description`}
+            className={COMPACT_INPUT_CLASS}
           />
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="text-xs text-[hsl(var(--color-foreground-muted))]">Qty</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <label className={SMALL_LABEL_CLASS}>Qty</label>
               <input
                 type="number"
                 value={item.quantity}
@@ -723,13 +800,14 @@ function LineItemsEditor({
                   updated[index] = { ...item, quantity: qty, amount: qty * item.unitPrice };
                   onChange(updated);
                 }}
-                className="w-full px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+                aria-label={`Item ${index + 1} quantity`}
+                className={COMPACT_INPUT_CLASS}
               />
             </div>
-            <div>
-              <label className="text-xs text-[hsl(var(--color-foreground-muted))]">Unit Price</label>
+            <div className="space-y-1">
+              <label className={SMALL_LABEL_CLASS}>Unit Price</label>
               <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[hsl(var(--color-foreground-muted))]">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[hsl(var(--color-foreground-muted))]">$</span>
                 <input
                   type="number"
                   value={item.unitPrice}
@@ -739,31 +817,38 @@ function LineItemsEditor({
                     updated[index] = { ...item, unitPrice: price, amount: item.quantity * price };
                     onChange(updated);
                   }}
-                  className="w-full pl-5 pr-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+                  aria-label={`Item ${index + 1} unit price`}
+                  className={cn(COMPACT_INPUT_CLASS, "pl-6")}
                 />
               </div>
             </div>
-            <div>
-              <label className="text-xs text-[hsl(var(--color-foreground-muted))]">Amount</label>
+            <div className="space-y-1">
+              <label className={SMALL_LABEL_CLASS}>Amount</label>
               <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[hsl(var(--color-foreground-muted))]">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[hsl(var(--color-foreground-muted))]">$</span>
                 <input
                   type="number"
                   value={item.amount}
                   readOnly
-                  className="w-full pl-5 pr-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))]"
+                  aria-label={`Item ${index + 1} amount`}
+                  className={cn(
+                    COMPACT_INPUT_CLASS,
+                    "pl-6 bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))]"
+                  )}
                 />
               </div>
             </div>
           </div>
         </div>
       ))}
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => onChange([...items, { description: "", quantity: 1, unitPrice: 0, amount: 0 }])}
-        className="text-sm text-[hsl(var(--color-accent))] hover:underline"
+        className={ADD_BUTTON_CLASS}
       >
         + Add line item
-      </button>
+      </Button>
     </div>
   );
 }
@@ -777,21 +862,22 @@ function CaseStudiesEditor({
 }) {
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium">Case Studies</label>
+      <label className={LABEL_CLASS}>Case Studies</label>
       {studies.map((study, index) => (
-        <div key={index} className="p-3 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg space-y-2">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-medium text-[hsl(var(--color-foreground-muted))]">Case Study {index + 1}</span>
-            <button
+        <div key={index} className={ITEM_PANEL_CLASS}>
+          <div className="flex justify-between items-center">
+            <span className={ITEM_TITLE_CLASS}>Case Study {index + 1}</span>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => onChange(studies.filter((_, i) => i !== index))}
-              className="text-red-500 hover:bg-red-500/10 rounded p-1"
+              className={REMOVE_BUTTON_CLASS}
+              aria-label={`Remove case study ${index + 1}`}
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <IconX size={12} />
+            </Button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input
               type="text"
               value={study.name}
@@ -801,7 +887,8 @@ function CaseStudiesEditor({
                 onChange(updated);
               }}
               placeholder="Client/Project name"
-              className="px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+              aria-label={`Case study ${index + 1} name`}
+              className={COMPACT_INPUT_CLASS}
             />
             <input
               type="text"
@@ -812,7 +899,8 @@ function CaseStudiesEditor({
                 onChange(updated);
               }}
               placeholder="Industry"
-              className="px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+              aria-label={`Case study ${index + 1} industry`}
+              className={COMPACT_INPUT_CLASS}
             />
           </div>
           <input
@@ -824,16 +912,19 @@ function CaseStudiesEditor({
               onChange(updated);
             }}
             placeholder="Key result"
-            className="w-full px-2 py-1.5 border border-[hsl(var(--color-border))] rounded text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--color-ring))]"
+            aria-label={`Case study ${index + 1} key result`}
+            className={COMPACT_INPUT_CLASS}
           />
         </div>
       ))}
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => onChange([...studies, { name: "", result: "", industry: "" }])}
-        className="text-sm text-[hsl(var(--color-accent))] hover:underline"
+        className={ADD_BUTTON_CLASS}
       >
         + Add case study
-      </button>
+      </Button>
     </div>
   );
 }
@@ -1004,49 +1095,48 @@ export default function EditDocumentPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
+    <PageContainer className="flex flex-col space-y-4 md:space-y-4 lg:h-[calc(100vh-120px)]">
+      <PageHeader
+        breadcrumb={
           <Link
             href={`/admin/documents/${documentId}`}
-            className="p-2 rounded-lg text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-muted))] transition-colors"
+            aria-label="Back to document"
+            className="inline-flex items-center justify-center p-2 -ml-2 rounded-lg text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-muted))] transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-            </svg>
+            <IconChevronLeft size={20} />
           </Link>
-          <div>
-            <h1 className="text-xl font-semibold">Edit {document.document_number}</h1>
-            <p className="text-sm text-[hsl(var(--color-foreground-muted))]">{document.title}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {hasChanges && (
-            <span className="text-sm text-yellow-600 bg-yellow-500/10 px-3 py-1 rounded-lg">
-              Unsaved changes
-            </span>
-          )}
-          <button
-            onClick={handleSave}
-            disabled={saving || !hasChanges}
-            className="px-4 py-2 border border-[hsl(var(--color-border))] rounded-xl font-medium hover:bg-[hsl(var(--color-background-muted))] transition-colors disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
-          <button
-            onClick={handleSaveAndView}
-            disabled={saving}
-            className="px-4 py-2 bg-[hsl(var(--color-accent))] text-white rounded-xl font-medium hover:bg-[hsl(var(--color-accent))]/90 transition-colors disabled:opacity-50"
-          >
-            Save & View
-          </button>
-        </div>
-      </div>
+        }
+        title={`Edit ${document.document_number}`}
+        subtitle={document.title}
+        actions={
+          <>
+            {hasChanges && (
+              <span className="inline-flex items-center text-sm text-yellow-600 bg-yellow-500/10 px-3 py-1 rounded-full">
+                Unsaved changes
+              </span>
+            )}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleSave}
+              disabled={saving || !hasChanges}
+            >
+              {saving ? "Saving..." : "Save"}
+            </Button>
+            <Button
+              variant="accent"
+              size="sm"
+              onClick={handleSaveAndView}
+              disabled={saving}
+            >
+              Save & View
+            </Button>
+          </>
+        }
+      />
 
       {error && (
-        <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600">
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600">
           {error}
         </div>
       )}
@@ -1054,9 +1144,9 @@ export default function EditDocumentPage() {
       {/* Editor and Preview */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
         {/* Editor Panel */}
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden flex flex-col">
-          <div className="px-5 py-3 border-b border-[hsl(var(--color-border))] flex items-center justify-between">
-            <h2 className="font-medium text-sm">Edit Content</h2>
+        <Card padding="none" className="overflow-hidden flex flex-col">
+          <div className="px-5 py-4 border-b border-[hsl(var(--color-border))]/30 flex items-center justify-between gap-3">
+            <h2 className={CARD_TITLE_CLASS}>Edit Content</h2>
             <span className="text-xs text-[hsl(var(--color-foreground-muted))]">
               {Object.keys(content).length} fields
             </span>
@@ -1065,7 +1155,7 @@ export default function EditDocumentPage() {
             {/* Scalar fields by section */}
             {orderedSections.map((section) => (
               <div key={section}>
-                <h3 className="text-xs font-semibold text-[hsl(var(--color-foreground-muted))] mb-3">
+                <h3 className={SUBSECTION_TITLE_CLASS}>
                   {section}
                 </h3>
                 <div className="space-y-3">
@@ -1073,49 +1163,55 @@ export default function EditDocumentPage() {
                     const value = getValue(key);
                     const fieldType = getFieldType(key.includes(".") ? key.split(".")[1] : key);
                     const label = getLabel(key.includes(".") ? key.split(".")[1] : key);
+                    const fieldId = `doc-field-${key.replace(/\s+/g, "-")}`;
 
                     return (
                       <div key={key}>
-                        <label className="block text-sm font-medium mb-1">
+                        <label htmlFor={fieldId} className={cn(LABEL_CLASS, "mb-1.5")}>
                           {label}
                         </label>
                         {fieldType === "textarea" ? (
                           <textarea
+                            id={fieldId}
                             value={(value as string) || ""}
                             onChange={(e) => setValue(key, e.target.value)}
                             rows={4}
-                            className="w-full px-3 py-2 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))] resize-y"
+                            className={cn(INPUT_CLASS, "resize-y")}
                           />
                         ) : fieldType === "currency" ? (
                           <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[hsl(var(--color-foreground-muted))]">$</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[hsl(var(--color-foreground-muted))]">$</span>
                             <input
+                              id={fieldId}
                               type="number"
                               value={typeof value === "number" ? value : (typeof value === "string" ? value.replace(/[^0-9.]/g, "") : "")}
                               onChange={(e) => setValue(key, parseFloat(e.target.value) || 0)}
-                              className="w-full pl-7 pr-3 py-2 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))]"
+                              className={cn(INPUT_CLASS, "pl-8")}
                             />
                           </div>
                         ) : fieldType === "number" ? (
                           <input
+                            id={fieldId}
                             type="number"
                             value={typeof value === "number" ? value : ""}
                             onChange={(e) => setValue(key, parseFloat(e.target.value) || 0)}
-                            className="w-full px-3 py-2 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))]"
+                            className={INPUT_CLASS}
                           />
                         ) : fieldType === "date" ? (
                           <input
+                            id={fieldId}
                             type="date"
                             value={(value as string)?.split("T")[0] || ""}
                             onChange={(e) => setValue(key, e.target.value)}
-                            className="w-full px-3 py-2 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))]"
+                            className={INPUT_CLASS}
                           />
                         ) : (
                           <input
+                            id={fieldId}
                             type="text"
                             value={(value as string) || ""}
                             onChange={(e) => setValue(key, e.target.value)}
-                            className="w-full px-3 py-2 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))]"
+                            className={INPUT_CLASS}
                           />
                         )}
                       </div>
@@ -1127,8 +1223,8 @@ export default function EditDocumentPage() {
 
             {/* Array fields */}
             {arrayFields.length > 0 && (
-              <div className="pt-4 border-t border-[hsl(var(--color-border))]">
-                <h3 className="text-xs font-semibold text-[hsl(var(--color-foreground-muted))] mb-3">
+              <div className="pt-6 border-t border-[hsl(var(--color-border))]/30">
+                <h3 className={SUBSECTION_TITLE_CLASS}>
                   Lists & Collections
                 </h3>
                 <div className="space-y-5">
@@ -1232,7 +1328,7 @@ export default function EditDocumentPage() {
             )}
 
             {/* Raw JSON Editor for advanced users */}
-            <div className="pt-4 border-t border-[hsl(var(--color-border))]">
+            <div className="pt-6 border-t border-[hsl(var(--color-border))]/30">
               <details>
                 <summary className="text-sm font-medium text-[hsl(var(--color-foreground-muted))] cursor-pointer hover:text-[hsl(var(--color-foreground))]">
                   Advanced: Edit Raw JSON
@@ -1249,32 +1345,36 @@ export default function EditDocumentPage() {
                     }
                   }}
                   rows={15}
-                  className="mt-3 w-full px-3 py-2 bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))]"
+                  aria-label="Raw JSON"
+                  className={cn(INPUT_CLASS, "mt-3 text-xs font-mono")}
                 />
               </details>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Preview Panel */}
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-[hsl(var(--color-border))]">
-            <h2 className="font-medium text-sm">Preview</h2>
-            <button
+        <Card padding="none" className="overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[hsl(var(--color-border))]/30">
+            <h2 className={CARD_TITLE_CLASS}>Preview</h2>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setPreviewKey((k) => k + 1)}
-              className="text-sm text-[hsl(var(--color-accent))] hover:underline"
+              className="h-8 px-3 -mr-3 -my-2 text-sm text-[hsl(var(--color-accent))]"
             >
               Refresh
-            </button>
+            </Button>
           </div>
+          {/* The white backdrop is the document's own paper colour, not a theme surface */}
           <iframe
             key={previewKey}
             src={`/api/admin/documents/${documentId}/preview?t=${Date.now()}`}
-            className="flex-1 bg-white"
+            className="flex-1 bg-white min-h-[70vh] lg:min-h-0"
             title="Document Preview"
           />
-        </div>
+        </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

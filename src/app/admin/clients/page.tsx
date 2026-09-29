@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
-import { PageHeader, StatCard, FilterBar, FilterChip, EmptyState } from "@/components/admin/ui";
+import { PageHeader, EmptyState } from "@/components/admin/ui";
 import { IconPlus, IconUsers, IconChevronRight, IconMail } from "@/components/admin/icons";
 
 interface ClientStats {
@@ -175,7 +175,7 @@ export default function ClientsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 border-b border-[hsl(var(--color-border))] pb-4">
+      <div className="flex flex-wrap gap-2 border-b border-[hsl(var(--color-border))] pb-4">
         {["all", "active", "lead", "completed", "churned"].map((status) => (
           <button
             key={status}

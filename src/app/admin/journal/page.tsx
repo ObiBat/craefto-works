@@ -3,6 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
+import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, Card, StatCard } from "@/components/admin/ui";
+import { IconPlus, IconEdit, IconExternal } from "@/components/admin/icons";
 
 interface Article {
   id: string;
@@ -35,7 +38,7 @@ function formatDate(dateString: string) {
 
 function getStatusStyles(status: string) {
   const styles: Record<string, string> = {
-    draft: "bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground-muted))]",
+    draft: "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))]",
     review: "bg-yellow-500/20 text-yellow-600",
     approved: "bg-blue-500/20 text-blue-600",
     published: "bg-green-500/20 text-green-600",
@@ -43,6 +46,12 @@ function getStatusStyles(status: string) {
   };
   return styles[status] || styles.draft;
 }
+
+const SELECT_CLASS =
+  "h-10 px-3 rounded-xl bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] text-sm text-[hsl(var(--color-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))]/40";
+const TH_CLASS = "px-6 py-3 text-xs font-semibold text-[hsl(var(--color-foreground-muted))]";
+const ROW_ACTION_CLASS =
+  "h-9 w-9 text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))]";
 
 export default function JournalAdminPage() {
   const [articles, setArticles] = React.useState<Article[]>([]);
@@ -90,32 +99,31 @@ export default function JournalAdminPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl tracking-tight font-semibold mb-1">Journal</h1>
-          <p className="text-[hsl(var(--color-foreground-muted))]">Manage your articles and content</p>
-        </div>
-        <Link
-          href="/admin/journal/new"
-          className="px-4 py-2.5 bg-[hsl(var(--color-accent))] text-black font-medium rounded-xl hover:bg-[hsl(var(--color-accent-hover))] transition-colors inline-flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          New Article
-        </Link>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Journal"
+        subtitle="Manage your articles and content"
+        actions={
+          <Button asChild variant="accent" size="sm">
+            <Link href="/admin/journal/new">
+              <IconPlus size={20} />
+              New Article
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Filters */}
-      <div className="flex gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[hsl(var(--color-foreground-muted))]">Status:</label>
+          <label htmlFor="journal-status-filter" className="text-sm text-[hsl(var(--color-foreground-muted))]">
+            Status:
+          </label>
           <select
+            id="journal-status-filter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))]"
+            className={`${SELECT_CLASS} flex-1 sm:flex-none`}
           >
             {statuses.map((status) => (
               <option key={status} value={status}>
@@ -125,11 +133,14 @@ export default function JournalAdminPage() {
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[hsl(var(--color-foreground-muted))]">Pillar:</label>
+          <label htmlFor="journal-pillar-filter" className="text-sm text-[hsl(var(--color-foreground-muted))]">
+            Pillar:
+          </label>
           <select
+            id="journal-pillar-filter"
             value={pillarFilter}
             onChange={(e) => setPillarFilter(e.target.value)}
-            className="px-3 py-2 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))]"
+            className={`${SELECT_CLASS} flex-1 sm:flex-none`}
           >
             <option value="all">All Pillars</option>
             {pillars.map((pillar) => (
@@ -142,113 +153,109 @@ export default function JournalAdminPage() {
       </div>
 
       {/* Articles Table */}
-      <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-[hsl(var(--color-background-subtle))] border-b border-[hsl(var(--color-border))]">
-            <tr>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Title</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Pillar</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Type</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Status</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Date</th>
-              <th className="text-right px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#27272a]">
-            {filteredArticles.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-[hsl(var(--color-foreground-subtle))]">
-                  <p className="text-lg mb-2">No articles found</p>
-                  <p className="text-sm">Create your first article to get started</p>
-                </td>
+      <Card padding="none" className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px]">
+            <thead>
+              <tr className="border-b border-[hsl(var(--color-border))]/30">
+                <th className={`text-left ${TH_CLASS}`}>Title</th>
+                <th className={`text-left ${TH_CLASS}`}>Pillar</th>
+                <th className={`text-left ${TH_CLASS}`}>Type</th>
+                <th className={`text-left ${TH_CLASS}`}>Status</th>
+                <th className={`text-left ${TH_CLASS}`}>Date</th>
+                <th className={`text-right ${TH_CLASS}`}>Actions</th>
               </tr>
-            ) : (
-              filteredArticles.map((article) => (
-                <tr key={article.id} className="hover:bg-[hsl(var(--color-background-subtle))] transition-colors">
-                  <td className="px-6 py-4">
-                    <Link
-                      href={`/admin/journal/${article.id}`}
-                      className="font-medium text-[hsl(var(--color-foreground))] hover:text-[hsl(var(--color-accent))] transition-colors"
-                    >
-                      {article.title}
-                    </Link>
-                    <p className="text-sm text-[hsl(var(--color-foreground-subtle))] mt-0.5">{article.author_name}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className="inline-flex items-center gap-1.5 text-sm"
-                      style={{ color: article.pillar_color }}
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: article.pillar_color }}
-                      />
-                      {article.pillar_name}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[hsl(var(--color-foreground-muted))] capitalize">
-                    {article.content_type.replace("_", " ")}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusStyles(article.status)}`}
-                    >
-                      {article.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[hsl(var(--color-foreground-muted))]">
-                    {article.published_at
-                      ? formatDate(article.published_at)
-                      : formatDate(article.updated_at)}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        href={`/admin/journal/${article.id}`}
-                        className="p-2 text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))] rounded-xl transition-colors"
-                        title="Edit"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </Link>
-                      {article.status === "published" && (
-                        <a
-                          href={`/journal/${article.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))] rounded-xl transition-colors"
-                          title="View"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
-                        </a>
-                      )}
-                    </div>
+            </thead>
+            <tbody className="divide-y divide-[hsl(var(--color-border))]/30">
+              {filteredArticles.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-[hsl(var(--color-foreground-subtle))]">
+                    <p className="text-lg mb-2">No articles found</p>
+                    <p className="text-sm">Create your first article to get started</p>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                filteredArticles.map((article) => (
+                  <tr key={article.id} className="hover:bg-[hsl(var(--color-background-muted))]/30 transition-colors">
+                    <td className="px-6 py-3.5 text-sm">
+                      <Link
+                        href={`/admin/journal/${article.id}`}
+                        className="font-medium text-[hsl(var(--color-foreground))] hover:text-[hsl(var(--color-accent))] transition-colors"
+                      >
+                        {article.title}
+                      </Link>
+                      <p className="text-sm text-[hsl(var(--color-foreground-subtle))] mt-0.5">{article.author_name}</p>
+                    </td>
+                    <td className="px-6 py-3.5 text-sm">
+                      <span
+                        className="inline-flex items-center gap-1.5 text-sm"
+                        style={{ color: article.pillar_color }}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: article.pillar_color }}
+                        />
+                        {article.pillar_name}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3.5 text-sm text-[hsl(var(--color-foreground-muted))] capitalize">
+                      {article.content_type.replace("_", " ")}
+                    </td>
+                    <td className="px-6 py-3.5 text-sm">
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusStyles(article.status)}`}
+                      >
+                        {article.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3.5 text-sm text-[hsl(var(--color-foreground-muted))]">
+                      {article.published_at
+                        ? formatDate(article.published_at)
+                        : formatDate(article.updated_at)}
+                    </td>
+                    <td className="px-6 py-3.5 text-sm text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button asChild variant="ghost" size="icon" className={ROW_ACTION_CLASS}>
+                          <Link href={`/admin/journal/${article.id}`} title="Edit" aria-label="Edit article">
+                            <IconEdit size={16} />
+                          </Link>
+                        </Button>
+                        {article.status === "published" && (
+                          <Button asChild variant="ghost" size="icon" className={ROW_ACTION_CLASS}>
+                            <a
+                              href={`/journal/${article.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="View"
+                              aria-label="View published article"
+                            >
+                              <IconExternal size={16} />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {statuses.slice(1).map((status) => {
           const count = articles.filter((a) => a.status === status).length;
           return (
-            <div
+            <StatCard
               key={status}
-              className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-4 text-center"
-            >
-              <p className="text-2xl font-semibold text-[hsl(var(--color-foreground))]">{count}</p>
-              <p className="text-sm text-[hsl(var(--color-foreground-muted))] capitalize">{status}</p>
-            </div>
+              label={status.charAt(0).toUpperCase() + status.slice(1)}
+              value={count}
+            />
           );
         })}
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -4,6 +4,19 @@ import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
+import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, Card, DetailSection, InfoField } from "@/components/admin/ui";
+import {
+  IconArchive,
+  IconChevronLeft,
+  IconClock,
+  IconDownload,
+  IconEdit,
+  IconEye,
+  IconSend,
+  IconSpinner,
+  IconX,
+} from "@/components/admin/icons";
 
 interface DocumentSignature {
   id: string;
@@ -72,6 +85,15 @@ const SIGNATURE_STATUS_COLORS: Record<string, string> = {
   viewed: "bg-yellow-500/20 text-yellow-600",
   signed: "bg-green-500/20 text-green-600",
 };
+
+const CARD_TITLE_CLASS = "font-[family-name:var(--font-heading)] text-lg font-semibold text-[hsl(var(--color-foreground))]";
+
+const ACTION_ITEM_CLASS = "w-full justify-start h-auto px-4 py-3 rounded-xl";
+
+const INPUT_CLASS =
+  "w-full px-4 py-2.5 rounded-xl bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] text-sm text-[hsl(var(--color-foreground))] placeholder:text-[hsl(var(--color-foreground-subtle))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))]/40 focus:border-[hsl(var(--color-accent))]/40";
+
+const LABEL_CLASS = "block text-sm font-medium text-[hsl(var(--color-foreground-muted))] mb-1.5";
 
 function formatDate(dateString: string | null) {
   if (!dateString) return "—";
@@ -208,86 +230,74 @@ export default function DocumentDetailPage() {
   const canSend = ["draft", "pending_review"].includes(document.status);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
+    <PageContainer>
+      <PageHeader
+        title={document.document_number}
+        subtitle={document.title}
+        breadcrumb={
+          <div className="flex items-center gap-3">
             <Link
               href="/admin/documents"
-              className="p-1 rounded-lg text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-muted))] transition-colors"
+              aria-label="Back to documents"
+              className="inline-flex items-center justify-center p-1 rounded-lg text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-muted))] transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-              </svg>
+              <IconChevronLeft size={20} />
             </Link>
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border ${STATUS_COLORS[document.status] || STATUS_COLORS.draft}`}>
+            <span
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[document.status] || STATUS_COLORS.draft}`}
+            >
               {STATUS_LABELS[document.status] || document.status}
             </span>
           </div>
-          <h1 className="text-2xl font-semibold mb-1">{document.document_number}</h1>
-          <p className="text-[hsl(var(--color-foreground-muted))]">{document.title}</p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {canSend && (
-            <Link
-              href={`/admin/documents/${documentId}/edit`}
-              className="inline-flex items-center gap-2 px-4 py-2.5 border border-[hsl(var(--color-border))] rounded-xl font-medium hover:bg-[hsl(var(--color-background-muted))] transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Edit
-            </Link>
-          )}
-          <a
-            href={`/api/admin/documents/${documentId}/pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 border border-[hsl(var(--color-border))] rounded-xl font-medium hover:bg-[hsl(var(--color-background-muted))] transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            Preview PDF
-          </a>
-          <a
-            href={`/api/admin/documents/${documentId}/pdf?download=true`}
-            className="inline-flex items-center gap-2 px-4 py-2.5 border border-[hsl(var(--color-border))] rounded-xl font-medium hover:bg-[hsl(var(--color-background-muted))] transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Download
-          </a>
-          {canSend && (
-            <button
-              onClick={() => setShowSendModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[hsl(var(--color-accent))] text-white rounded-xl font-medium hover:bg-[hsl(var(--color-accent))]/90 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-              Send for Signature
-            </button>
-          )}
-        </div>
-      </div>
+        }
+        actions={
+          <>
+            {canSend && (
+              <Button asChild variant="secondary" size="sm">
+                <Link href={`/admin/documents/${documentId}/edit`}>
+                  <IconEdit size={16} />
+                  Edit
+                </Link>
+              </Button>
+            )}
+            <Button asChild variant="secondary" size="sm">
+              <a
+                href={`/api/admin/documents/${documentId}/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <IconEye size={16} />
+                Preview PDF
+              </a>
+            </Button>
+            <Button asChild variant="secondary" size="sm">
+              <a href={`/api/admin/documents/${documentId}/pdf?download=true`}>
+                <IconDownload size={16} />
+                Download
+              </a>
+            </Button>
+            {canSend && (
+              <Button variant="accent" size="sm" onClick={() => setShowSendModal(true)}>
+                <IconSend size={16} />
+                Send for Signature
+              </Button>
+            )}
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {/* Document Preview */}
-          <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[hsl(var(--color-border))]">
-              <h2 className="text-lg font-medium">Document Preview</h2>
+          <Card padding="none" className="overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-6 py-4 border-b border-[hsl(var(--color-border))]/30">
+              <h2 className={CARD_TITLE_CLASS}>Document Preview</h2>
               <a
                 href={`/api/admin/documents/${document.id}/preview`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-[hsl(var(--color-accent))] hover:underline"
+                className="inline-flex items-center text-sm text-[hsl(var(--color-accent))] hover:underline"
               >
                 Open in new tab
               </a>
@@ -297,62 +307,44 @@ export default function DocumentDetailPage() {
               className="w-full h-[600px] bg-white"
               title="Document Preview"
             />
-          </div>
+          </Card>
 
           {/* Document Details */}
-          <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6">
-            <h2 className="text-lg font-medium mb-4">Document Details</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Type</p>
-                <p className="font-medium">{TYPE_LABELS[document.document_type]}</p>
-              </div>
-              <div>
-                <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Created</p>
-                <p className="font-medium">{formatDate(document.created_at)}</p>
-              </div>
-              {document.sent_at && (
-                <div>
-                  <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Sent</p>
-                  <p className="font-medium">{formatDate(document.sent_at)}</p>
-                </div>
-              )}
-              {document.expires_at && (
-                <div>
-                  <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Expires</p>
-                  <p className="font-medium">{formatDate(document.expires_at)}</p>
-                </div>
-              )}
+          <DetailSection title="Document Details">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <InfoField label="Type" value={TYPE_LABELS[document.document_type]} />
+              <InfoField label="Created" value={formatDate(document.created_at)} />
+              {document.sent_at && <InfoField label="Sent" value={formatDate(document.sent_at)} />}
+              {document.expires_at && <InfoField label="Expires" value={formatDate(document.expires_at)} />}
               {document.signed_at && (
-                <div>
-                  <p className="text-sm text-[hsl(var(--color-foreground-muted))]">Signed</p>
-                  <p className="font-medium text-green-600">{formatDate(document.signed_at)}</p>
-                </div>
+                <InfoField
+                  label="Signed"
+                  value={<span className="text-green-600">{formatDate(document.signed_at)}</span>}
+                />
               )}
             </div>
-          </div>
+          </DetailSection>
 
           {/* Signatures */}
           {document.signatures && document.signatures.length > 0 && (
-            <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6">
-              <h2 className="text-lg font-medium mb-4">Signatures</h2>
+            <DetailSection title="Signatures">
               <div className="space-y-3">
                 {document.signatures.map((sig) => (
                   <div
                     key={sig.id}
-                    className="flex items-center justify-between p-4 bg-[hsl(var(--color-background))] rounded-xl border border-[hsl(var(--color-border))]"
+                    className="flex items-center justify-between gap-3 p-4 rounded-xl bg-[hsl(var(--color-background-muted))]/40"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[hsl(var(--color-accent))]/20 flex items-center justify-center text-[hsl(var(--color-accent))] font-medium">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-[hsl(var(--color-accent))]/20 flex items-center justify-center text-[hsl(var(--color-accent))] font-medium">
                         {sig.signer_name.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <p className="font-medium">{sig.signer_name}</p>
-                        <p className="text-sm text-[hsl(var(--color-foreground-muted))]">{sig.signer_email}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-[hsl(var(--color-foreground))] break-words">{sig.signer_name}</p>
+                        <p className="text-sm text-[hsl(var(--color-foreground-muted))] break-all">{sig.signer_email}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${SIGNATURE_STATUS_COLORS[sig.status]}`}>
+                    <div className="text-right shrink-0">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${SIGNATURE_STATUS_COLORS[sig.status]}`}>
                         {sig.status === "signed" ? "Signed" : sig.status === "viewed" ? "Viewed" : sig.status === "sent" ? "Sent" : "Pending"}
                       </span>
                       {sig.signed_at && (
@@ -362,23 +354,20 @@ export default function DocumentDetailPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </DetailSection>
           )}
 
           {/* Activity Log */}
           {document.activities && document.activities.length > 0 && (
-            <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6">
-              <h2 className="text-lg font-medium mb-4">Activity</h2>
+            <DetailSection title="Activity">
               <div className="space-y-4">
                 {document.activities.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[hsl(var(--color-background-subtle))] flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-[hsl(var(--color-foreground-muted))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                    <div className="w-8 h-8 rounded-full bg-[hsl(var(--color-background-muted))] flex items-center justify-center flex-shrink-0">
+                      <IconClock size={16} className="text-[hsl(var(--color-foreground-muted))]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-[hsl(var(--color-foreground))]">{activity.description}</p>
+                      <p className="text-sm text-[hsl(var(--color-foreground))] break-words">{activity.description}</p>
                       <p className="text-xs text-[hsl(var(--color-foreground-muted))] mt-1">
                         {activity.actor} &middot; {formatActivityDate(activity.created_at)}
                       </p>
@@ -386,97 +375,89 @@ export default function DocumentDetailPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </DetailSection>
           )}
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* Client Info */}
           {document.lead && (
-            <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6">
-              <h2 className="text-lg font-medium mb-4">Client</h2>
+            <DetailSection title="Client">
               <Link
                 href={`/admin/leads/${document.lead.id}`}
                 className="flex items-center gap-3 group"
               >
-                <div className="w-12 h-12 rounded-full bg-[hsl(var(--color-accent))]/20 flex items-center justify-center text-[hsl(var(--color-accent))] font-medium text-lg">
+                <div className="w-12 h-12 shrink-0 rounded-full bg-[hsl(var(--color-accent))]/20 flex items-center justify-center text-[hsl(var(--color-accent))] font-medium text-lg">
                   {document.lead.name.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <p className="font-medium group-hover:text-[hsl(var(--color-accent))] transition-colors">{document.lead.name}</p>
-                  <p className="text-sm text-[hsl(var(--color-foreground-muted))]">{document.lead.company || document.lead.email}</p>
+                <div className="min-w-0">
+                  <p className="font-medium text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors break-words">
+                    {document.lead.name}
+                  </p>
+                  <p className="text-sm text-[hsl(var(--color-foreground-muted))] break-all">
+                    {document.lead.company || document.lead.email}
+                  </p>
                 </div>
               </Link>
-            </div>
+            </DetailSection>
           )}
 
           {/* Quick Actions */}
-          <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6">
-            <h2 className="text-lg font-medium mb-4">Actions</h2>
-            <div className="space-y-2">
+          <DetailSection title="Actions">
+            <div className="space-y-1">
               {canSend && (
-                <Link
-                  href={`/admin/documents/${documentId}/edit`}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left hover:bg-[hsl(var(--color-background-subtle))] transition-colors"
-                >
-                  <svg className="w-5 h-5 text-[hsl(var(--color-foreground-muted))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span>Edit Document</span>
-                </Link>
+                <Button asChild variant="ghost" className={ACTION_ITEM_CLASS}>
+                  <Link href={`/admin/documents/${documentId}/edit`}>
+                    <IconEdit size={20} className="text-[hsl(var(--color-foreground-muted))]" />
+                    <span>Edit Document</span>
+                  </Link>
+                </Button>
               )}
               {canSend && (
-                <button
-                  onClick={() => setShowSendModal(true)}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left hover:bg-[hsl(var(--color-background-subtle))] transition-colors"
-                >
-                  <svg className="w-5 h-5 text-[hsl(var(--color-accent))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
+                <Button variant="ghost" className={ACTION_ITEM_CLASS} onClick={() => setShowSendModal(true)}>
+                  <IconSend size={20} className="text-[hsl(var(--color-accent))]" />
                   <span>Send for Signature</span>
-                </button>
+                </Button>
               )}
-              <a
-                href={`/api/admin/documents/${documentId}/pdf`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left hover:bg-[hsl(var(--color-background-subtle))] transition-colors"
-              >
-                <svg className="w-5 h-5 text-[hsl(var(--color-foreground-muted))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span>Preview PDF</span>
-              </a>
-              <button
+              <Button asChild variant="ghost" className={ACTION_ITEM_CLASS}>
+                <a
+                  href={`/api/admin/documents/${documentId}/pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <IconEye size={20} className="text-[hsl(var(--color-foreground-muted))]" />
+                  <span>Preview PDF</span>
+                </a>
+              </Button>
+              <Button
+                variant="ghost"
+                className={`${ACTION_ITEM_CLASS} text-red-600 hover:bg-red-500/10`}
                 onClick={handleArchive}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-red-600 hover:bg-red-500/10 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                </svg>
+                <IconArchive size={20} />
                 <span>Archive Document</span>
-              </button>
+              </Button>
             </div>
-          </div>
+          </DetailSection>
         </div>
       </div>
 
       {/* Send Modal */}
       {showSendModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[hsl(var(--color-background))] rounded-2xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Send for Signature</h2>
-              <button
+          <div className="bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))]/50 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h2 className={CARD_TITLE_CLASS}>Send for Signature</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                aria-label="Close"
                 onClick={() => setShowSendModal(false)}
-                className="p-2 rounded-lg hover:bg-[hsl(var(--color-background-muted))] transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                <IconX size={20} />
+              </Button>
             </div>
 
             {sendError && (
@@ -487,22 +468,24 @@ export default function DocumentDetailPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Signer Name</label>
+                <label htmlFor="signer-name" className={LABEL_CLASS}>Signer Name</label>
                 <input
+                  id="signer-name"
                   type="text"
                   value={signerName}
                   onChange={(e) => setSignerName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))]"
+                  className={INPUT_CLASS}
                   placeholder="Client name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Signer Email</label>
+                <label htmlFor="signer-email" className={LABEL_CLASS}>Signer Email</label>
                 <input
+                  id="signer-email"
                   type="email"
                   value={signerEmail}
                   onChange={(e) => setSignerEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-ring))]"
+                  className={INPUT_CLASS}
                   placeholder="client@example.com"
                 />
               </div>
@@ -515,34 +498,35 @@ export default function DocumentDetailPage() {
               </div>
 
               <div className="flex items-center gap-3 pt-2">
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1"
                   onClick={() => setShowSendModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-[hsl(var(--color-border))] rounded-xl font-medium hover:bg-[hsl(var(--color-background-muted))] transition-colors"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="accent"
+                  size="sm"
+                  className="flex-1"
                   onClick={handleSendForSignature}
                   disabled={sending || !signerEmail || !signerName}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[hsl(var(--color-accent))] text-white rounded-xl font-medium hover:bg-[hsl(var(--color-accent))]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {sending ? (
                     <>
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
+                      <IconSpinner size={16} />
                       Sending...
                     </>
                   ) : (
                     "Send"
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

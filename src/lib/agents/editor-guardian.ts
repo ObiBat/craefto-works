@@ -3,10 +3,8 @@ import { BaseAgent, callLLM, parseJSONResponse } from "./base-agent";
 import type {
   EditorGuardianInput,
   EditorGuardianOutput,
-  ContentDraft,
   ContentReview,
   ReviewVerdict,
-  EditSuggestion,
 } from "./types";
 
 const SYSTEM_PROMPT = `You are an Editor Guardian agent for Craefto. You review content drafts with a critical eye, ensuring quality before publication.

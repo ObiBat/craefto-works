@@ -3,6 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
+import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, Card, EmptyState } from "@/components/admin/ui";
+import {
+  IconChevronRight,
+  IconClock,
+  IconEdit,
+  IconFileText,
+  IconLightbulb,
+  IconPlus,
+  IconSpinner,
+} from "@/components/admin/icons";
 
 interface PipelineStats {
   insights: { new: number; approved: number; total: number };
@@ -32,6 +43,12 @@ interface Schedule {
   topics: string[];
 }
 
+const STAGE_CARD_CLASS =
+  "group block bg-[hsl(var(--color-background-subtle))]/50 backdrop-blur-sm border border-[hsl(var(--color-border))]/50 rounded-2xl p-6 hover:bg-[hsl(var(--color-background-subtle))]/80 transition-all duration-200";
+
+const CARD_TITLE_CLASS =
+  "font-[family-name:var(--font-heading)] text-lg font-semibold text-[hsl(var(--color-foreground))]";
+
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString("en-US", {
     month: "short",
@@ -47,7 +64,6 @@ export default function PipelineDashboard() {
   const [schedules, setSchedules] = React.useState<Schedule[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [scanning, setScanning] = React.useState(false);
-  const [showScheduleModal, setShowScheduleModal] = React.useState(false);
 
   const fetchData = React.useCallback(async () => {
     try {
@@ -155,56 +171,38 @@ export default function PipelineDashboard() {
   const needsAttention = (stats?.insights.new || 0) + (stats?.briefs.draft || 0) + (stats?.drafts.draft || 0);
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-semibold mb-2">Content Pipeline</h1>
-          <p className="text-[hsl(var(--color-foreground-subtle))]">
-            {needsAttention > 0 ? (
-              <span className="text-yellow-600">{needsAttention} items need your attention</span>
-            ) : (
-              "All caught up"
-            )}
-          </p>
-        </div>
-        <button
-          onClick={runScan}
-          disabled={scanning}
-          className="px-5 py-2.5 bg-[hsl(var(--color-accent))] text-black font-medium rounded-xl hover:bg-[hsl(var(--color-accent-hover))] transition-colors disabled:opacity-50 inline-flex items-center gap-2"
-        >
-          {scanning ? (
-            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+    <PageContainer>
+      <PageHeader
+        title="Content Pipeline"
+        subtitle={
+          needsAttention > 0 ? (
+            <span className="text-yellow-600">{needsAttention} items need your attention</span>
           ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-          )}
-          {scanning ? "Scanning..." : "New Scan"}
-        </button>
-      </div>
+            "All caught up"
+          )
+        }
+        actions={
+          <Button variant="accent" size="sm" onClick={runScan} disabled={scanning}>
+            {scanning ? <IconSpinner size={16} /> : <IconPlus size={16} />}
+            {scanning ? "Scanning..." : "New Scan"}
+          </Button>
+        }
+      />
 
       {/* Pipeline Flow */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Insights */}
-        <Link
-          href="/admin/pipeline/insights"
-          className="group bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6 hover:border-purple-500/50 transition-all"
-        >
+        <Link href="/admin/pipeline/insights" className={`${STAGE_CARD_CLASS} hover:border-purple-500/50`}>
           <div className="flex items-center justify-between mb-6">
             <div className="w-12 h-12 bg-purple-500/20 text-purple-600 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
+              <IconLightbulb size={24} />
             </div>
-            <svg className="w-5 h-5 text-[hsl(var(--color-foreground-subtle))] group-hover:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <IconChevronRight
+              size={20}
+              className="text-[hsl(var(--color-foreground-subtle))] group-hover:text-purple-600 transition-colors"
+            />
           </div>
-          <h3 className="text-lg font-semibold text-[hsl(var(--color-foreground))] mb-1">Insights</h3>
+          <h2 className={`${CARD_TITLE_CLASS} mb-1`}>Insights</h2>
           <p className="text-sm text-[hsl(var(--color-foreground-subtle))] mb-4">Content opportunities discovered</p>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -223,21 +221,17 @@ export default function PipelineDashboard() {
         </Link>
 
         {/* Briefs */}
-        <Link
-          href="/admin/pipeline/briefs"
-          className="group bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6 hover:border-blue-500/50 transition-all"
-        >
+        <Link href="/admin/pipeline/briefs" className={`${STAGE_CARD_CLASS} hover:border-blue-500/50`}>
           <div className="flex items-center justify-between mb-6">
             <div className="w-12 h-12 bg-blue-500/20 text-blue-600 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              <IconFileText size={24} />
             </div>
-            <svg className="w-5 h-5 text-[hsl(var(--color-foreground-subtle))] group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <IconChevronRight
+              size={20}
+              className="text-[hsl(var(--color-foreground-subtle))] group-hover:text-blue-600 transition-colors"
+            />
           </div>
-          <h3 className="text-lg font-semibold text-[hsl(var(--color-foreground))] mb-1">Briefs</h3>
+          <h2 className={`${CARD_TITLE_CLASS} mb-1`}>Briefs</h2>
           <p className="text-sm text-[hsl(var(--color-foreground-subtle))] mb-4">Content outlines and plans</p>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -256,21 +250,17 @@ export default function PipelineDashboard() {
         </Link>
 
         {/* Drafts */}
-        <Link
-          href="/admin/pipeline/drafts"
-          className="group bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6 hover:border-green-500/50 transition-all"
-        >
+        <Link href="/admin/pipeline/drafts" className={`${STAGE_CARD_CLASS} hover:border-green-500/50`}>
           <div className="flex items-center justify-between mb-6">
             <div className="w-12 h-12 bg-green-500/20 text-green-600 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
+              <IconEdit size={24} />
             </div>
-            <svg className="w-5 h-5 text-[hsl(var(--color-foreground-subtle))] group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <IconChevronRight
+              size={20}
+              className="text-[hsl(var(--color-foreground-subtle))] group-hover:text-green-600 transition-colors"
+            />
           </div>
-          <h3 className="text-lg font-semibold text-[hsl(var(--color-foreground))] mb-1">Drafts</h3>
+          <h2 className={`${CARD_TITLE_CLASS} mb-1`}>Drafts</h2>
           <p className="text-sm text-[hsl(var(--color-foreground-subtle))] mb-4">Written content ready for review</p>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -295,25 +285,23 @@ export default function PipelineDashboard() {
 
       {/* Scheduled Scans */}
       {schedules.length > 0 && (
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-[hsl(var(--color-foreground))]">Scheduled Scans</h2>
-          </div>
+        <Card>
+          <h2 className={`${CARD_TITLE_CLASS} mb-4`}>Scheduled Scans</h2>
           <div className="space-y-3">
             {schedules.map((schedule) => (
               <div
                 key={schedule.id}
-                className="flex items-center justify-between p-4 bg-[hsl(var(--color-background-subtle))] rounded-xl"
+                className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl bg-[hsl(var(--color-background-muted))]/40 p-4"
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    schedule.enabled ? "bg-green-500/20 text-green-600" : "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))]"
-                  }`}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                <div className="flex items-center gap-4 min-w-0">
+                  <div
+                    className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${
+                      schedule.enabled ? "bg-green-500/20 text-green-600" : "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))]"
+                    }`}
+                  >
+                    <IconClock size={20} />
                   </div>
-                  <div>
+                  <div className="min-w-0 break-words">
                     <p className="font-medium text-[hsl(var(--color-foreground))]">{schedule.name}</p>
                     <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">
                       {schedule.schedule_type.charAt(0).toUpperCase() + schedule.schedule_type.slice(1)} • {schedule.topics.slice(0, 2).join(", ")}
@@ -321,8 +309,8 @@ export default function PipelineDashboard() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
+                <div className="flex items-center justify-between gap-4 sm:justify-end shrink-0">
+                  <div className="sm:text-right">
                     <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">Next run</p>
                     <p className={`text-sm font-medium ${schedule.enabled ? "text-[hsl(var(--color-foreground))]" : "text-[hsl(var(--color-foreground-muted))]"}`}>
                       {schedule.enabled ? formatNextRun(schedule.next_run_at) : "Disabled"}
@@ -330,7 +318,10 @@ export default function PipelineDashboard() {
                   </div>
                   <button
                     onClick={() => toggleSchedule(schedule.id)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    role="switch"
+                    aria-checked={schedule.enabled}
+                    aria-label={`Toggle ${schedule.name}`}
+                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
                       schedule.enabled ? "bg-green-600" : "bg-[hsl(var(--color-border))]"
                     }`}
                   >
@@ -344,118 +335,98 @@ export default function PipelineDashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Workflow Guide */}
-      <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-6">
-        <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-[hsl(var(--color-foreground))] mb-4">Workflow</h2>
-        <div className="flex items-center justify-between">
+      <Card>
+        <h2 className={`${CARD_TITLE_CLASS} mb-4`}>Workflow</h2>
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-purple-500/20 text-purple-600 flex items-center justify-center text-sm font-medium">1</div>
+            <div className="w-8 h-8 shrink-0 rounded-full bg-purple-500/20 text-purple-600 flex items-center justify-center text-sm font-medium">1</div>
             <span className="text-sm text-[hsl(var(--color-foreground-muted))]">Scan for insights</span>
           </div>
-          <svg className="w-4 h-4 text-[hsl(var(--color-border))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <IconChevronRight size={16} className="hidden xl:block shrink-0 text-[hsl(var(--color-border))]" />
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-purple-500/20 text-purple-600 flex items-center justify-center text-sm font-medium">2</div>
+            <div className="w-8 h-8 shrink-0 rounded-full bg-purple-500/20 text-purple-600 flex items-center justify-center text-sm font-medium">2</div>
             <span className="text-sm text-[hsl(var(--color-foreground-muted))]">Approve insight</span>
           </div>
-          <svg className="w-4 h-4 text-[hsl(var(--color-border))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <IconChevronRight size={16} className="hidden xl:block shrink-0 text-[hsl(var(--color-border))]" />
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-600 flex items-center justify-center text-sm font-medium">3</div>
+            <div className="w-8 h-8 shrink-0 rounded-full bg-blue-500/20 text-blue-600 flex items-center justify-center text-sm font-medium">3</div>
             <span className="text-sm text-[hsl(var(--color-foreground-muted))]">Create brief</span>
           </div>
-          <svg className="w-4 h-4 text-[hsl(var(--color-border))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <IconChevronRight size={16} className="hidden xl:block shrink-0 text-[hsl(var(--color-border))]" />
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-600 flex items-center justify-center text-sm font-medium">4</div>
+            <div className="w-8 h-8 shrink-0 rounded-full bg-blue-500/20 text-blue-600 flex items-center justify-center text-sm font-medium">4</div>
             <span className="text-sm text-[hsl(var(--color-foreground-muted))]">Write draft</span>
           </div>
-          <svg className="w-4 h-4 text-[hsl(var(--color-border))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <IconChevronRight size={16} className="hidden xl:block shrink-0 text-[hsl(var(--color-border))]" />
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-600 flex items-center justify-center text-sm font-medium">5</div>
+            <div className="w-8 h-8 shrink-0 rounded-full bg-green-500/20 text-green-600 flex items-center justify-center text-sm font-medium">5</div>
             <span className="text-sm text-[hsl(var(--color-foreground-muted))]">Publish</span>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Awaiting Approval Queue */}
       {awaitingApproval.length > 0 && (
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[hsl(var(--color-border))] flex items-center justify-between">
-            <h2 className="font-semibold">Awaiting Approval</h2>
-            <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-600 text-xs font-medium rounded">
+        <Card padding="none" className="overflow-hidden">
+          <div className="px-6 py-4 border-b border-[hsl(var(--color-border))]/30 flex items-center justify-between gap-4">
+            <h2 className={CARD_TITLE_CLASS}>Awaiting Approval</h2>
+            <span className="px-2.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-600 text-xs font-medium">
               {awaitingApproval.length}
             </span>
           </div>
-          <div className="divide-y divide-[#27272a]">
+          <div className="divide-y divide-[hsl(var(--color-border))]/30">
             {awaitingApproval.slice(0, 5).map((item) => (
-              <div key={item.id} className="px-6 py-4 flex items-center justify-between hover:bg-[hsl(var(--color-background-subtle))] transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    item.item_type === "insight" ? "bg-purple-500/20 text-purple-600" :
-                    item.item_type === "brief" ? "bg-blue-500/20 text-blue-600" :
-                    "bg-green-500/20 text-green-600"
-                  }`}>
+              <div
+                key={item.id}
+                className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-[hsl(var(--color-background-muted))]/30 transition-colors"
+              >
+                <div className="flex items-center gap-4 min-w-0">
+                  <div
+                    className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${
+                      item.item_type === "insight" ? "bg-purple-500/20 text-purple-600" :
+                      item.item_type === "brief" ? "bg-blue-500/20 text-blue-600" :
+                      "bg-green-500/20 text-green-600"
+                    }`}
+                  >
                     {item.item_type === "insight" ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                      </svg>
+                      <IconLightbulb size={20} />
                     ) : item.item_type === "brief" ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                      <IconFileText size={20} />
                     ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
+                      <IconEdit size={20} />
                     )}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[hsl(var(--color-foreground))] font-medium capitalize">{item.item_type}</p>
                     <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">{formatDate(item.created_at)}</p>
                   </div>
                 </div>
-                <Link
-                  href={`/admin/pipeline/${item.item_type}s`}
-                  className="px-4 py-2 bg-[hsl(var(--color-background-subtle))] text-[hsl(var(--color-foreground))] text-sm font-medium rounded-xl hover:bg-[hsl(var(--color-background-muted))] transition-colors"
-                >
-                  Review
-                </Link>
+                <Button asChild variant="secondary" size="sm" className="h-8 px-3 text-xs shrink-0">
+                  <Link href={`/admin/pipeline/${item.item_type}s`}>Review</Link>
+                </Button>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Empty State */}
       {!loading && !stats?.insights.total && !stats?.briefs.total && !stats?.drafts.total && (
-        <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl p-12 text-center">
-          <div className="w-16 h-16 bg-[hsl(var(--color-background-subtle))] rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-[hsl(var(--color-foreground-subtle))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-[hsl(var(--color-foreground))] mb-2">Start your content pipeline</h3>
-          <p className="text-[hsl(var(--color-foreground-subtle))] mb-6 max-w-md mx-auto">
-            Click "New Scan" to discover content opportunities based on trends and your audience interests.
-          </p>
-          <button
-            onClick={runScan}
-            disabled={scanning}
-            className="px-6 py-3 bg-[hsl(var(--color-accent))] text-black font-medium rounded-xl hover:bg-[hsl(var(--color-accent-hover))] transition-colors disabled:opacity-50"
-          >
-            {scanning ? "Scanning..." : "Start First Scan"}
-          </button>
-        </div>
+        <EmptyState
+          icon={<IconPlus size={48} />}
+          title="Start your content pipeline"
+          description='Click "New Scan" to discover content opportunities based on trends and your audience interests.'
+          action={
+            <Button variant="accent" size="sm" onClick={runScan} disabled={scanning}>
+              {scanning ? "Scanning..." : "Start First Scan"}
+            </Button>
+          }
+        />
       )}
-    </div>
+    </PageContainer>
   );
 }

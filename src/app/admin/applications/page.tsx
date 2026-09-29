@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
 import { PageHeader, SearchInput, FilterBar, FilterChip } from "@/components/admin/ui";
+import { IconStarFilled } from "@/components/admin/icons";
 
 interface Application {
   id: string;
@@ -60,14 +61,11 @@ function RatingStars({ rating }: { rating: number | null }) {
   return (
     <span className="flex items-center gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
-        <svg
+        <IconStarFilled
           key={i}
-          className={`w-3.5 h-3.5 ${i < rating ? "text-amber-400" : "text-[hsl(var(--color-border))]"}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
+          size={14}
+          className={i < rating ? "text-amber-400" : "text-[hsl(var(--color-border))]"}
+        />
       ))}
     </span>
   );
@@ -180,59 +178,61 @@ export default function ApplicationsPage() {
 
       {/* Table */}
       <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-[hsl(var(--color-border))]">
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Applicant</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Role</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Applied</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Status</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Rating</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[hsl(var(--color-border))]">
-            {filtered.length > 0 ? (
-              filtered.map((app) => (
-                <tr
-                  key={app.id}
-                  className="hover:bg-[hsl(var(--color-background-subtle))] transition-colors cursor-pointer"
-                >
-                  <td className="px-6 py-4">
-                    <Link href={`/admin/applications/${app.id}`} className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[hsl(var(--color-accent))]/20 flex items-center justify-center text-[hsl(var(--color-accent))] font-medium text-sm">
-                        {app.full_name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-medium text-[hsl(var(--color-foreground))] hover:text-[hsl(var(--color-accent))] transition-colors">
-                          {app.full_name}
-                        </p>
-                        <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">{app.email}</p>
-                      </div>
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{app.role_title}</td>
-                  <td className="px-6 py-4 text-[hsl(var(--color-foreground-subtle))] text-sm">{formatDate(app.created_at)}</td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-medium border ${getStatusStyle(app.status)}`}>
-                      {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <RatingStars rating={app.rating} />
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px]">
+            <thead>
+              <tr className="border-b border-[hsl(var(--color-border))]">
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Applicant</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Role</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Applied</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Status</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Rating</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[hsl(var(--color-border))]">
+              {filtered.length > 0 ? (
+                filtered.map((app) => (
+                  <tr
+                    key={app.id}
+                    className="hover:bg-[hsl(var(--color-background-subtle))] transition-colors cursor-pointer"
+                  >
+                    <td className="px-6 py-4">
+                      <Link href={`/admin/applications/${app.id}`} className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[hsl(var(--color-accent))]/20 flex items-center justify-center text-[hsl(var(--color-accent))] font-medium text-sm">
+                          {app.full_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-[hsl(var(--color-foreground))] hover:text-[hsl(var(--color-accent))] transition-colors">
+                            {app.full_name}
+                          </p>
+                          <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">{app.email}</p>
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{app.role_title}</td>
+                    <td className="px-6 py-4 text-[hsl(var(--color-foreground-subtle))] text-sm">{formatDate(app.created_at)}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-medium border ${getStatusStyle(app.status)}`}>
+                        {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <RatingStars rating={app.rating} />
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-[hsl(var(--color-foreground-subtle))]">
+                    {search || statusFilter !== "all" || roleFilter !== "all"
+                      ? "No applications match your filters"
+                      : "No applications yet"}
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-[hsl(var(--color-foreground-subtle))]">
-                  {search || statusFilter !== "all" || roleFilter !== "all"
-                    ? "No applications match your filters"
-                    : "No applications yet"}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

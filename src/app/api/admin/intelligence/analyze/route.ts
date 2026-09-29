@@ -104,7 +104,7 @@ async function researchCompany(email: string, companyName: string | null): Promi
 }
 
 // Generate response template based on analysis
-function generateResponseTemplate(lead: LeadData, analysis: ReturnType<typeof analyzeLeadRuleBased>, research: CompanyResearch): string {
+function generateResponseTemplate(lead: LeadData, analysis: ReturnType<typeof analyzeLeadRuleBased>): string {
   const firstName = lead.name.split(' ')[0];
   const serviceNames: Record<string, string> = {
     'web': 'web design and development',
@@ -162,7 +162,7 @@ Obi`;
 }
 
 // Generate discovery call agenda
-function generateCallAgenda(lead: LeadData, analysis: ReturnType<typeof analyzeLeadRuleBased>, research: CompanyResearch): string[] {
+function generateCallAgenda(lead: LeadData, analysis: ReturnType<typeof analyzeLeadRuleBased>): string[] {
   const agenda: string[] = [];
   
   agenda.push('Introductions and background (5 min)');
@@ -403,7 +403,7 @@ export async function POST(request: NextRequest) {
             analysis_mode: 'ml_service',
           };
         }
-      } catch (mlError) {
+      } catch {
         console.log('ML service unavailable, using rule-based analysis');
       }
     }
@@ -440,8 +440,8 @@ export async function POST(request: NextRequest) {
     // Enhanced Intelligence V2: Company research, templates, agenda
     const companyResearch = await researchCompany(lead.email, lead.company);
     const detailedRedFlags = detectRedFlags(lead as LeadData);
-    const responseTemplate = generateResponseTemplate(lead as LeadData, analysis, companyResearch);
-    const callAgenda = generateCallAgenda(lead as LeadData, analysis, companyResearch);
+    const responseTemplate = generateResponseTemplate(lead as LeadData, analysis);
+    const callAgenda = generateCallAgenda(lead as LeadData, analysis);
 
     // Merge detailed red flags into analysis
     const enhancedAnalysis = {

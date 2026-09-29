@@ -4,8 +4,6 @@ import type {
   InsightSynthesiserInput,
   InsightSynthesiserOutput,
   ContentBrief,
-  ContentInsight,
-  OutlineItem,
 } from "./types";
 
 const SYSTEM_PROMPT = `You are an Insight Synthesiser agent for Craefto, transforming raw content insights into comprehensive content briefs.

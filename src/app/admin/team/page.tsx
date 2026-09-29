@@ -3,8 +3,7 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminLoader } from "@/components/admin/AdminLoader";
-import { PageHeader, EmptyState } from "@/components/admin/ui";
-import { IconPlus, IconUsers, IconEdit, IconTrash, IconGlobe, IconMail, IconX } from "@/components/admin/icons";
+import { IconPlus, IconUsers } from "@/components/admin/icons";
 
 interface Contractor {
   id: string;
