@@ -25,9 +25,13 @@ type Fixtures = { consoleErrors: string[] };
 // hooks lint rule doesn't mistake it for React's use().)
 
 export const test = base.extend<Fixtures>({
-  // Never send analytics from a test run (the site also skips automated browsers).
+  // Never count a test run as a visit: the site's own page-view log (which
+  // also skips automated browsers), Vercel Web Analytics and Speed Insights.
   page: async ({ page }, provide) => {
     await page.route("**/api/analytics/**", (route) => route.fulfill({ status: 204, body: "" }));
+    await page.route("**/_vercel/**", (route) =>
+      route.fulfill({ status: 200, contentType: "application/javascript", body: "" })
+    );
     await provide(page);
   },
   consoleErrors: async ({ page }, provide) => {

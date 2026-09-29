@@ -1,11 +1,13 @@
 name: E2E
 
-# Vercel reports each deployment (preview and production) to GitHub; once one
-# is live, run the Playwright suite against it (see playwright.config.ts).
+# Vercel reports each deployment to GitHub; once one is live, run the
+# Playwright suite against it (see playwright.config.ts).
 #
-# Deployment URLs are behind Vercel Authentication, so this needs one repo
-# secret: VERCEL_AUTOMATION_BYPASS_SECRET (Vercel > Project Settings >
-# Deployment Protection > Protection Bypass for Automation).
+# Production is tested on www.craefto.com, which is public. Preview
+# deployment URLs sit behind Vercel Authentication, so they are only tested
+# when the repo has a VERCEL_AUTOMATION_BYPASS_SECRET secret (Vercel >
+# Project Settings > Deployment Protection > Protection Bypass for
+# Automation); otherwise the run is skipped with a notice.
 on:
   deployment_status:
 
@@ -15,18 +17,37 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Choose what to test
+        id: target
+        env:
+          ENVIRONMENT: ${{ github.event.deployment.environment }}
+          DEPLOY_URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          if [ "$ENVIRONMENT" = "Production" ]; then
+            echo "url=https://www.craefto.com" >> "$GITHUB_OUTPUT"
+          elif [ -n "$BYPASS" ]; then
+            echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Skipped: preview deployments need the VERCEL_AUTOMATION_BYPASS_SECRET repo secret."
+          fi
       - uses: actions/checkout@v5
+        if: steps.target.outputs.url != ''
         with:
           ref: ${{ github.event.deployment.sha }}
       - uses: actions/setup-node@v5
+        if: steps.target.outputs.url != ''
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test
+      - if: steps.target.outputs.url != ''
+        run: npm ci
+      - if: steps.target.outputs.url != ''
+        run: npx playwright install --with-deps chromium
+      - if: steps.target.outputs.url != ''
+        run: npx playwright test
         env:
-          BASE_URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+          BASE_URL: ${{ steps.target.outputs.url }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       - uses: actions/upload-artifact@v4
         if: failure()
