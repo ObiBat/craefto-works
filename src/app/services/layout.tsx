@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Services",
+  title: "Capabilities",
+  brand: "Craefto Works",
   description:
-    "Brand identity, web design and development, digital products, AI automation and security audits, with transparent pricing from one team.",
+    "Craefto Works brings brand, digital products, business systems and creative content together: five capabilities, commissioned on their own or combined.",
   path: "/services",
   image: "route",
 });

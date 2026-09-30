@@ -1,353 +1,263 @@
-"use client";
-
+import type { CSSProperties } from "react";
 import Link from "next/link";
-import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Separator, PageTransition, AnimatedSection, HeroText, SectionLabel } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RevealText } from "@/components/editorial/reveal-text";
 import { Glide } from "@/components/editorial/glide";
-import { priceRanges, rangeLabel, weeksLabel } from "@/lib/pricing";
-import { scrollPageTo } from "@/lib/smooth-scroll";
+import { formatPrice, monthlyPlans, priceRanges, rangeLabel, weeksLabel, type MonthlyPlan } from "@/lib/pricing";
+import { getCaseStudy } from "@/content/case-studies";
+import {
+  capabilities,
+  capabilityPlan,
+  capabilityPrices,
+  engagements,
+  getCapability,
+  selectedWork,
+  type Capability,
+  type CapabilityId,
+} from "@/content/capabilities";
+import { CapabilityScroll } from "./capability-scroll";
+import { Faq, type FaqGroup } from "./faq";
 
-const services = [
+// The capabilities page. It keeps the /services address so existing links
+// work; the old service anchors are rewritten in CapabilityScroll.
+
+const work = selectedWork.flatMap(({ slug, capabilities: ids }) => {
+  const study = getCaseStudy(slug);
+  return study ? [{ study, ids, thumbnail: `/images/projects/${slug}/${slug}-thumb.jpg` }] : [];
+});
+
+// The FAQ quotes the published prices (lib/pricing.ts), so it can't drift.
+const smallest = priceRanges.reduce((a, b) => (b.min < a.min ? b : a));
+const largest = priceRanges.reduce((a, b) => (b.max > a.max ? b : a));
+const shortestWeeks = Math.min(...priceRanges.map((range) => range.weeks[0]));
+const longestWeeks = Math.max(...priceRanges.map((range) => range.weeks[1]));
+const midSentence = (label: string) => label.charAt(0).toLowerCase() + label.slice(1);
+
+const faqGroups: FaqGroup[] = [
   {
-    id: "web",
-    number: "01",
-    title: "Web Design & Development",
-    tagline: "Design and engineering as one",
-    description:
-      "Your website doesn\u2019t reflect who you are anymore, or you are launching something new and need it built right the first time. We design and build marketing sites, SaaS platforms, and dashboards end to end.",
-    includes: [
-      "Information architecture & UX",
-      "Visual design & prototyping",
-      "Frontend development (React, Next.js)",
-      "Backend & API development",
-      "Payment integration (Stripe)",
-      "Real time dashboards & portals",
-      "Performance optimization",
-    ],
-    scenarios: [
-      "Our site looks dated and we are losing credibility",
-      "We need a web app but don\u2019t know where to start",
-      "We have a design but need someone to build it properly",
+    label: "Pricing and plans",
+    items: [
+      {
+        question: "How much does a typical project cost?",
+        answer: `Most projects fall between ${formatPrice(smallest.min)} (${midSentence(smallest.label)}) and ${formatPrice(largest.max)} (${midSentence(largest.label)}), and each capability lists its prices above. We give you a fixed price before any work begins. For ongoing work, a monthly plan is usually simpler.`,
+      },
+      {
+        question: "Why are your prices lower than most agencies?",
+        answer: "We use AI for the repetitive parts of the work, such as first drafts, boilerplate code, image clean-up and rough cuts, and spend our time on the decisions and the finish. Every piece is still directed and checked by us, and you get the same fixed price before work begins.",
+      },
+      {
+        question: "Which monthly plan do I need?",
+        answer: "Media for fresh content, from shoots to motion design; Growth for more enquiries from your website, with the data to show what works; and Studio for work across every capability, with design and development on call. Plans can be combined, and if you\u2019re unsure, tell us what you\u2019re working on and we\u2019ll suggest one.",
+      },
+      {
+        question: "How do monthly plans work?",
+        answer: "Each plan covers the work on its card, every month. Studio runs on requests: send them whenever you like and we work on one or two at a time. Media and Growth are planned with you each month. Plans are billed monthly in advance, come in larger sizes on request, and can be paused or cancelled before your next billing date.",
+      },
+      {
+        question: "How does payment work?",
+        answer: "Projects are split into milestones so you are never paying for work that has not been delivered: typically 30% upfront, 40% at design approval and 30% on launch, with more milestones for larger projects. Monthly plans are billed in advance each month. We accept bank transfer and can provide invoices with flexible terms for enterprise clients.",
+      },
     ],
   },
   {
-    id: "brand",
-    number: "02",
-    title: "Brand Identity",
-    tagline: "Strategic foundations",
-    description:
-      "Your brand feels inconsistent across touchpoints. Your website says one thing, your pitch deck says another. We align everything into a cohesive identity that communicates clearly.",
-    includes: [
-      "Brand strategy & positioning",
-      "Logo & visual identity",
-      "Design system & components",
-      "Brand guidelines",
-    ],
-    scenarios: [
-      "We don\u2019t have a real brand, just a logo",
-      "Our visual identity is all over the place",
-      "We are rebranding and need it done professionally",
-    ],
-  },
-  {
-    id: "products",
-    number: "03",
-    title: "Digital Products",
-    tagline: "From concept to launch",
-    description:
-      "You have a product idea but no technical team to build it. Or an existing product that needs a serious upgrade. We handle full stack product development from scoping to deployment.",
-    includes: [
-      "Product strategy & scoping",
-      "Full stack development",
-      "Interactive experiences & WebGL",
-      "API integrations",
-      "Workflow automation",
-      "Stakeholder portals & client dashboards",
-    ],
-    scenarios: [
-      "We have an idea but no technical co founder",
-      "Our current product is held together with duct tape",
-      "We need an MVP to validate our concept before raising",
-    ],
-  },
-  {
-    id: "ai",
-    number: "04",
-    title: "AI & Automation",
-    tagline: "Intelligent systems",
-    description:
-      "You keep hearing about AI but don\u2019t know what is actually useful for your business. We cut through the hype and build agents and automations that save real time.",
-    includes: [
-      "AI strategy & discovery",
-      "Custom agent development",
-      "LLM integrations",
-      "Process automation",
-    ],
-    scenarios: [
-      "We want to use AI but don\u2019t know how",
-      "We are doing manual work that could be automated",
-      "We need a custom AI tool for our team",
-    ],
-  },
-  {
-    id: "security",
-    number: "05",
-    title: "Security & Pen Testing",
-    tagline: "We don\u2019t just build it, we secure it",
-    description:
-      "You know security matters but aren\u2019t sure where the vulnerabilities are. Or you need compliance for enterprise clients. We make enterprise grade security accessible.",
-    includes: [
-      "Web application security assessment",
-      "Vulnerability report & remediation guide",
-      "Executive summary (investor/board ready)",
-      "30 day re test after fixes",
-      "ISO 27001 & SOC 2 readiness",
-      "Essential Eight compliance",
-      "PCI DSS assessment",
-      "OSCP/CREST certified testers",
-    ],
-    scenarios: [
-      "We need a security audit before onboarding enterprise clients",
-      "We have never tested our application for vulnerabilities",
-      "We need compliance documentation for investors or partners",
+    label: "Working with us",
+    items: [
+      {
+        question: "Do I need to have a clear brief before reaching out?",
+        answer: "No. Many clients start with just an idea or a frustration. We help shape the direction during our initial conversation, so you don\u2019t need anything polished before getting in touch.",
+      },
+      {
+        question: "Can you handle just design, or just development?",
+        answer: "Yes, but we work best when we can do both. Fewer handoffs means better results, faster delivery, and less risk of things getting lost in translation between teams.",
+      },
+      {
+        question: "What is your typical timeline?",
+        answer: `${shortestWeeks} to ${longestWeeks} weeks for most projects, depending on scope; each capability lists its timelines above. We confirm yours in the proposal and keep you informed throughout.`,
+      },
+      {
+        question: "Do you support the project after launch?",
+        answer: "Yes. Every project includes 30 days of post launch support. After that, the Studio plan covers fixes, updates and new work.",
+      },
+      {
+        question: "What technologies do you use?",
+        answer: "We primarily work with React, Next.js, TypeScript, and Tailwind on the frontend, with Node.js, Supabase, and various APIs on the backend. We choose the best tools for each project rather than forcing a one size fits all stack.",
+      },
     ],
   },
 ];
 
-const workProcess = [
-  { number: "01", title: "Discovery", description: "Understand goals and constraints" },
-  { number: "02", title: "Proposal", description: "Clear scope and investment" },
-  { number: "03", title: "Execution", description: "Build in focused sprints" },
-  { number: "04", title: "Launch", description: "Deploy and support" },
-];
-
-const pricingData = priceRanges.map((range) => ({
-  type: range.label,
-  range: rangeLabel(range),
-  min: range.min,
-  max: range.max,
-  timeline: weeksLabel(range),
-}));
-
-// Every range bar shares one scale, so the rows compare at a glance.
-const PRICE_SCALE = Math.max(...pricingData.map((row) => row.max));
-
-const faqs = [
-  {
-    question: "Do I need to have a clear brief before reaching out?",
-    answer: "No. Many clients start with just an idea or a frustration. We help shape the direction during our initial conversation, so you don\u2019t need anything polished before getting in touch.",
-  },
-  {
-    question: "How much does a typical project cost?",
-    answer: "It depends on scope, but we are transparent about pricing from the first conversation. See our pricing ranges above for starting points. We will give you a clear, fixed price proposal before any work begins.",
-  },
-  {
-    question: "Can you handle just design, or just development?",
-    answer: "Yes, but we work best when we can do both. Fewer handoffs means better results, faster delivery, and less risk of things getting lost in translation between teams.",
-  },
-  {
-    question: "What is your typical timeline?",
-    answer: "4 to 12 weeks depending on complexity. We set realistic expectations upfront and keep you informed throughout. You will never be left wondering what is happening with your project.",
-  },
-  {
-    question: "Do you support the project after launch?",
-    answer: "Yes. Every project includes 30 days of post launch support. After that, we offer ongoing retainers for maintenance, optimization, and continued development.",
-  },
-  {
-    question: "What technologies do you use?",
-    answer: "We primarily work with React, Next.js, TypeScript, and Tailwind on the frontend, with Node.js, Supabase, and various APIs on the backend. We choose the best tools for each project rather than forcing a one size fits all stack.",
-  },
-  {
-    question: "How does payment work?",
-    answer: "We split projects into milestones so you are never paying for work that has not been delivered. A typical schedule: 30% upfront to begin, 40% at design approval, and 30% on launch. For larger projects, we can break it into more milestones. Retainers are billed monthly in advance. We accept bank transfer and can provide invoices with flexible terms for enterprise clients.",
-  },
-];
-
-// Service Card Component
-function ServiceCard({
-  service,
-  className,
-}: {
-  service: typeof services[0];
-  className?: string;
-}) {
+function Arrow({ className }: { className?: string }) {
   return (
-    <div
-      id={service.id}
-      className={cn(
-        "group relative rounded-2xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))] transition-colors duration-300",
-        "hover:border-[hsl(var(--color-accent))]",
-        className
-      )}
-    >
-      <div className="h-full flex flex-col p-6 lg:p-8">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <span className="font-mono font-medium text-[hsl(var(--color-accent))] text-xs">
-            {service.number}
-          </span>
-          <div className="w-2 h-2 rounded-full bg-[hsl(var(--color-accent))] transition-transform duration-300 group-hover:scale-150" />
-        </div>
-
-        {/* Title */}
-        <h3 className="font-heading font-semibold tracking-tight text-[hsl(var(--color-foreground))] text-lg lg:text-xl mb-2">
-          {service.title}
-        </h3>
-
-        {/* Tagline */}
-        <p className="text-[hsl(var(--color-accent))] font-medium uppercase font-mono tracking-[0.06em] text-xs mb-4">
-          {service.tagline}
-        </p>
-
-        {/* Description */}
-        <p className="text-sm text-[hsl(var(--color-foreground-muted))] leading-relaxed mb-6">
-          {service.description}
-        </p>
-
-        {/* Scenarios */}
-        <div className="pt-4 border-t border-[hsl(var(--color-border))]">
-          <p className="text-xs font-medium text-[hsl(var(--color-foreground-subtle))] uppercase font-mono tracking-[0.06em] mb-3">
-            Common scenarios
-          </p>
-          <div className="space-y-2">
-            {service.scenarios.map((scenario) => (
-              <p
-                key={scenario}
-                className="text-sm text-[hsl(var(--color-foreground-muted))] leading-relaxed flex items-start gap-2"
-              >
-                <span className="w-1 h-1 rounded-full bg-[hsl(var(--color-accent))] mt-2 flex-shrink-0" />
-                &ldquo;{scenario}&rdquo;
-              </p>
-            ))}
-          </div>
-        </div>
-
-        {/* Includes */}
-        <div className="pt-4 border-t border-[hsl(var(--color-border))] mt-4">
-          <p className="text-xs font-medium text-[hsl(var(--color-foreground-subtle))] uppercase font-mono tracking-[0.06em] mb-3">
-            Includes
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {service.includes.map((item) => (
-              <span
-                key={item}
-                className="px-3 py-1.5 text-xs rounded-full bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))] border border-[hsl(var(--color-border-subtle))]"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+    <svg className={cn("w-4 h-4 shrink-0", className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+    </svg>
   );
 }
 
-// FAQ Item Component
-function FAQItem({ faq, index }: { faq: typeof faqs[0]; index: number }) {
-  const [isOpen, setIsOpen] = useState(false);
-
+/** A plan card's header. The copy, laid over it, is decoration: no heading. */
+function PlanHead({ plan, copy = false }: { plan: MonthlyPlan; copy?: boolean }) {
+  const name = <span className="plan-name block text-4xl font-semibold tracking-tight">{plan.name}</span>;
   return (
-    <div
-      data-glide-item
-      className={cn(
-        "-mx-2.5 sm:-mx-5 px-2.5 sm:px-5 rounded-2xl transition-colors duration-500",
-        isOpen && "bg-[hsl(var(--color-accent-subtle))]"
-      )}
-    >
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-5 py-5 text-left group"
-        aria-expanded={isOpen}
-      >
-        <span
-          className={cn(
-            "w-5 font-mono text-xs tabular-nums shrink-0 transition-colors duration-300 group-hover:text-[hsl(var(--color-accent))]",
-            isOpen ? "text-[hsl(var(--color-accent))]" : "text-[hsl(var(--color-foreground-subtle))]"
-          )}
+    <>
+      {copy ? name : <h3>{name}</h3>}
+      <p className="plan-for mt-2 text-sm leading-relaxed md:min-h-[2lh]">{plan.bestFor}</p>
+      <p className="mt-6 flex items-baseline gap-1.5">
+        <span className="plan-price text-3xl font-semibold tracking-tight tabular-nums">{formatPrice(plan.price)}</span>
+        <span className="plan-per text-sm">/ month</span>
+      </p>
+    </>
+  );
+}
+
+function CheckMark() {
+  return (
+    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+/** A tick in a plan card; fills in after the ticks before it (see .plan-tick). */
+function PlanTick({ index }: { index: number }) {
+  return (
+    <span className="plan-tick" style={{ "--i": index } as CSSProperties} aria-hidden="true">
+      <CheckMark />
+    </span>
+  );
+}
+
+/** Capability names as links to their sections on this page. */
+function CapabilityTags({ ids, label, className }: { ids: CapabilityId[]; label: string; className?: string }) {
+  return (
+    <ul className={cn("flex flex-wrap gap-2", className)} aria-label={label}>
+      {ids.map((id) => {
+        const capability = getCapability(id);
+        return (
+          <li key={id}>
+            <a
+              href={`#${id}`}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--color-background-muted))] px-3 py-1.5 text-xs font-medium text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-accent))]"
+            >
+              <span className="font-mono text-[hsl(var(--color-accent))]" aria-hidden="true">
+                {capability.number}
+              </span>
+              {capability.name}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function CapabilityDetail({ capability }: { capability: Capability }) {
+  const plan = capabilityPlan(capability);
+  return (
+    <section aria-labelledby={capability.id} className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+      <AnimatedSection className="lg:col-span-5">
+        <h2
+          id={capability.id}
+          data-section={capability.name}
+          data-section-number={capability.number}
+          className="scroll-mt-8 font-semibold tracking-tight"
         >
-          {String(index + 1).padStart(2, "0")}
-        </span>
-        <span className="flex-1 font-medium text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors pr-4">
-          {faq.question}
-        </span>
-        <span
-          className={cn(
-            "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:bg-[hsl(var(--color-accent))] group-hover:text-white",
-            isOpen
-              ? "bg-[hsl(var(--color-accent))] text-white"
-              : "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground))]"
-          )}
-        >
-          <svg
-            className={cn("w-4 h-4 transition-transform duration-300", isOpen && "rotate-45")}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+          <span
+            className="mb-4 flex w-fit rounded-full bg-[hsl(var(--color-accent-subtle))] px-2.5 py-1 font-mono text-xs font-medium tabular-nums tracking-normal text-[hsl(var(--color-accent))]"
             aria-hidden="true"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        </span>
-      </button>
-      <div data-no-reveal className={cn(
-        "overflow-hidden transition-all duration-300",
-        isOpen ? "max-h-[300px] opacity-100 pb-6" : "max-h-0 opacity-0"
-      )}>
-        <p className="pl-10 text-[hsl(var(--color-foreground-muted))] leading-relaxed">
-          {faq.answer}
+            {capability.number}
+          </span>
+          <RevealText text={capability.name} />
+        </h2>
+        <p data-ink className="mt-5 max-w-md text-lg md:text-xl leading-relaxed text-[hsl(var(--color-foreground-muted))]">
+          {capability.summary}
         </p>
+
+        <div className="mt-10 rounded-2xl bg-[hsl(var(--color-accent-subtle))] p-6">
+          <h3 className="label-heading mb-4">Pricing, AUD ex GST</h3>
+          <ul className="space-y-3">
+            {capabilityPrices(capability).map((range) => (
+              <li key={range.service}>
+                <span className="block font-medium text-[hsl(var(--color-foreground))]">{range.label}</span>
+                <span className="text-sm">
+                  <span className="font-medium tabular-nums text-[hsl(var(--color-accent))]">{rangeLabel(range)}</span>
+                  <span className="text-[hsl(var(--color-foreground-muted))]"> · {weeksLabel(range)}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          {plan && (
+            <a
+              href="#plans"
+              className="group mt-5 inline-flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-accent))]"
+            >
+              Or monthly: {plan.name}, {formatPrice(plan.price)} a month
+              <Arrow className="transition-transform group-hover:translate-x-1" />
+            </a>
+          )}
+        </div>
+      </AnimatedSection>
+
+      <div className="lg:col-span-7 flex flex-col gap-10 lg:pt-11">
+        <p className="text-lg leading-relaxed text-[hsl(var(--color-foreground))]">{capability.description}</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+          <div>
+            <h3 className="label-heading mb-4">Deliverables</h3>
+            <ul className="space-y-3">
+              {capability.deliverables.map((item) => (
+                <li key={item} className="flex gap-3 text-[hsl(var(--color-foreground))]">
+                  <span
+                    className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[hsl(var(--color-accent-subtle))] text-[hsl(var(--color-accent))]"
+                    aria-hidden="true"
+                  >
+                    <CheckMark />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="label-heading mb-4">When you&apos;d need it</h3>
+            <p className="leading-relaxed text-[hsl(var(--color-foreground-muted))]">{capability.example}</p>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="label-heading mb-4">Related work</h3>
+          <ul className="space-y-3">
+            {capability.work.map((item) => (
+              <li key={item.slug}>
+                <Link href={`/work/${item.slug}`} className="group block">
+                  <span className="flex items-center gap-2 font-medium text-[hsl(var(--color-foreground))] transition-colors group-hover:text-[hsl(var(--color-accent))]">
+                    {item.project}
+                    <Arrow className="text-[hsl(var(--color-foreground-subtle))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--color-accent))]" />
+                  </span>
+                  <span className="mt-0.5 block leading-relaxed text-[hsl(var(--color-foreground-muted))]">{item.detail}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
 export default function ServicesPage() {
-  const scrollToSection = useCallback((targetId: string, onScrolled?: () => void) => {
-    // Wait for page transition animation (300ms) + layout to settle
-    const timer = setTimeout(() => {
-      onScrolled?.();
-      const element = document.getElementById(targetId);
-      if (element) {
-        const headerOffset = 100;
-        const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-        scrollPageTo(elementPosition - headerOffset);
-      }
-    }, 450);
-    return timer;
-  }, []);
-
-  // Handle scroll from /start page via sessionStorage (no hash in URL)
-  useEffect(() => {
-    const target = sessionStorage.getItem("scrollToService");
-    if (target) {
-      // Cleared only once the scroll runs, so a re-run effect (Strict Mode,
-      // fast refresh) still finds it.
-      const timer = scrollToSection(target, () => sessionStorage.removeItem("scrollToService"));
-      return () => clearTimeout(timer);
-    }
-
-    // Also handle direct URL hash (e.g. shared link /services#web)
-    const hash = window.location.hash?.replace("#", "");
-    if (hash) {
-      // Reset scroll position immediately to prevent native hash jump
-      window.scrollTo(0, 0);
-      const timer = scrollToSection(hash);
-      return () => clearTimeout(timer);
-    }
-  }, [scrollToSection]);
-
   return (
     <>
       <Header />
+      <CapabilityScroll />
       <PageTransition>
         <main id="main-content" className="pt-20">
-          {/* Hero - Compact */}
-          <Section spacing="sm" className="pb-12 md:pb-20">
+          {/* Introduction and the five capabilities at a glance */}
+          <Section spacing="sm" className="pb-8 md:pb-12">
             <Container>
               <div className="max-w-3xl">
                 <nav className="mb-6" aria-label="Breadcrumb">
@@ -357,233 +267,264 @@ export default function ServicesPage() {
                         Home
                       </Link>
                     </li>
-                    <li><span className="mx-2">/</span></li>
-                    <li className="text-[hsl(var(--color-foreground))] font-medium">Services</li>
+                    <li aria-hidden="true"><span className="mx-2">/</span></li>
+                    <li className="text-[hsl(var(--color-foreground))] font-medium" aria-current="page">Capabilities</li>
                   </ol>
                 </nav>
 
-                <h1 className="font-semibold tracking-tight mb-4"><RevealText text={"Services"} mode="load" /></h1>
+                <h1 className="font-semibold tracking-tight mb-6"><RevealText text={"Capabilities"} mode="load" /></h1>
                 <HeroText delay={0.1}>
-                  <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
-                    Tailored systems, not templates. Each project approached from first principles.
+                  <p className="text-xl md:text-2xl leading-snug text-[hsl(var(--color-foreground))]">
+                    Craefto Works brings brand, digital products, business systems and creative content together.
+                  </p>
+                </HeroText>
+                <HeroText delay={0.2}>
+                  <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[hsl(var(--color-foreground-muted))]">
+                    Commission one capability or combine several. When a project needs more than one, we plan them together, so your identity, website, internal tools and content are made to fit.
                   </p>
                 </HeroText>
               </div>
+
+              <HeroText delay={0.3}>
+                <nav aria-label="Capabilities on this page" className="mt-14 md:mt-20">
+                  <Glide bleed={16}>
+                    <ol>
+                      {capabilities.map((capability) => (
+                        <li key={capability.id} data-glide-item className="rounded-2xl">
+                          <a
+                            href={`#${capability.id}`}
+                            className="group grid grid-cols-[2.5rem_1fr] md:grid-cols-[3rem_12rem_1fr_auto] items-baseline gap-x-4 md:gap-x-8 gap-y-1 py-5 md:py-6"
+                          >
+                            <span className="font-mono text-sm tabular-nums text-[hsl(var(--color-foreground-subtle))] transition-colors group-hover:text-[hsl(var(--color-accent))]">
+                              {capability.number}
+                            </span>
+                            <span className="text-2xl md:text-3xl font-semibold tracking-tight text-[hsl(var(--color-foreground))] transition-colors group-hover:text-[hsl(var(--color-accent))]">
+                              {capability.name}
+                            </span>
+                            <span className="col-start-2 md:col-start-auto text-[hsl(var(--color-foreground-muted))] leading-relaxed">
+                              {capability.summary}
+                            </span>
+                            {/* A wrapper, since the global svg rule would override hidden */}
+                            <span className="hidden md:block self-center">
+                              <Arrow className="text-[hsl(var(--color-foreground-subtle))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--color-accent))]" />
+                            </span>
+                          </a>
+                        </li>
+                      ))}
+                    </ol>
+                  </Glide>
+                </nav>
+              </HeroText>
             </Container>
           </Section>
 
-          {/* Bento Grid */}
-          <Section spacing="lg" className="pt-0 md:pt-0">
+          {/* The capabilities in detail */}
+          <div className="py-24 md:py-40">
             <Container>
-              {/* Desktop Grid - Row 1 */}
-              <AnimatedSection>
-                <div className="hidden lg:grid lg:grid-cols-12 gap-4 lg:gap-5">
-                  <ServiceCard
-                    service={services[0]}
-                    className="lg:col-span-4"
-                  />
-                  <ServiceCard
-                    service={services[1]}
-                    className="lg:col-span-4"
-                  />
-                  <ServiceCard
-                    service={services[2]}
-                    className="lg:col-span-4"
-                  />
-                </div>
-              </AnimatedSection>
-
-              {/* Desktop Grid - Row 2 */}
-              <AnimatedSection>
-                <div className="hidden lg:grid lg:grid-cols-12 gap-4 lg:gap-5 mt-4 lg:mt-5">
-                  <ServiceCard
-                    service={services[3]}
-                    className="lg:col-span-4"
-                  />
-                  <ServiceCard
-                    service={services[4]}
-                    className="lg:col-span-4"
-                  />
-
-                  {/* Process Card */}
-                  <div className="lg:col-span-4 rounded-2xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-subtle))] p-6 lg:p-8">
-                    <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase font-mono tracking-[0.06em] mb-5">
-                      How we work
-                    </p>
-                    <div className="space-y-4">
-                      {workProcess.map((step) => (
-                        <div key={step.title} className="flex items-center gap-3">
-                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--color-accent))] flex items-center justify-center text-[10px] font-semibold text-white">
-                            {step.number}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <span className="font-medium text-sm text-[hsl(var(--color-foreground))]">{step.title}</span>
-                            <span className="text-[hsl(var(--color-foreground-muted))] text-sm"> · {step.description}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-5">
-                      <Link
-                        href="/process"
-                        className="text-sm font-medium text-[hsl(var(--color-accent))] hover:underline inline-flex items-center gap-1"
-                      >
-                        See full process
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </AnimatedSection>
-
-              {/* Mobile Layout - Each card animates individually */}
-              <div className="lg:hidden space-y-4">
-                {services.map((service) => (
-                  <AnimatedSection key={service.id}>
-                    <ServiceCard service={service} />
-                  </AnimatedSection>
+              <div className="flex flex-col gap-24 md:gap-40">
+                {capabilities.map((capability) => (
+                  <CapabilityDetail key={capability.id} capability={capability} />
                 ))}
+              </div>
+            </Container>
+          </div>
 
-                {/* Mobile Process */}
+          {/* How capabilities combine */}
+          <Section spacing="lg" className="pt-0 md:pt-0" aria-labelledby="together-heading">
+            <Container>
+              <div className="flex flex-col gap-14 md:gap-10">
                 <AnimatedSection>
-                  <div className="rounded-2xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-subtle))] p-6">
-                    <p className="text-xs font-medium text-[hsl(var(--color-accent))] uppercase font-mono tracking-[0.06em] mb-5">
-                      How we work
+                  <div className="flex flex-col gap-4">
+                    <SectionLabel number="06" label="Together" />
+                    <h2 id="together-heading" className="font-semibold tracking-tight"><RevealText text={"One capability, or several"} /></h2>
+                    <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-2xl">
+                      Each capability can be commissioned on its own. When a project needs more than one, we plan them as one piece of work: the brand rules carry into the product, the systems fit how the product is used, and the media and marketing are made for the same launch.
                     </p>
-                    <div className="grid grid-cols-2 gap-4">
-                      {workProcess.map((step) => (
-                        <div key={step.title} className="flex items-start gap-3">
-                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--color-accent))] flex items-center justify-center text-[10px] font-semibold text-white">
-                            {step.number}
-                          </span>
-                          <div>
-                            <p className="font-medium text-sm text-[hsl(var(--color-foreground))]">{step.title}</p>
-                            <p className="text-xs text-[hsl(var(--color-foreground-muted))]">{step.description}</p>
-                          </div>
-                        </div>
-                      ))}
+                  </div>
+                </AnimatedSection>
+
+                <Separator />
+
+                <div className="flex flex-col gap-8">
+                  <h3 className="label-heading">Illustrative engagements, not past projects</h3>
+                  <ul className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 lg:gap-12">
+                    {engagements.map((engagement) => (
+                      <li key={engagement.title} className="flex flex-col gap-4">
+                        <h4 className="text-xl font-semibold tracking-tight text-[hsl(var(--color-foreground))]">{engagement.title}</h4>
+                        <CapabilityTags ids={engagement.capabilities} label={`Capabilities for ${engagement.title.toLowerCase()}`} />
+                        <p className="leading-relaxed text-[hsl(var(--color-foreground-muted))]">{engagement.description}</p>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/process"
+                    className="group inline-flex w-fit items-center gap-2 text-sm font-medium text-[hsl(var(--color-accent))]"
+                  >
+                    How a project runs
+                    <Arrow className="transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
+              </div>
+            </Container>
+          </Section>
+
+          {/* Selected work */}
+          <Section spacing="lg" className="pt-0 md:pt-0" aria-labelledby="work-heading">
+            <Container>
+              <div className="flex flex-col gap-14 md:gap-10">
+                <AnimatedSection>
+                  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                    <div className="flex flex-col gap-4">
+                      <SectionLabel number="07" label="Work" />
+                      <h2 id="work-heading" className="font-semibold tracking-tight"><RevealText text={"Selected work"} /></h2>
+                      <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
+                        Case studies, and the capabilities each one drew on.
+                      </p>
                     </div>
-                    <div className="mt-5">
+                    <Link
+                      href="/work"
+                      className="group flex shrink-0 items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-foreground))]"
+                    >
+                      All case studies
+                      <Arrow className="transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </div>
+                </AnimatedSection>
+
+                <Separator />
+
+                <ul className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-6 lg:gap-8">
+                  {work.map(({ study, ids, thumbnail }) => (
+                    <li key={study.slug}>
+                      <article>
+                        <Link href={`/work/${study.slug}`} className="group block">
+                          <div className="relative mb-5 aspect-[4/3] overflow-hidden rounded-xl transition-shadow duration-500 group-hover:shadow-2xl">
+                            <Image
+                              src={thumbnail}
+                              alt=""
+                              fill
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                            />
+                          </div>
+                          <h3 className="text-lg font-semibold tracking-tight text-[hsl(var(--color-foreground))] transition-colors group-hover:text-[hsl(var(--color-accent))]">
+                            {study.title}
+                          </h3>
+                          <p className="mt-2 leading-relaxed text-[hsl(var(--color-foreground-muted))]">{study.description}</p>
+                        </Link>
+                        <CapabilityTags ids={ids} label={`Capabilities in ${study.title}`} className="mt-4" />
+                      </article>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Container>
+          </Section>
+
+          {/* Monthly plans (lib/pricing.ts) */}
+          <Section spacing="lg" className="pt-0 md:pt-0" aria-labelledby="plans">
+            <Container>
+              <div className="flex flex-col gap-14 md:gap-10">
+                <AnimatedSection>
+                  <div className="flex flex-col gap-4">
+                    <SectionLabel number="08" label="Plans" />
+                    <h2 id="plans" className="scroll-mt-8 font-semibold tracking-tight"><RevealText text={"Monthly plans"} /></h2>
+                    <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
+                      One monthly price for ongoing work. Pick the plan that fits, and pause or cancel any time.
+                    </p>
+                  </div>
+                </AnimatedSection>
+
+                <Separator />
+
+                <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5">
+                  {monthlyPlans.map((plan) => (
+                    <li key={plan.id} className="plan-card flex flex-col rounded-3xl bg-[hsl(var(--color-background-subtle))] p-2">
+                      <div className="plan-card-head rounded-[1.25rem] bg-[hsl(var(--color-accent-subtle))] px-6 pt-6 pb-7">
+                        <PlanHead plan={plan} />
+                        {/* The same header in white on green, uncovered while the card is on. */}
+                        <div className="plan-card-flood px-6 pt-6 pb-7" aria-hidden="true">
+                          <PlanHead plan={plan} copy />
+                        </div>
+                      </div>
+                      <div className="flex flex-1 flex-col p-6">
+                        <ul className="space-y-3">
+                          {plan.includes.map((item, index) => (
+                            <li key={item} className="flex gap-3 text-sm text-[hsl(var(--color-foreground))]">
+                              <PlanTick index={index} />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                        <CapabilityTags ids={plan.capabilities} label={`Capabilities in ${plan.name}`} className="mt-6" />
+                        <div className="mt-auto pt-8">
+                          <Button asChild size="md" className="w-full" hoverText={"Let\u2019s talk"}>
+                            <Link href={`/contact?plan=${plan.id}`}>Start with {plan.name}</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                <p className="text-sm text-[hsl(var(--color-foreground-muted))] max-w-2xl">
+                  Billed monthly in advance, in AUD excluding GST. Larger sizes on request, and plans can be combined. Not sure which fits?{" "}
+                  <Link href="/contact" className="font-medium text-[hsl(var(--color-accent))] hover:underline">
+                    Tell us what you&apos;re working on
+                  </Link>
+                  .
+                </p>
+              </div>
+            </Container>
+          </Section>
+
+          {/* FAQ: the heading and a way to ask stay in view beside the questions */}
+          <Section spacing="lg" className="pt-0 md:pt-0" aria-labelledby="faq-heading">
+            <Container>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+                <div className="lg:col-span-4">
+                  <AnimatedSection className="lg:sticky lg:top-28 flex flex-col gap-4">
+                    <SectionLabel number="09" label="FAQ" />
+                    <h2 id="faq-heading" className="font-semibold tracking-tight"><RevealText text={"Common questions"} /></h2>
+                    <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
+                      Straight answers on pricing, plans and how we work together.
+                    </p>
+                    <div className="mt-6 rounded-2xl bg-[hsl(var(--color-background-subtle))] p-6">
+                      <p className="font-medium text-[hsl(var(--color-foreground))]">Still have a question?</p>
+                      <p className="mt-2 text-sm leading-relaxed text-[hsl(var(--color-foreground-muted))]">
+                        Send us a message and we&apos;ll reply within 1 to 2 days, or email{" "}
+                        <a href="mailto:hello@craefto.com" className="font-medium text-[hsl(var(--color-foreground))] hover:text-[hsl(var(--color-accent))]">
+                          hello@craefto.com
+                        </a>
+                        .
+                      </p>
                       <Link
-                        href="/process"
-                        className="text-sm font-medium text-[hsl(var(--color-accent))] hover:underline inline-flex items-center gap-1"
+                        href="/contact"
+                        className="group mt-4 inline-flex items-center gap-2 text-sm font-medium text-[hsl(var(--color-accent))]"
                       >
-                        See full process
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
+                        Ask us
+                        <Arrow className="transition-transform group-hover:translate-x-1" />
                       </Link>
                     </div>
-                  </div>
+                  </AnimatedSection>
+                </div>
+                <AnimatedSection delay={0.1} className="lg:col-span-8">
+                  <Faq groups={faqGroups} />
                 </AnimatedSection>
               </div>
             </Container>
           </Section>
 
-          {/* Pricing Section */}
-          <Section spacing="lg">
-            <Container>
-              <div className="flex flex-col gap-14 md:gap-10">
-                <AnimatedSection>
-                  <div className="flex flex-col gap-4">
-                    <SectionLabel number="06" label="Investment" />
-                    <h2 className="font-semibold tracking-tight"><RevealText text={"Transparent pricing"} /></h2>
-                    <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
-                      Every project is different, but here is what to expect. We will give you a precise quote after our discovery call.
-                    </p>
-                  </div>
-                </AnimatedSection>
-
-                <Separator />
-
-                <AnimatedSection delay={0.1}>
-                  <Glide bleed={16} className="pricing-rows">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-[hsl(var(--color-border))]">
-                          <th className="text-left py-4 pr-6 text-xs font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
-                            Project Type
-                          </th>
-                          <th className="text-left py-4 pr-6 text-xs font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
-                            Typical Range
-                          </th>
-                          <th className="text-left py-4 text-xs font-medium uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
-                            Timeline
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pricingData.map((row) => (
-                          <tr key={row.type} data-glide-item>
-                            <td className="py-5 pr-6 font-medium text-[hsl(var(--color-foreground))]">
-                              {row.type}
-                            </td>
-                            <td className="py-5 pr-6">
-                              <span className="block text-[hsl(var(--color-accent))] font-medium tabular-nums">{row.range}</span>
-                              <span className="relative mt-2.5 block h-2 w-full max-w-[240px]" aria-hidden="true">
-                                <span
-                                  className="range-bar absolute inset-y-0 rounded-full bg-[hsl(var(--color-accent))]/35"
-                                  style={{
-                                    left: `${(row.min / PRICE_SCALE) * 100}%`,
-                                    width: `${((row.max - row.min) / PRICE_SCALE) * 100}%`,
-                                  }}
-                                />
-                              </span>
-                            </td>
-                            <td className="py-5 text-[hsl(var(--color-foreground-muted))]">
-                              {row.timeline}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  </Glide>
-                  <p className="mt-6 text-sm text-[hsl(var(--color-foreground-muted))]">
-                    These are starting points. Pricing is always fixed and agreed upon before work begins.
-                  </p>
-                </AnimatedSection>
-              </div>
-            </Container>
-          </Section>
-
-          {/* FAQ Section */}
-          <Section spacing="lg">
-            <Container>
-              <div className="flex flex-col gap-14 md:gap-10">
-                <AnimatedSection>
-                  <div className="flex flex-col gap-4">
-                    <SectionLabel number="07" label="FAQ" />
-                    <h2 className="font-semibold tracking-tight"><RevealText text={"Common questions"} /></h2>
-                  </div>
-                </AnimatedSection>
-
-                <Separator />
-
-                <AnimatedSection delay={0.1}>
-                  <Glide bleed={0} className="max-w-2xl">
-                    {faqs.map((faq, index) => (
-                      <FAQItem key={faq.question} faq={faq} index={index} />
-                    ))}
-                  </Glide>
-                </AnimatedSection>
-              </div>
-            </Container>
-          </Section>
-
-          {/* CTA */}
+          {/* Enquiry */}
           <Section spacing="lg" className="pt-8 md:pt-12">
             <Container>
               <AnimatedSection variant="scaleIn">
                 <div className="rounded-2xl bg-[hsl(var(--color-accent))] p-8 sm:p-10 lg:p-12">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                     <div className="max-w-xl">
-                      <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight !text-white mb-2"><RevealText text={"Ready to start?"} /></h2>
+                      <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight !text-white mb-2"><RevealText text={"Tell us what you’re working on"} /></h2>
                       <p data-ink className="text-white/80 text-base lg:text-lg leading-relaxed">
-                        You don&apos;t need a finished brief. Start with what you are thinking about, and we will shape it together.
+                        Start with the capability you need or the problem in front of you. You don&apos;t need a finished brief.
                       </p>
                     </div>
                     <Button
@@ -595,16 +536,12 @@ export default function ServicesPage() {
                       <Link href="/contact">
                         <span className="btn-text-wrapper">
                           <span className="btn-text-primary">
-                            Get in touch
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                            </svg>
+                            Start a project
+                            <Arrow />
                           </span>
                           <span className="btn-text-secondary" aria-hidden="true">
-                            Let&apos;s connect
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                            </svg>
+                            Let&apos;s talk
+                            <Arrow />
                           </span>
                         </span>
                       </Link>

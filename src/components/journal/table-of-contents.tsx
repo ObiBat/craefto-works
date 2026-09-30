@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { scrollPageTo } from "@/lib/smooth-scroll";
 
 interface TOCItem {
   id: string;
@@ -90,14 +89,9 @@ export function TableOfContents({ content }: TableOfContentsProps) {
               )}
               <a
                 href={`#${heading.id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  const element = document.getElementById(heading.id);
-                  if (element) {
-                    scrollPageTo(element);
-                    setActiveId(heading.id);
-                  }
-                }}
+                // The glide itself comes from the site-wide anchor handling
+                // (components/editorial/smooth-scroll.tsx).
+                onClick={() => setActiveId(heading.id)}
                 className={cn(
                   "block py-1.5 transition-all duration-200 leading-relaxed",
                   heading.level === 3 ? "pl-6" : "pl-4",

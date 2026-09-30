@@ -55,7 +55,7 @@ const phases = [
       "Deployment, DNS, and SSL configuration",
       "Analytics and tracking setup",
       "30 day post launch support included",
-      "Optional ongoing retainer for maintenance and optimization",
+      "Optional monthly plan for upkeep and new work",
     ],
     deliverable: "Live, production ready product with ongoing support",
   },

@@ -12,8 +12,10 @@ export const DEFAULT_OG_IMAGE = { url: "/opengraph-image", width: 1200, height: 
 export const JOURNAL_OG_IMAGE = { url: "/journal/opengraph-image", width: 1200, height: 630, alt: "The Craefto Journal" };
 
 interface PageMetadataInput {
-  /** Page title; the root layout's template appends " | Craefto". */
+  /** Page title; " | Craefto" (or " | " + brand) is appended. */
   title: string;
+  /** The name after the title, where a page speaks as Craefto Works. */
+  brand?: string;
   description: string;
   /** Path of the page, e.g. "/services". Used for the canonical and og:url. */
   path: string;
@@ -37,8 +39,8 @@ interface PageMetadataInput {
  * the same layout, and never over an explicit twitter image, so routes with
  * their own card pass image: "route" and set none here.
  */
-export function pageMetadata({ title, description, path, image, type = "website", noIndex }: PageMetadataInput): Metadata {
-  const fullTitle = `${title} | ${SITE_NAME}`;
+export function pageMetadata({ title, brand = SITE_NAME, description, path, image, type = "website", noIndex }: PageMetadataInput): Metadata {
+  const fullTitle = `${title} | ${brand}`;
   const images = image === "route" ? undefined : [image ? { ...image, alt: image.alt ?? title } : DEFAULT_OG_IMAGE];
   return {
     title: { absolute: fullTitle },

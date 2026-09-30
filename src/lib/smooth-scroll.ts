@@ -24,6 +24,10 @@ export function scrollPageTo(target: number | HTMLElement) {
     else target.scrollIntoView({ behavior });
     return;
   }
+  // A native scroll just before this (a touch fling, keys, a jump) may not
+  // have reached Lenis yet; glide from where the page really is.
+  if (l.isScrolling !== "smooth") l.animatedScroll = l.targetScroll = l.actualScroll;
+
   if (typeof target === "number") {
     l.scrollTo(target);
     return;

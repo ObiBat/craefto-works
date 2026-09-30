@@ -52,22 +52,29 @@ export function SmoothScroll() {
     update();
     reduced.addEventListener("change", update);
 
-    // Same-page #links glide too, through scrollPageTo so they re-aim if the
-    // page moves on the way (Lenis's own anchors option can't). The click
-    // still does its default, so the URL and focus update as usual; the
-    // glide takes over from the jump before the next paint. Links that
-    // handle themselves (the contents list) have already prevented it.
+    // Same-page #links glide instead of jumping, through scrollPageTo so they
+    // re-aim if the page moves on the way. This runs in the capture phase,
+    // ahead of Next's <Link>, which would otherwise jump there itself; it then
+    // does what the jump would have: updates the address and moves keyboard
+    // focus to the target.
     const onClick = (e: MouseEvent) => {
-      if (!lenis || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (!lenis || lenis.isStopped || e.defaultPrevented) return;
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const link = (e.target as Element | null)?.closest?.("a[href*='#']");
-      if (!(link instanceof HTMLAnchorElement) || (link.target && link.target !== "_self")) return;
+      if (!(link instanceof HTMLAnchorElement) || (link.target && link.target !== "_self") || link.hasAttribute("download")) return;
       const url = new URL(link.href);
       const here = window.location;
-      if (url.origin !== here.origin || url.pathname !== here.pathname || url.search !== here.search) return;
-      const section = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
-      if (section) scrollPageTo(section);
+      if (url.origin !== here.origin || url.pathname !== here.pathname || url.search !== here.search || !url.hash) return;
+      const target = document.getElementById(decodeURIComponent(url.hash.slice(1)));
+      if (!target) return;
+
+      e.preventDefault();
+      if (url.hash !== here.hash) window.history.pushState(window.history.state, "", url.hash);
+      scrollPageTo(target);
+      if (!target.hasAttribute("tabindex") && target.tabIndex < 0) target.setAttribute("tabindex", "-1");
+      target.focus({ preventScroll: true });
     };
-    window.addEventListener("click", onClick);
+    document.addEventListener("click", onClick, true);
 
     // Back or forward to another page mid-glide: drop the glide so the
     // restored position holds. Same-page #links fire popstate too, and those
@@ -82,7 +89,7 @@ export function SmoothScroll() {
 
     return () => {
       reduced.removeEventListener("change", update);
-      window.removeEventListener("click", onClick);
+      document.removeEventListener("click", onClick, true);
       window.removeEventListener("popstate", onPopState);
       lenis?.destroy();
       setSmoothScroll(null);

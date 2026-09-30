@@ -6,11 +6,12 @@ import { Header, Footer, Container, Section } from "@/components/layout";
 import { Separator, PageTransition, AnimatedSection, StaggeredGrid, StaggeredItem, HeroText, SectionLabel } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { RevealText } from "@/components/editorial/reveal-text";
+import { capabilities, capabilityHref } from "@/content/capabilities";
 
 const stats = [
   { label: "Founded", value: "2025" },
   { label: "Based in", value: "Sydney" },
-  { label: "Capability", value: "Design + Code + Strategy" },
+  { label: "Capability", value: "Design + Technology + Media" },
 ];
 
 const clientBrings = [
@@ -55,13 +56,10 @@ const comparisons = [
   },
 ];
 
-const serviceLinks = [
-  { title: "Web Design & Development", href: "/services#web" },
-  { title: "Brand Identity", href: "/services#brand" },
-  { title: "Digital Products", href: "/services#products" },
-  { title: "AI & Automation", href: "/services#ai" },
-  { title: "Security & Pen Testing", href: "/services#security" },
-];
+const serviceLinks = capabilities.map((capability) => ({
+  title: capability.name,
+  href: capabilityHref(capability.id),
+}));
 
 export default function StartPage() {
   const router = useRouter();
@@ -269,14 +267,14 @@ export default function StartPage() {
               <div className="flex flex-col gap-14 md:gap-10">
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
-                    <SectionLabel number="05" label="What We Build" />
-                    <h2 className="font-semibold tracking-tight"><RevealText text={"From brands to platforms"} /></h2>
+                    <SectionLabel number="05" label="Capabilities" />
+                    <h2 className="font-semibold tracking-tight"><RevealText text={"From brand to growth"} /></h2>
                   </div>
                 </AnimatedSection>
 
                 <Separator />
 
-                <StaggeredGrid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <StaggeredGrid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                   {serviceLinks.map((service) => (
                     <StaggeredItem key={service.title}>
                       <Link

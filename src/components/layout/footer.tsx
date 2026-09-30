@@ -3,15 +3,11 @@
 import Link from "next/link";
 import { Container } from "./container";
 import { Logo } from "@/components/ui/logo";
-import { navigation, siteConfig, services } from "@/lib/constants";
+import { navigation, siteConfig } from "@/lib/constants";
+import { capabilities, capabilityHref } from "@/content/capabilities";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-
-  const footerServices = services.slice(0, 4).map(s => ({
-    name: s.title.split(" & ")[0].split("-")[0].trim(),
-    href: s.href,
-  }));
 
   return (
     <footer
@@ -33,7 +29,7 @@ export function Footer() {
                 <Logo size="md" inverted />
               </Link>
               <p className="text-sm text-white/60 leading-relaxed">
-                Design systems and digital products built with craft and intention.
+                Craefto Works brings brand, digital products, business systems and creative content together.
               </p>
             </div>
 
@@ -125,19 +121,19 @@ export function Footer() {
                 </ul>
               </nav>
 
-              {/* Services */}
-              <nav aria-label="Services">
+              {/* Capabilities */}
+              <nav aria-label="Capabilities">
                 <p className="text-xs font-medium uppercase font-mono tracking-[0.06em] mb-4" style={{ color: '#ffffff' }}>
-                  Services
+                  Capabilities
                 </p>
                 <ul className="space-y-2.5">
-                  {footerServices.map((service) => (
-                    <li key={service.name}>
+                  {capabilities.map((capability) => (
+                    <li key={capability.id}>
                       <Link
-                        href={service.href}
+                        href={capabilityHref(capability.id)}
                         className="text-sm text-white/70 hover:text-white transition-colors"
                       >
-                        {service.name}
+                        {capability.name}
                       </Link>
                     </li>
                   ))}

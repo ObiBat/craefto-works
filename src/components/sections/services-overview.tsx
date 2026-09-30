@@ -6,28 +6,27 @@ import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
 import { SectionLabel } from "@/components/ui/section-label";
 import { AnimatedSection } from "@/components/ui/motion";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { services } from "@/lib/constants";
+import { capabilities, capabilityHref, type Capability } from "@/content/capabilities";
 import { RevealText } from "@/components/editorial/reveal-text";
 import { Glide } from "@/components/editorial/glide";
+import { formatPrice, monthlyPlans } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
-import { formatPrice, priceFor, weeksLabel } from "@/lib/pricing";
 
+// The monthly plans, named under the capabilities: "Media, Growth and Studio,
+// from A$2,400 a month". Prices and plans live in lib/pricing.ts.
+const PLAN_NAMES = new Intl.ListFormat("en-AU", { type: "conjunction" }).format(monthlyPlans.map((plan) => plan.name));
+const PLANS_FROM = `A${formatPrice(Math.min(...monthlyPlans.map((plan) => plan.price)))}`;
 
 function AccordionItem({
-  service,
-  index,
+  capability,
   isOpen,
   onToggle,
 }: {
-  service: typeof services[0];
-  index: number;
+  capability: Capability;
   isOpen: boolean;
   onToggle: () => void;
 }) {
-  const number = String(index + 1).padStart(2, "0");
-  const price = priceFor(service.icon);
   const panelId = useId();
 
   return (
@@ -52,19 +51,14 @@ function AccordionItem({
             isOpen ? "text-[hsl(var(--color-accent))]" : "text-[hsl(var(--color-foreground-subtle))]"
           )}
         >
-          {number}
+          {capability.number}
         </span>
 
-        {/* Title + Badge */}
+        {/* Title */}
         <div className="flex-1 flex items-center gap-3">
           <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight">
-            {service.title}
+            {capability.name}
           </h3>
-          {service.badge && (
-            <Badge variant="accent" className="hidden sm:inline-flex">
-              {service.badge}
-            </Badge>
-          )}
         </div>
 
         {/* Toggle Icon - green accent on hover; turns into a cross when open */}
@@ -103,34 +97,18 @@ function AccordionItem({
               {/* Description + CTA */}
               <div className="flex flex-col gap-5 lg:col-span-1">
                 <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
-                  {service.description}
+                  {capability.summary}
                 </p>
                 
-                {/* Pricing & Timeline */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[hsl(var(--color-foreground-subtle))]">Starting from</span>
-                    <span className="font-semibold text-[hsl(var(--color-foreground))]">
-                      {price && formatPrice(price.min)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[hsl(var(--color-foreground-subtle))]">Typical timeline</span>
-                    <span className="font-medium text-[hsl(var(--color-foreground))]">
-                      {price && weeksLabel(price)}
-                    </span>
-                  </div>
-                </div>
-
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <Link href={`/contact?service=${service.icon}`}>
+                  <Link href={`/contact?service=${capability.id}`}>
                     <Button size="sm" hoverText="Let's talk">
                       Get a quote
                     </Button>
                   </Link>
                   <Link
-                    href={service.href}
+                    href={capabilityHref(capability.id)}
                     className="inline-flex items-center justify-center gap-2 text-sm font-medium text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors py-2"
                   >
                     Learn more
@@ -151,14 +129,14 @@ function AccordionItem({
                 </div>
               </div>
 
-              {/* Capabilities */}
+              {/* Deliverables */}
               <div className="lg:col-span-2 flex flex-wrap items-start content-start justify-start lg:justify-end gap-2">
-                {service.capabilities?.map((capability) => (
+                {capability.deliverables.map((deliverable) => (
                   <span
-                    key={capability}
+                    key={deliverable}
                     className="px-3 py-1.5 text-sm font-medium rounded-full border border-[hsl(var(--color-border))] text-[hsl(var(--color-foreground-muted))] bg-[hsl(var(--color-background))] whitespace-nowrap"
                   >
-                    {capability}
+                    {deliverable}
                   </span>
                 ))}
               </div>
@@ -184,19 +162,19 @@ export function ServicesOverview() {
           {/* Header */}
           <AnimatedSection>
             <div className="flex flex-col gap-4">
-              <SectionLabel number="01" label="Services" />
+              <SectionLabel number="01" label="Capabilities" />
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                 <div>
-                  <h2 className="font-semibold tracking-tight"><RevealText text={"What we build"} /></h2>
+                  <h2 className="font-semibold tracking-tight"><RevealText text={"What we do"} /></h2>
                   <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-3">
-                    End-to-end capabilities from brand to product.
+                    Brand, digital products, business systems, media and growth, as fixed-price projects or monthly plans.
                   </p>
                 </div>
                 <Link
                   href="/services"
                   className="text-sm text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors group flex items-center gap-2 shrink-0"
                 >
-                  View all services
+                  View all capabilities
                   <svg
                     className="w-4 h-4 transition-transform group-hover:translate-x-1"
                     fill="none"
@@ -218,16 +196,42 @@ export function ServicesOverview() {
           {/* Services Accordion */}
           <AnimatedSection>
             <Glide bleed={0}>
-              {services.map((service, index) => (
+              {capabilities.map((capability, index) => (
                 <AccordionItem
-                  key={service.title}
-                  service={service}
-                  index={index}
+                  key={capability.id}
+                  capability={capability}
                   isOpen={openIndex === index}
                   onToggle={() => handleToggle(index)}
                 />
               ))}
             </Glide>
+
+            {/* The other way in: a monthly plan. In line with the names above. */}
+            <div className="mt-4 sm:mt-6 pl-12 sm:pl-16 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-8">
+              <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
+                <span className="font-medium text-[hsl(var(--color-foreground))]">Prefer a monthly plan?</span>{" "}
+                {PLAN_NAMES}, from {PLANS_FROM} a month.
+              </p>
+              <Link
+                href="/services#plans"
+                className="text-sm text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors group flex items-center gap-2 shrink-0"
+              >
+                See the plans
+                <svg
+                  className="w-4 h-4 transition-transform group-hover:translate-x-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+              </Link>
+            </div>
           </AnimatedSection>
         </div>
       </Container>

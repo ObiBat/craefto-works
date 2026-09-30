@@ -13,7 +13,7 @@ export const siteConfig = {
 export const navigation = {
   main: [
     { name: "Case studies", href: "/work" },
-    { name: "Services", href: "/services" },
+    { name: "Capabilities", href: "/services" },
     { name: "How we work", href: "/process" },
     { name: "Journal", href: "/journal" },
     { name: "About", href: "/about" },
@@ -24,49 +24,6 @@ export const navigation = {
   ],
   cta: { name: "Contact", href: "/contact" },
 };
-
-export const services = [
-  {
-    title: "Brand Identity & Design Systems",
-    description: "Strategic foundations and visual systems that scale.",
-    capabilities: ["Visual identity", "Logo systems", "Design tokens", "Brand guidelines", "Typography systems"],
-    href: "/services#brand",
-    badge: null,
-    icon: "brand",
-  },
-  {
-    title: "Web Design & Development",
-    description: "Marketing sites, SaaS platforms, and dashboards built for performance.",
-    capabilities: ["Marketing sites", "Landing pages", "SaaS interfaces", "Dashboard design", "Payment integration (Stripe, Apple Pay)", "Responsive development"],
-    href: "/services#web",
-    badge: "Popular",
-    icon: "web",
-  },
-  {
-    title: "Digital Products & Platforms",
-    description: "MVPs, interactive experiences, and scalable tools from concept to launch.",
-    capabilities: ["MVP development", "Client portals", "Interactive experiences", "Workflow automation", "API integrations", "WebGL & 3D"],
-    href: "/services#products",
-    badge: null,
-    icon: "product",
-  },
-  {
-    title: "AI & Automation",
-    description: "Intelligent systems, agents, and automation for modern teams.",
-    capabilities: ["AI agents", "LLM integrations", "Intelligent workflows", "Data pipelines", "Custom AI tools", "Process automation"],
-    href: "/services#ai",
-    badge: "High demand",
-    icon: "ai",
-  },
-  {
-    title: "Security & Penetration Testing",
-    description: "Enterprise-grade security assessments at accessible pricing. We don't just build it, we secure it.",
-    capabilities: ["Web application security", "Penetration testing", "Vulnerability assessments", "Compliance readiness", "Executive reporting", "30-day re-testing"],
-    href: "/services#security",
-    badge: null,
-    icon: "security",
-  },
-];
 
 export const processSteps = [
   {

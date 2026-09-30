@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase';
 import { resend, EMAIL_FROM, ADMIN_EMAIL } from '@/lib/resend';
 import { LeadConfirmationEmail, getLeadConfirmationSubject } from '@/emails/lead-confirmation';
 import { AdminNotificationEmail, getAdminNotificationSubject } from '@/emails/admin-notification';
+import { enquiryPhrase } from '@/lib/enquiry';
 
 // Rate limiting: simple in-memory store (use Redis in production)
 const rateLimitMap = new Map<string, { count: number; timestamp: number }>();
@@ -43,6 +44,9 @@ function calculateLeadScore(data: {
     '10-25k': 25,
     '5-10k': 15,
     '3-5k': 10,
+    'under-3k': 5,
+    // A monthly plan is recurring: a year of the smallest is about A$29k.
+    'monthly': 35,
     'discuss': 5,
   };
   score += budgetScores[data.budget || ''] || 0;
@@ -188,7 +192,7 @@ export async function POST(request: NextRequest) {
           subject: getLeadConfirmationSubject(lead.name),
           html: LeadConfirmationEmail({
             name: lead.name,
-            service: lead.service_interest
+            service: enquiryPhrase(lead.service_interest)
           }),
         });
 

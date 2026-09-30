@@ -119,6 +119,32 @@ test.describe("smooth scroll", () => {
     expect(await offFromRest(page, hash.slice(1))).toBeLessThan(2);
   });
 
+  test("tapping a capability glides to it and moves focus there", async ({ page }) => {
+    await page.goto("/services");
+    await expect(page.locator("html")).toHaveClass(LENIS);
+    const recorded = await recordScroll(page, 2500);
+    await page.getByRole("navigation", { name: "Capabilities on this page" }).locator('a[href="#systems"]').click();
+    const ys = await recorded();
+    expect(ys.filter((y) => y > 5 && y < ys.at(-1)! - 5).length).toBeGreaterThan(4);
+    await expect(page).toHaveURL(/#systems$/);
+    expect(await offFromRest(page, "systems")).toBeLessThan(2);
+    expect(await page.evaluate(() => document.activeElement?.id)).toBe("systems");
+  });
+
+  test("a same-page link made with Next's Link glides too", async ({ page }) => {
+    await page.goto("/services");
+    await expect(page.locator("html")).toHaveClass(LENIS);
+    const link = page.locator('footer a[href="/services#growth"]');
+    await link.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+    const recorded = await recordScroll(page, 2500);
+    await link.click();
+    const ys = await recorded();
+    expect(ys.filter((y) => y < ys[0] - 5 && y > ys.at(-1)! + 5).length).toBeGreaterThan(4);
+    await expect(page).toHaveURL(/\/services#growth$/);
+    expect(await offFromRest(page, "growth")).toBeLessThan(2);
+  });
+
   test("contents links land on their heading while article images load", async ({ page }) => {
     await page.goto("/journal");
     const article = await page

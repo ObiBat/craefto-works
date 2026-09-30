@@ -340,6 +340,19 @@ h3 {
   letter-spacing: -0.01em;
 }
 
+/* A heading set as a small mono label ("Deliverables"): keeps the outline
+   for screen readers without the heading scale. */
+:is(h2, h3, h4).label-heading {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--color-foreground-subtle));
+  font-variation-settings: normal;
+}
+
 p {
   text-wrap: pretty;
 }
@@ -785,6 +798,89 @@ img {
 
 .btn-fill-hover:hover {
   box-shadow: 0 8px 24px hsl(var(--color-accent) / 0.3);
+}
+
+/* Plan cards (/services). Hovering a card, or tabbing into it, turns it on
+   (--on: 1): it lifts on a soft green shadow, and a copy of its header in
+   white on green opens out from the lower corner, so each letter turns
+   white just as the green reaches it. The ticks then fill in one after
+   another, and the button fills green as it does when hovered itself.
+   The lift is a transform because the scroll rise (item-rise) animates
+   translate. */
+.plan-card {
+  --on: 0;
+  transform: translateY(calc(var(--on) * -6px));
+  box-shadow: 0 28px 60px -32px hsl(var(--color-accent) / calc(var(--on) * 0.6));
+  transition:
+    transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (hover: hover) {
+  .plan-card:hover {
+    --on: 1;
+  }
+}
+.plan-card:has(:focus-visible) {
+  --on: 1;
+}
+.plan-card-head {
+  position: relative;
+}
+.plan-card-flood {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: hsl(var(--color-accent));
+  clip-path: circle(calc(var(--on) * 150%) at 0% 100%);
+  /* Arrives over 700ms, leaves over 400ms. */
+  transition: clip-path calc(400ms + var(--on) * 300ms) cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  user-select: none;
+}
+.plan-name {
+  font-family: var(--font-heading);
+  color: hsl(var(--color-accent));
+}
+.plan-price {
+  color: hsl(var(--color-foreground));
+}
+.plan-for,
+.plan-per {
+  color: hsl(var(--color-foreground-muted));
+}
+.plan-card-flood :is(.plan-name, .plan-price) {
+  color: #fff;
+}
+.plan-card-flood :is(.plan-for, .plan-per) {
+  color: rgb(255 255 255 / 0.85);
+}
+.plan-tick {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: color-mix(in srgb, hsl(var(--color-accent)) calc(var(--on) * 100%), hsl(var(--color-accent-subtle)));
+  color: color-mix(in srgb, #fff calc(var(--on) * 100%), hsl(var(--color-accent)));
+  transition:
+    background-color 350ms ease,
+    color 350ms ease;
+  /* Staggered on the way in; all at once on the way out. */
+  transition-delay: calc(var(--on) * (120ms + var(--i, 0) * 70ms));
+}
+.plan-card .btn-fill-hover::before {
+  transform: scaleY(var(--on));
+}
+@media (prefers-reduced-motion: reduce) {
+  .plan-card {
+    transform: none;
+  }
+  .plan-card-flood {
+    clip-path: none;
+    opacity: var(--on);
+    transition: opacity 250ms ease;
+  }
 }
 
 /* Border hover effect for secondary buttons */
@@ -1505,19 +1601,6 @@ html:has([data-subbar][data-scrolled]) .site-header::after {
       animation-range: cover 6% cover 56%;
     }
 
-    /* Price ranges draw themselves as the table arrives, and are whole
-       before its rows reach reading height (never a misleading half bar).
-       The timeline sits outside the table's own horizontal scroll box. */
-    .pricing-rows {
-      view-timeline-name: --pricing;
-    }
-    html:not(.sd-fallback) .range-bar {
-      transform-origin: left center;
-      animation: bar-grow linear both;
-      animation-timeline: --pricing;
-      animation-range: entry 0% entry 55%;
-    }
-
     /* Sequence markers (process steps, changelog dates) fill in as their
        step arrives, standing in for the old timeline line. */
     .phase,
@@ -1572,14 +1655,6 @@ html:has([data-subbar][data-scrolled]) .site-header::after {
   }
   to {
     background-position: 0 0;
-  }
-}
-@keyframes bar-grow {
-  from {
-    scale: 0 1;
-  }
-  to {
-    scale: 1 1;
   }
 }
 @keyframes marker-on {
@@ -1702,10 +1777,6 @@ html:has([data-subbar][data-scrolled]) .site-header::after {
     background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: ink-in 1800ms cubic-bezier(0.45, 0, 0.25, 1) both;
-  }
-  html.sd-fallback [data-sd-fx="bar"][data-sd] {
-    transform-origin: left center;
-    animation: bar-grow 1100ms cubic-bezier(0.25, 1, 0.5, 1) both;
   }
   html.sd-fallback [data-sd-fx="marker"][data-sd] {
     animation: marker-on 900ms cubic-bezier(0.25, 1, 0.5, 1) both;

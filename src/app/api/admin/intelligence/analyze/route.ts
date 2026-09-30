@@ -113,7 +113,7 @@ function generateResponseTemplate(lead: LeadData, analysis: ReturnType<typeof an
     'brand': 'brand identity',
     'other': 'your project',
   };
-  const serviceName = serviceNames[lead.service_interest || 'other'];
+  const serviceName = serviceNames[lead.service_interest || 'other'] ?? serviceNames.other;
   
   // High fit template
   if (analysis.fit_score >= 0.6) {
@@ -180,7 +180,7 @@ function generateCallAgenda(lead: LeadData, analysis: ReturnType<typeof analyzeL
     'brand': 'Explore brand values, positioning, and competitive landscape',
     'other': 'Define project scope and success metrics',
   };
-  agenda.push(serviceQuestions[lead.service_interest || 'other']);
+  agenda.push(serviceQuestions[lead.service_interest || 'other'] ?? serviceQuestions.other);
   
   if (analysis.scope_creep_risk > 0.5) {
     agenda.push('⚠️ Clarify boundaries and phasing to manage scope');

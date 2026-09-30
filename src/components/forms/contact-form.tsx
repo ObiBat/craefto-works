@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { formatPrice, priceFor, type ServiceKey } from "@/lib/pricing";
+import { formatPrice, monthlyPlans, priceRanges } from "@/lib/pricing";
+import { ENQUIRY_GROUPS, ENQUIRY_PRESELECT, ENQUIRY_UNSURE, PLAN_PROJECT_TYPE, enquiryPlan, enquiryPriceRange } from "@/lib/enquiry";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,26 +13,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { RevealText } from "@/components/editorial/reveal-text";
 
-// Service to project type mapping
-const SERVICE_MAP: Record<string, string> = {
-  brand: "brand",
-  web: "web",
-  product: "saas",
-  ai: "ai",
-  security: "other",
-};
-
-// Form project types → published price ranges (lib/pricing.ts).
-const PROJECT_PRICING: Record<string, ServiceKey> = { brand: "brand", web: "web", saas: "product", ai: "ai" };
-const FORM_MINIMUM = Math.min(...Object.values(PROJECT_PRICING).map((key) => priceFor(key)?.min ?? Infinity));
+// The smallest published project and the span of the monthly plans
+// (lib/pricing.ts), for the budget hint.
+const FORM_MINIMUM = Math.min(...priceRanges.map((range) => range.min));
+const PLAN_MIN = Math.min(...monthlyPlans.map((plan) => plan.price));
+const PLAN_MAX = Math.max(...monthlyPlans.map((plan) => plan.price));
 const aud = (amount: number) => `A${formatPrice(amount)}`;
 
-// Suggested budgets based on project type
+// Suggested budgets based on project type: the bracket around the middle of
+// its published range.
 const BUDGET_SUGGESTIONS: Record<string, string> = {
-  brand: "5-10k",
-  web: "10-25k",
-  saas: "25-50k",
-  ai: "10-25k",
+  brand: "3-5k",
+  web: "5-10k",
+  saas: "10-25k",
+  ai: "5-10k",
+  media: "3-5k",
+  growth: "under-3k",
   other: "discuss",
 };
 
@@ -39,8 +36,10 @@ const BUDGET_SUGGESTIONS: Record<string, string> = {
 const TIMELINE_SUGGESTIONS: Record<string, string> = {
   brand: "1-3months",
   web: "1-3months",
-  saas: "3-6months",
+  saas: "1-3months",
   ai: "1-3months",
+  media: "1-3months",
+  growth: "1-3months",
   other: "flexible",
 };
 
@@ -113,7 +112,13 @@ export function ContactForm() {
   
   // Check for service pre-selection from URL
   const preselectedService = searchParams.get("service");
-  const defaultProjectType = preselectedService ? SERVICE_MAP[preselectedService] || "" : "";
+  // A monthly plan's button links here with ?plan=…
+  const preselectedPlan = enquiryPlan(searchParams.get("plan"));
+  const defaultProjectType = preselectedPlan
+    ? PLAN_PROJECT_TYPE[preselectedPlan.id]
+    : preselectedService
+      ? ENQUIRY_PRESELECT[preselectedService] || ""
+      : "";
 
   const {
     register,
@@ -126,8 +131,9 @@ export function ContactForm() {
     resolver: zodResolver(contactSchema),
     defaultValues: {
       projectType: defaultProjectType,
-      budget: defaultProjectType ? BUDGET_SUGGESTIONS[defaultProjectType] : "",
-      timeline: defaultProjectType ? TIMELINE_SUGGESTIONS[defaultProjectType] : "",
+      budget: preselectedPlan ? "monthly" : defaultProjectType ? BUDGET_SUGGESTIONS[defaultProjectType] : "",
+      timeline: preselectedPlan ? "" : defaultProjectType ? TIMELINE_SUGGESTIONS[defaultProjectType] : "",
+      message: preselectedPlan ? `I\u2019m interested in the ${preselectedPlan.name} plan.` : "",
     },
   });
 
@@ -476,11 +482,16 @@ export function ContactForm() {
           {...register("projectType")}
         >
           <option value="">Select one</option>
-          <option value="brand">Brand Identity</option>
-          <option value="web">Web Design & Dev</option>
-          <option value="saas">SaaS / Product</option>
-          <option value="ai">AI / Automation</option>
-          <option value="other">Not sure yet</option>
+          {ENQUIRY_GROUPS.map((group) => (
+            <optgroup key={group.capability} label={group.capability}>
+              {group.types.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+          <option value={ENQUIRY_UNSURE.value}>{ENQUIRY_UNSURE.label}</option>
         </Select>
         {errors.projectType && (
           <p className="text-sm text-[hsl(var(--color-error))]">
@@ -498,19 +509,21 @@ export function ContactForm() {
         </label>
         <Select id="budget" error={!!errors.budget} {...register("budget")}>
           <option value="">Select one</option>
+          <option value="under-3k">Under A$3k</option>
           <option value="3-5k">A$3k – A$5k</option>
           <option value="5-10k">A$5k – A$10k</option>
           <option value="10-25k">A$10k – A$25k</option>
           <option value="25-50k">A$25k – A$50k</option>
           <option value="50k+">A$50k+</option>
+          <option value="monthly">Monthly plan</option>
           <option value="discuss">Let&apos;s discuss</option>
         </Select>
         <p className="text-xs text-[hsl(var(--color-foreground-subtle))]" aria-live="polite">
           {(() => {
-            const range = priceFor(PROJECT_PRICING[watchedProjectType] ?? "");
-            return range
-              ? `${range.label} projects usually run ${aud(range.min)} to ${aud(range.max)}.`
-              : `Minimum project investment: ${aud(FORM_MINIMUM)}`;
+            if (watchedBudget === "monthly") return `Monthly plans run ${aud(PLAN_MIN)} to ${aud(PLAN_MAX)} a month.`;
+            const range = enquiryPriceRange(watchedProjectType);
+            if (range) return `${range.label} projects usually run ${aud(range.min)} to ${aud(range.max)}.`;
+            return `Minimum project investment: ${aud(FORM_MINIMUM)}`;
           })()}
         </p>
         {errors.budget && (

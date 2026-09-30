@@ -16,12 +16,12 @@ const Metaballs = dynamic(
 const VALUE_PROPS = [
   "Design systems and digital products built with craft and intention.",
   "From brand identity to production-ready code, end to end.",
-  "Strategy, design, engineering, and security audit under one roof.",
+  "Design, technology and media under one roof.",
 ];
 
 const SOCIAL_PROOF = [
   { value: 12, suffix: "+", label: "Projects delivered" },
-  { value: 5, suffix: "", label: "Services, one team" },
+  { value: 5, suffix: "", label: "Capabilities, one studio" },
   { value: 3, suffix: "-4 weeks", label: "To MVP, then iterate" },
 ];
 

@@ -9,6 +9,7 @@ import { SiteClassSync } from "@/components/editorial/site-class-sync";
 import { RouteTransitions } from "@/components/editorial/route-transitions";
 import { ScrollFallback } from "@/components/editorial/scroll-fallback";
 import { SmoothScroll } from "@/components/editorial/smooth-scroll";
+import { capabilities, capabilityHref } from "@/content/capabilities";
 import "./globals.css";
 
 // Headings: Archivo (variable weight, normal width).
@@ -144,9 +145,10 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "@id": "https://www.craefto.com/#organization",
-  name: "Craefto",
+  name: "Craefto Works",
+  alternateName: "Craefto",
   description:
-    "Craefto is a creative tech studio. We design and build brands, products, and tools for founders and teams who value craft.",
+    "Craefto Works is a multidisciplinary studio spanning design, technology and media. We bring brand, digital products, business systems and creative content together.",
   url: "https://www.craefto.com",
   logo: "https://www.craefto.com/logo.png",
   sameAs: [
@@ -177,49 +179,24 @@ const jsonLd = {
     "SaaS Development",
     "Design Systems",
     "Creative Technology",
+    "Software Development",
+    "Workflow Automation",
+    "Artificial Intelligence",
+    "Photography",
+    "Video Production",
+    "Motion Design",
+    "Marketing",
+    "Search Engine Optimisation",
   ],
-  makesOffer: [
-    {
-      "@type": "Offer",
-      itemOffered: {
-        "@type": "Service",
-        name: "Brand Identity & Design Systems",
-        description: "Strategic foundations and visual systems that scale with your business.",
-      },
+  makesOffer: capabilities.map((capability) => ({
+    "@type": "Offer",
+    itemOffered: {
+      "@type": "Service",
+      name: capability.serviceName,
+      description: capability.summary,
+      url: `https://www.craefto.com${capabilityHref(capability.id)}`,
     },
-    {
-      "@type": "Offer",
-      itemOffered: {
-        "@type": "Service",
-        name: "Web Design & Development",
-        description: "Marketing sites, SaaS platforms, and dashboards built for performance.",
-      },
-    },
-    {
-      "@type": "Offer",
-      itemOffered: {
-        "@type": "Service",
-        name: "Digital Products & Platforms",
-        description: "MVPs, interactive experiences, and scalable tools from concept to launch.",
-      },
-    },
-    {
-      "@type": "Offer",
-      itemOffered: {
-        "@type": "Service",
-        name: "AI & Automation",
-        description: "Intelligent systems, agents, and automation for modern teams.",
-      },
-    },
-    {
-      "@type": "Offer",
-      itemOffered: {
-        "@type": "Service",
-        name: "Security & Penetration Testing",
-        description: "Vulnerability assessments and security audits to protect your systems.",
-      },
-    },
-  ],
+  })),
 };
 
 export default function RootLayout({
