@@ -801,12 +801,13 @@ img {
 }
 
 /* Plan cards (/services). Hovering a card, or tabbing into it, turns it on
-   (--on: 1): it lifts on a soft green shadow, and a copy of its header in
-   white on green opens out from the lower corner, so each letter turns
-   white just as the green reaches it. The ticks then fill in one after
-   another, and the button fills green as it does when hovered itself.
-   The lift is a transform because the scroll rise (item-rise) animates
-   translate. */
+   (--on: 1). Phones can't hover, so there the card crossing the middle of
+   the screen turns on instead (<PlanSpotlight>). An on card lifts on a
+   soft green shadow, and a copy of its header in white on green opens out
+   from the lower corner, so each letter turns white just as the green
+   reaches it. The ticks then fill in one after another, and the button
+   fills green as it does when hovered itself. The lift is a transform
+   because the scroll rise (item-rise) animates translate. */
 .plan-card {
   --on: 0;
   transform: translateY(calc(var(--on) * -6px));
@@ -820,7 +821,8 @@ img {
     --on: 1;
   }
 }
-.plan-card:has(:focus-visible) {
+.plan-card:has(:focus-visible),
+.plan-card[data-spotlight] {
   --on: 1;
 }
 .plan-card-head {

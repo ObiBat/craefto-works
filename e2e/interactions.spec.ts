@@ -25,6 +25,29 @@ test.describe("interactions", () => {
     await expect(page.locator("#quick-message")).toBeVisible();
   });
 
+  test("a plan lights up like a hovered one: by hover, or on a phone in mid-screen", async ({ page, isMobile }) => {
+    await page.goto("/services");
+    const cards = page.locator("li.plan-card");
+    const on = (index: number) => cards.nth(index).evaluate((card) => getComputedStyle(card).getPropertyValue("--on").trim());
+    // Put the second plan across the middle of the screen.
+    await cards.nth(1).evaluate((card) => {
+      const box = card.getBoundingClientRect();
+      window.scrollTo(0, window.scrollY + box.top + box.height / 2 - window.innerHeight / 2);
+    });
+
+    if (isMobile) {
+      await expect.poll(() => on(1)).toBe("1");
+      expect(await on(0)).toBe("0");
+    } else {
+      // Scrolling alone lights nothing where there's hover.
+      await page.mouse.move(1, 1);
+      await page.waitForTimeout(300);
+      expect(await on(1)).toBe("0");
+      await cards.nth(1).hover();
+      await expect.poll(() => on(1)).toBe("1");
+    }
+  });
+
   test("back to top appears only after scrolling", async ({ page }) => {
     await page.goto("/");
     const button = page.getByRole("button", { name: "Back to top" });

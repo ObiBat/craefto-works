@@ -21,6 +21,7 @@ import {
 } from "@/content/capabilities";
 import { CapabilityScroll } from "./capability-scroll";
 import { Faq, type FaqGroup } from "./faq";
+import { PlanSpotlight } from "./plan-spotlight";
 
 // The capabilities page. It keeps the /services address so existing links
 // work; the old service anchors are rewritten in CapabilityScroll.
@@ -466,6 +467,7 @@ export default function ServicesPage() {
                     </li>
                   ))}
                 </ul>
+                <PlanSpotlight />
 
                 <p className="text-sm text-[hsl(var(--color-foreground-muted))] max-w-2xl">
                   Billed monthly in advance, in AUD excluding GST. Larger sizes on request, and plans can be combined. Not sure which fits?{" "}
