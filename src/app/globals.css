@@ -1469,6 +1469,16 @@ html.site :is([class~="h-px"], [class~="w-px"], [class~="h-0.5"], [class~="w-0.5
   }
 }
 
+/* The home hero's 3D artwork fades in once it has started (see <Hero>). */
+.blob-in {
+  animation: blob-in 1200ms ease both;
+}
+@keyframes blob-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* Mono section labels type in: a stepped wipe that uncovers one
    monospace character per step (--n is the label's length). */
 .type-num {
@@ -1493,7 +1503,8 @@ html.site :is([class~="h-px"], [class~="w-px"], [class~="h-0.5"], [class~="w-0.5
     opacity: 1;
     transform: none;
   }
-  .hero-in {
+  .hero-in,
+  .blob-in {
     animation: none;
   }
   .js [data-reveal="type"]:not([data-in]) .type-in {

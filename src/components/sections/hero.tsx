@@ -30,7 +30,11 @@ export function Hero() {
   const [line, setLine] = useState({ current: 0, previous: -1 });
   const paused = useRef(false);
   // The 3D artwork mounts once the browser is idle, so three.js never
-  // competes with the first paint.
+  // competes with the first paint. Starting it is a long task (WebGL context
+  // and shaders), so arriving by link it waits until the hero's entrance and
+  // counters have played (about 2.4s), then fades in. A full load needn't
+  // wait, as the logo intro's veil covers the start, and nor does reduced
+  // motion, which has no entrance.
   const [showBlob, setShowBlob] = useState(false);
 
   useEffect(() => {
@@ -39,8 +43,16 @@ export function Hero() {
       cancelIdleCallback?: (id: number) => void;
     };
     const show = () => setShowBlob(true);
-    const idle = w.requestIdleCallback ? w.requestIdleCallback(show) : window.setTimeout(show, 300);
+    const noEntrance =
+      document.documentElement.classList.contains("logo-intro-home") ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let idle: number | undefined;
+    const wait = window.setTimeout(() => {
+      idle = w.requestIdleCallback ? w.requestIdleCallback(show) : window.setTimeout(show, 300);
+    }, noEntrance ? 0 : 2400);
     return () => {
+      window.clearTimeout(wait);
+      if (idle === undefined) return;
       if (w.cancelIdleCallback) w.cancelIdleCallback(idle);
       else window.clearTimeout(idle);
     };
@@ -60,7 +72,7 @@ export function Hero() {
     <section className="relative min-h-[100vh] flex items-center pt-20 pb-16 overflow-hidden bg-[hsl(var(--color-background))]">
       {/* 3D artwork: behind the content on phones, the right half on wider screens */}
       <div className="absolute left-0 right-0 top-[15%] bottom-0 z-0 pointer-events-none translate-x-[20%] md:top-0 md:left-auto md:right-0 md:w-[55%] md:translate-x-0" aria-hidden="true">
-        {showBlob && <Metaballs className="w-full h-full" />}
+        {showBlob && <Metaballs className="blob-in w-full h-full" />}
       </div>
 
       {/* Content - left aligned */}
