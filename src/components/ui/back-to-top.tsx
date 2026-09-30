@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { scrollPageTo } from "@/lib/smooth-scroll";
 
 /**
  * Appears after two screens of scrolling. Always in the DOM; CSS fades and
@@ -19,15 +20,10 @@ export function BackToTop() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToTop = () => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
-  };
-
   return (
     <button
       type="button"
-      onClick={scrollToTop}
+      onClick={() => scrollPageTo(0)}
       data-shown={visible ? "" : undefined}
       className="back-to-top fixed bottom-6 right-6 z-40 w-12 h-12 bg-[hsl(var(--color-foreground))] text-[hsl(var(--color-background))] rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95"
       aria-label="Back to top"

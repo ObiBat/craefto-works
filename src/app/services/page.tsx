@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { RevealText } from "@/components/editorial/reveal-text";
 import { Glide } from "@/components/editorial/glide";
 import { priceRanges, rangeLabel, weeksLabel } from "@/lib/pricing";
+import { scrollPageTo } from "@/lib/smooth-scroll";
 
 const services = [
   {
@@ -314,10 +315,7 @@ export default function ServicesPage() {
       if (element) {
         const headerOffset = 100;
         const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({
-          top: elementPosition - headerOffset,
-          behavior: "smooth",
-        });
+        scrollPageTo(elementPosition - headerOffset);
       }
     }, 450);
     return timer;

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { navigation } from "@/lib/constants";
 import { SectionIndicator } from "@/components/editorial/section-indicator";
+import { pauseSmoothScroll, scrollPageTo } from "@/lib/smooth-scroll";
 
 function MoreDropdown({ items, indexOffset }: { items: { name: string; href: string }[]; indexOffset: number }) {
   const pathname = usePathname();
@@ -195,7 +196,7 @@ export function Header() {
     setIsMobileMenuOpen(false);
     if (pathname === "/") {
       e.preventDefault();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollPageTo(0);
     }
   };
 
@@ -213,8 +214,11 @@ export function Header() {
     } else {
       document.body.style.overflow = "";
     }
+    // Smooth scrolling moves the page from script, which overflow can't stop.
+    pauseSmoothScroll(isMobileMenuOpen);
     return () => {
       document.body.style.overflow = "";
+      pauseSmoothScroll(false);
     };
   }, [isMobileMenuOpen]);
 

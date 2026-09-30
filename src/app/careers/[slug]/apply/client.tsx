@@ -10,6 +10,7 @@ import { PageTransition, AnimatedSection } from "@/components/ui";
 import type { Role, ApplicationQuestion } from "@/lib/careers";
 import { supabase } from "@/lib/supabase";
 import { RevealText } from "@/components/editorial/reveal-text";
+import { scrollPageTo } from "@/lib/smooth-scroll";
 
 // User-facing steps. The submission spinner is rendered as an overlay rather
 // than a fake step so the progress indicator and step counter stay accurate.
@@ -112,7 +113,7 @@ export function ApplicationFormClient({ role }: { role: Role }) {
     requestAnimationFrame(() => {
       const rect = el.getBoundingClientRect();
       const target = window.scrollY + rect.top - 80; // 80px offset for sticky header
-      window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+      scrollPageTo(Math.max(0, target));
     });
   }, [step, submitted]);
 

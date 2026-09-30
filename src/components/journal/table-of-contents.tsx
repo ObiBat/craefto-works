@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { scrollPageTo } from "@/lib/smooth-scroll";
 
 interface TOCItem {
   id: string;
@@ -93,7 +94,7 @@ export function TableOfContents({ content }: TableOfContentsProps) {
                   e.preventDefault();
                   const element = document.getElementById(heading.id);
                   if (element) {
-                    element.scrollIntoView({ behavior: "smooth" });
+                    scrollPageTo(element);
                     setActiveId(heading.id);
                   }
                 }}

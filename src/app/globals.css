@@ -239,6 +239,18 @@ html {
   }
 }
 
+/* While Lenis glides the wheel (components/editorial/smooth-scroll.tsx) it is
+   the only smoothing, so scrolls it doesn't make, like a new page resetting
+   to the top, stay instant. */
+html.lenis {
+  scroll-behavior: auto;
+}
+
+/* Mid-glide, an iframe under the pointer would swallow the wheel. */
+html.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 body {
   background-color: hsl(var(--color-background));
   color: hsl(var(--color-foreground));

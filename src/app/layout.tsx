@@ -8,6 +8,7 @@ import { editorialBootScript } from "@/components/editorial/boot-script";
 import { SiteClassSync } from "@/components/editorial/site-class-sync";
 import { RouteTransitions } from "@/components/editorial/route-transitions";
 import { ScrollFallback } from "@/components/editorial/scroll-fallback";
+import { SmoothScroll } from "@/components/editorial/smooth-scroll";
 import "./globals.css";
 
 // Headings: Archivo (variable weight, normal width).
@@ -249,6 +250,7 @@ export default function RootLayout({
 
         <SiteClassSync />
         <RouteTransitions />
+        <SmoothScroll />
         <ScrollFallback />
         <AnalyticsProvider />
         <Analytics />
