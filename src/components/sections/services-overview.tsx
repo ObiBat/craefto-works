@@ -14,8 +14,11 @@ import { formatPrice, monthlyPlans } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 // The monthly plans, named under the capabilities: "Media, Growth and Studio,
-// from A$2,400 a month". Prices and plans live in lib/pricing.ts.
-const PLAN_NAMES = new Intl.ListFormat("en-AU", { type: "conjunction" }).format(monthlyPlans.map((plan) => plan.name));
+// from A$2,400 a month". Prices and plans live in lib/pricing.ts. The names
+// are joined by hand: Intl.ListFormat gives "Growth and Studio" in Node but
+// "Growth, and Studio" in Safari, and that mismatch broke hydration.
+const planNames = monthlyPlans.map((plan) => plan.name);
+const PLAN_NAMES = planNames.length > 1 ? `${planNames.slice(0, -1).join(", ")} and ${planNames.at(-1)}` : planNames.join("");
 const PLANS_FROM = `A${formatPrice(Math.min(...monthlyPlans.map((plan) => plan.price)))}`;
 
 function AccordionItem({

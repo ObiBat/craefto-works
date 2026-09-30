@@ -25,6 +25,15 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     // Phones: the page and interaction checks (search and intro checks don't depend on the device).
     { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /(pages|interactions)\.spec\.ts/ },
+    // Safari's engine formats some text differently from Node (Intl.ListFormat
+    // adds an Oxford comma), and a mismatch makes React re-render the page,
+    // which drops <html>'s classes and stops every animation. The page checks
+    // fail on that error, so they run here too.
+    {
+      name: "iphone",
+      use: { ...devices["iPhone 15"], timezoneId: "Australia/Sydney", locale: "en-AU" },
+      testMatch: /pages\.spec\.ts/,
+    },
   ],
   webServer: process.env.BASE_URL
     ? undefined

@@ -43,7 +43,7 @@ jobs:
       - if: steps.target.outputs.url != ''
         run: npm ci
       - if: steps.target.outputs.url != ''
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
       - if: steps.target.outputs.url != ''
         run: npx playwright test
         env:
