@@ -27,12 +27,14 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /(pages|interactions)\.spec\.ts/ },
     // Safari's engine formats some text differently from Node (Intl.ListFormat
     // adds an Oxford comma), and a mismatch makes React re-render the page,
-    // which drops <html>'s classes and stops every animation. The page checks
-    // fail on that error, so they run here too.
+    // which drops <html>'s classes and stops every animation. The hydration
+    // checks run in WebKit for that. The scroll-timed page checks stay on
+    // Chromium, because headless WebKit on Linux doesn't reproduce them
+    // faithfully.
     {
       name: "iphone",
       use: { ...devices["iPhone 15"], timezoneId: "Australia/Sydney", locale: "en-AU" },
-      testMatch: /pages\.spec\.ts/,
+      testMatch: /hydration\.spec\.ts/,
     },
   ],
   webServer: process.env.BASE_URL
