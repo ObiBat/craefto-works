@@ -7,6 +7,7 @@ export const PAGES = [
   "/",
   "/work",
   "/work/mng-steel",
+  "/work/nowuknow",
   "/services",
   "/process",
   "/about",

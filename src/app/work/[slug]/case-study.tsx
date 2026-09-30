@@ -7,11 +7,30 @@ import { Header, Footer, Container, Section } from "@/components/layout";
 import { Badge, Separator, PageTransition, AnimatedSection, HeroText, StaggeredGrid, StaggeredItem, ProjectImagePlaceholder, InteractiveLogo, BrandMoment } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { RevealText } from "@/components/editorial/reveal-text";
+import { cn } from "@/lib/utils";
 
-import { caseStudies, getCaseStudy, PROJECTS_WITH_REAL_IMAGES, type CaseStudy } from "@/content/case-studies";
+import { caseStudies, getCaseStudy, PROJECTS_WITH_REAL_IMAGES, type CaseStudy, type PhotoSet } from "@/content/case-studies";
 
 // Blurred previews keyed by image path (see npm run images:placeholders).
 const BlurContext = createContext<Record<string, string>>({});
+
+// Section labels and headings: for a build, and for a photo shoot.
+const STORY = {
+  build: {
+    challenge: ["01 / The Challenge", "Understanding the problem"],
+    approach: ["02 / The Approach", "How we tackled it"],
+    solution: ["03 / The Solution", "What we built"],
+    outcome: ["04 / The Outcome", "Results & impact"],
+    stack: "Tech Stack",
+  },
+  shoot: {
+    challenge: ["01 / The Brief", "What the shoot was for"],
+    approach: ["02 / On Location", "How we shot it"],
+    solution: ["03 / The Edit", "How it was finished"],
+    outcome: ["04 / The Set", "What was delivered"],
+    stack: "Kit",
+  },
+} as const;
 
 // Helper component to render real image or placeholder
 function ProjectImage({
@@ -21,6 +40,7 @@ function ProjectImage({
   caption,
   imageType = "gallery",
   className = "",
+  sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px",
 }: {
   project: CaseStudy;
   src?: string;
@@ -28,6 +48,7 @@ function ProjectImage({
   caption?: string;
   imageType?: "hero" | "gallery" | "thumb";
   className?: string;
+  sizes?: string;
 }) {
   const [failed, setFailed] = useState(false);
   const blur = useContext(BlurContext)[src ?? ""];
@@ -43,7 +64,7 @@ function ProjectImage({
         alt={alt || `${project.title} ${imageType}`}
         fill
         className={`object-cover ${className}`}
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+        sizes={sizes}
         placeholder={blur ? "blur" : "empty"}
         blurDataURL={blur}
         onError={() => setFailed(true)}
@@ -61,9 +82,73 @@ function ProjectImage({
   );
 }
 
+/**
+ * A photo shoot's frames by setup, near-identical takes together: side by
+ * side from small screens up, and a row to swipe through on phones.
+ */
+function PhotoSets({ project, sets }: { project: CaseStudy; sets: PhotoSet[] }) {
+  if (sets.length === 0) return null;
+  return (
+    <Section spacing="sm">
+      <Container>
+        <div className="flex flex-col gap-16 md:gap-24">
+          {sets.map((set) => {
+            const count = set.images.length;
+            return (
+              <AnimatedSection key={set.title}>
+                <figure className={cn(count === 1 && "mx-auto max-w-lg", count === 2 && "sm:mx-auto sm:max-w-3xl")}>
+                  <div
+                    className={cn(
+                      count === 1
+                        ? "grid"
+                        : "-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0",
+                      count === 2 && "sm:grid-cols-2",
+                      count >= 3 && "sm:grid-cols-3"
+                    )}
+                  >
+                    {set.images.map((image) => (
+                      <div
+                        key={image.src}
+                        className={cn(
+                          "relative aspect-[2/3] overflow-hidden rounded-xl",
+                          count > 1 && "w-[78%] shrink-0 snap-center sm:w-auto"
+                        )}
+                      >
+                        <ProjectImage
+                          project={project}
+                          src={image.src}
+                          alt={image.alt}
+                          sizes="(max-width: 639px) 78vw, (max-width: 1280px) 34vw, 420px"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <figcaption className="mt-4 flex flex-col gap-1 text-sm sm:flex-row sm:items-baseline sm:gap-4">
+                    <span className="font-mono text-xs uppercase tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
+                      {set.title}
+                    </span>
+                    <span className="text-[hsl(var(--color-foreground-muted))]">{set.caption}</span>
+                  </figcaption>
+                </figure>
+              </AnimatedSection>
+            );
+          })}
+        </div>
+      </Container>
+    </Section>
+  );
+}
+
 export function CaseStudyView({ slug, placeholders = {} }: { slug: string; placeholders?: Record<string, string> }) {
   // The server page only renders known slugs (dynamicParams = false).
   const project = getCaseStudy(slug) as CaseStudy;
+
+  // A photo shoot swaps the screen-shaped image slots for its photo sets.
+  const photoSets = project.photoSets ?? [];
+  const isShoot = photoSets.length > 0;
+  const setsAfter = (placement: PhotoSet["placement"]) => photoSets.filter((set) => set.placement === placement);
+  const story = STORY[isShoot ? "shoot" : "build"];
+  const liveLabel = project.liveLabel ?? "Visit live site";
 
   // Only cycle through featured (real) projects for "next project"
   const featuredProjects = caseStudies.filter((p) => p.featured);
@@ -121,13 +206,13 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
                         <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">
                           <span className="btn-text-wrapper">
                             <span className="btn-text-primary">
-                              Visit live site
+                              {liveLabel}
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                               </svg>
                             </span>
                             <span className="btn-text-secondary" aria-hidden="true">
-                              View project
+                              {project.liveLabel ?? "View project"}
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                               </svg>
@@ -142,22 +227,26 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
             </Container>
           </Section>
 
-          {/* Hero Image */}
-          <Section spacing="sm">
-            <Container>
-              <AnimatedSection variant="scaleIn">
-                <div className="aspect-[16/9] rounded-2xl overflow-hidden relative">
-                  <ProjectImage
-                    project={project}
-                    src={project.heroImage}
-                    alt={`${project.title} hero`}
-                    caption="Main project showcase"
-                    imageType="hero"
-                  />
-                </div>
-              </AnimatedSection>
-            </Container>
-          </Section>
+          {/* Hero Image, or a shoot's opening set */}
+          {isShoot ? (
+            <PhotoSets project={project} sets={setsAfter("hero")} />
+          ) : (
+            <Section spacing="sm">
+              <Container>
+                <AnimatedSection variant="scaleIn">
+                  <div className="aspect-[16/9] rounded-2xl overflow-hidden relative">
+                    <ProjectImage
+                      project={project}
+                      src={project.heroImage}
+                      alt={`${project.title} hero`}
+                      caption="Main project showcase"
+                      imageType="hero"
+                    />
+                  </div>
+                </AnimatedSection>
+              </Container>
+            </Section>
+          )}
 
           {/* Project Metadata */}
           <Section spacing="md">
@@ -193,8 +282,8 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
           <Section spacing="md">
             <Container size="md">
               <AnimatedSection>
-                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">01 / The Challenge</p>
-                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6"><RevealText text={"Understanding the problem"} /></h2>
+                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">{story.challenge[0]}</p>
+                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6"><RevealText text={story.challenge[1]} /></h2>
                 <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
                   {project.challenge}
                 </p>
@@ -203,28 +292,32 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
           </Section>
 
           {/* Gallery Image */}
-          <Section spacing="sm">
-            <Container>
-              <AnimatedSection variant="scaleIn">
-                <div data-unmask className="aspect-[16/9] rounded-xl overflow-hidden relative">
-                  <ProjectImage
-                    project={project}
-                    src={project.gallery[0]?.src}
-                    alt={project.gallery[0]?.alt || "Project gallery"}
-                    caption={project.gallery[0]?.caption || "Challenge context visualization"}
-                    imageType="gallery"
-                  />
-                </div>
-              </AnimatedSection>
-            </Container>
-          </Section>
+          {isShoot ? (
+            <PhotoSets project={project} sets={setsAfter("challenge")} />
+          ) : (
+            <Section spacing="sm">
+              <Container>
+                <AnimatedSection variant="scaleIn">
+                  <div data-unmask className="aspect-[16/9] rounded-xl overflow-hidden relative">
+                    <ProjectImage
+                      project={project}
+                      src={project.gallery[0]?.src}
+                      alt={project.gallery[0]?.alt || "Project gallery"}
+                      caption={project.gallery[0]?.caption || "Challenge context visualization"}
+                      imageType="gallery"
+                    />
+                  </div>
+                </AnimatedSection>
+              </Container>
+            </Section>
+          )}
 
           {/* The Approach */}
           <Section spacing="md">
             <Container size="md">
               <AnimatedSection>
-                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">02 / The Approach</p>
-                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6"><RevealText text={"How we tackled it"} /></h2>
+                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">{story.approach[0]}</p>
+                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6"><RevealText text={story.approach[1]} /></h2>
                 <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
                   {project.approach}
                 </p>
@@ -233,37 +326,41 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
           </Section>
 
           {/* Image Grid */}
-          <Section spacing="sm">
-            <Container>
-              <AnimatedSection>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <div data-unmask className="aspect-[4/3] rounded-xl overflow-hidden relative">
-                    <ProjectImage
-                      project={project}
-                      src={project.gallery[1]?.src}
-                      alt={project.gallery[1]?.alt || "Design process"}
-                      caption={project.gallery[1]?.caption || "Design process & iterations"}
-                      imageType="gallery"
-                    />
-                  </div>
-                  <div data-unmask className="aspect-[4/3] rounded-xl overflow-hidden relative">
-                    {/* Interactive logo for GlobFam, regular image for others */}
-                    {project.slug === "globfam" ? (
-                      <InteractiveLogo />
-                    ) : (
+          {isShoot ? (
+            <PhotoSets project={project} sets={setsAfter("approach")} />
+          ) : (
+            <Section spacing="sm">
+              <Container>
+                <AnimatedSection>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div data-unmask className="aspect-[4/3] rounded-xl overflow-hidden relative">
                       <ProjectImage
                         project={project}
-                        src={project.gallery[2]?.src}
-                        alt={project.gallery[2]?.alt || "Implementation"}
-                        caption={project.gallery[2]?.caption || "Implementation details"}
+                        src={project.gallery[1]?.src}
+                        alt={project.gallery[1]?.alt || "Design process"}
+                        caption={project.gallery[1]?.caption || "Design process & iterations"}
                         imageType="gallery"
                       />
-                    )}
+                    </div>
+                    <div data-unmask className="aspect-[4/3] rounded-xl overflow-hidden relative">
+                      {/* Interactive logo for GlobFam, regular image for others */}
+                      {project.slug === "globfam" ? (
+                        <InteractiveLogo />
+                      ) : (
+                        <ProjectImage
+                          project={project}
+                          src={project.gallery[2]?.src}
+                          alt={project.gallery[2]?.alt || "Implementation"}
+                          caption={project.gallery[2]?.caption || "Implementation details"}
+                          imageType="gallery"
+                        />
+                      )}
+                    </div>
                   </div>
-                </div>
-              </AnimatedSection>
-            </Container>
-          </Section>
+                </AnimatedSection>
+              </Container>
+            </Section>
+          )}
 
           {/* Brand moment: the client's own logo entrance, ported from its site */}
           {(project.slug === "tav-partners" || project.slug === "japanoma" || project.slug === "artisan") && (
@@ -280,8 +377,8 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
           <Section spacing="md">
             <Container size="md">
               <AnimatedSection>
-                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">03 / The Solution</p>
-                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6"><RevealText text={"What we built"} /></h2>
+                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">{story.solution[0]}</p>
+                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6"><RevealText text={story.solution[1]} /></h2>
                 <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
                   {project.solution}
                 </p>
@@ -294,7 +391,7 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
             <Container>
               <AnimatedSection>
                 <div className="p-6 sm:p-8 rounded-xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))]">
-                  <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">Tech Stack</p>
+                  <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">{story.stack}</p>
                   <div className="flex flex-wrap gap-2">
                     {project.techStack.map((tech) => (
                       <span
@@ -311,34 +408,40 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
           </Section>
 
           {/* Full Width Image */}
-          <Section spacing="sm">
-            <Container>
-              <AnimatedSection variant="scaleIn">
-                <div data-unmask className="aspect-[21/9] rounded-xl overflow-hidden relative">
-                  <ProjectImage
-                    project={project}
-                    src={project.heroImage}
-                    alt={`${project.title} showcase`}
-                    caption="Full showcase view"
-                    imageType="hero"
-                  />
-                </div>
-              </AnimatedSection>
-            </Container>
-          </Section>
+          {isShoot ? (
+            <PhotoSets project={project} sets={setsAfter("solution")} />
+          ) : (
+            <Section spacing="sm">
+              <Container>
+                <AnimatedSection variant="scaleIn">
+                  <div data-unmask className="aspect-[21/9] rounded-xl overflow-hidden relative">
+                    <ProjectImage
+                      project={project}
+                      src={project.heroImage}
+                      alt={`${project.title} showcase`}
+                      caption="Full showcase view"
+                      imageType="hero"
+                    />
+                  </div>
+                </AnimatedSection>
+              </Container>
+            </Section>
+          )}
 
           {/* The Outcome */}
           <Section spacing="md">
             <Container size="md">
               <AnimatedSection>
-                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">04 / The Outcome</p>
-                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6"><RevealText text={"Results & impact"} /></h2>
+                <p className="text-xs uppercase font-mono tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))] mb-4">{story.outcome[0]}</p>
+                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6"><RevealText text={story.outcome[1]} /></h2>
                 <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
                   {project.outcome}
                 </p>
               </AnimatedSection>
             </Container>
           </Section>
+
+          {isShoot && <PhotoSets project={project} sets={setsAfter("outcome")} />}
 
           {/* Metrics */}
           {project.metrics && project.metrics.length > 0 && (
@@ -425,13 +528,13 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
                       <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">
                         <span className="btn-text-wrapper">
                           <span className="btn-text-primary">
-                            Visit live site
+                            {liveLabel}
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
                           </span>
                           <span className="btn-text-secondary" aria-hidden="true">
-                            View project
+                            {project.liveLabel ?? "View project"}
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>

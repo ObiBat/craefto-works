@@ -107,6 +107,17 @@ const projects = [
     accentColor: "18 100% 50%",
     thumbnail: "/images/projects/nuu/nuu-thumb.jpg",
   },
+  {
+    slug: "nowuknow",
+    title: "Nowuknow",
+    description: "A merch shoot for Nowuknow, the Sydney collective behind hip-hop, R&B and underground club nights.",
+    category: "Media",
+    industry: "Events / Club Nights",
+    year: 2025,
+    featured: false,
+    accentColor: "172 45% 40%",
+    thumbnail: "/images/projects/nowuknow/nowuknow-thumb.jpg",
+  },
 ];
 
 export default function WorkPage() {

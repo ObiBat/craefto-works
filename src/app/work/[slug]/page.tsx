@@ -67,7 +67,8 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
   // "next project" card), so only a few hundred bytes reach the client.
   const blur: Record<string, string> = {};
   const all = imagePlaceholders as Record<string, string>;
-  for (const src of [study.heroImage, study.thumbnail, ...study.gallery.map((g) => g.src), ...caseStudies.map((c) => c.heroImage)]) {
+  const photos = (study.photoSets ?? []).flatMap((set) => set.images.map((image) => image.src));
+  for (const src of [study.heroImage, study.thumbnail, ...study.gallery.map((g) => g.src), ...photos, ...caseStudies.map((c) => c.heroImage)]) {
     if (src && all[src]) blur[src] = all[src];
   }
 

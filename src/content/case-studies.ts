@@ -19,11 +19,24 @@ export interface GalleryImage {
   caption?: string;
 }
 
+/** One setup on a photo shoot: its frames side by side, near-identical takes together. */
+export interface PhotoSet {
+  /** Where it was shot: "Rooftop car park". */
+  title: string;
+  /** What the frames show. */
+  caption: string;
+  /** Portrait (2:3) frames. */
+  images: GalleryImage[];
+  /** Where it sits in the story: "hero" opens the page in place of the hero
+      image; the others follow that section's text. */
+  placement: "hero" | "challenge" | "approach" | "solution" | "outcome";
+}
+
 export interface CaseStudy {
   slug: string;
   title: string;
   description: string;
-  category: "Brand" | "Web" | "Product" | "SaaS" | "Creative";
+  category: "Brand" | "Web" | "Product" | "SaaS" | "Creative" | "Media";
   client: string;
   industry: string;
   timeline: string;
@@ -32,6 +45,8 @@ export interface CaseStudy {
   services: string[];
   techStack: string[];
   liveUrl?: string;
+  /** The link's label when it isn't a website ("Visit live site"). */
+  liveLabel?: string;
   githubUrl?: string;
   challenge: string;
   approach: string;
@@ -44,11 +59,14 @@ export interface CaseStudy {
   testimonial?: Testimonial;
   awards?: string[];
   accentColor?: string;
+  /** Photo shoots: the photographs by setup, laid out in place of the
+      screen-shaped gallery. */
+  photoSets?: PhotoSet[];
 }
 
 // Projects that have real image files under /public/images/projects/{slug}/.
 // Anything else, or any listed file that fails to load, renders a placeholder.
-export const PROJECTS_WITH_REAL_IMAGES = ["tactix", "nuu", "fontkin", "globfam", "fx-foundations", "japanoma", "tav-partners", "artisan", "mng-steel"];
+export const PROJECTS_WITH_REAL_IMAGES = ["tactix", "nuu", "fontkin", "globfam", "fx-foundations", "japanoma", "tav-partners", "artisan", "mng-steel", "nowuknow"];
 
 export const caseStudies: CaseStudy[] = [
   {
@@ -361,6 +379,98 @@ export const caseStudies: CaseStudy[] = [
       company: "Sydney",
     },
     accentColor: "18 100% 50%",
+  },
+  // A photo shoot, and the oldest project here: last on /work, not featured,
+  // so never on the home page or in the next-project links.
+  {
+    slug: "nowuknow",
+    title: "Nowuknow",
+    description: "A merch shoot for Nowuknow, the Sydney collective behind hip-hop, R&B and underground club nights.",
+    category: "Media",
+    client: "Nowuknow Sydney",
+    industry: "Events / Club Nights",
+    timeline: "Feb 2025",
+    year: 2025,
+    featured: false,
+    services: ["Photography", "Photo Editing"],
+    techStack: ["Fujifilm X-T5", "XF 56mm f/1.2", "Adobe Lightroom"],
+    liveUrl: "https://www.instagram.com/nowuknow.syd/",
+    liveLabel: "Nowuknow on Instagram",
+    challenge: "Nowuknow is an event collective in Sydney that hosts hip-hop, R&B and underground club nights. Its new merch, a black tee with a liquid-chrome wordmark on the front and a teal graphic across the back, needed photographs with the same attitude as the nights.",
+    approach: "We took the tees onto the street rather than into a studio. Over one afternoon, with two models and a single 56mm lens, the shoot moved from a rooftop car park to a lift lobby, neon shopfronts, lantern-lit streets and laneways. Each setup was shot as a short run of takes, so both prints come through, along with the way the tee sits and moves.",
+    solution: "Every frame was finished in Lightroom with one grade: deep greens, warm skin and soft contrast, so the teal of the prints carries from one location to the next. Near-identical takes were kept together as sets, so there's a choice of framing and expression, and one frame was set into an old CRT television among tapes and stickers.",
+    outcome: "Sixteen finished photographs across eight setups, from close-ups of the front print to full-length frames of the pair on the street.",
+    heroImage: "/images/projects/nowuknow/nowuknow-07.jpg",
+    thumbnail: "/images/projects/nowuknow/nowuknow-thumb.jpg",
+    gallery: [],
+    accentColor: "172 45% 40%",
+    photoSets: [
+      {
+        title: "Neon shopfront",
+        caption: "Three takes of one setup, under a restaurant's neon.",
+        placement: "hero",
+        images: [
+          { src: "/images/projects/nowuknow/nowuknow-06.jpg", alt: "Two models outside a Chinese restaurant under green and red neon" },
+          { src: "/images/projects/nowuknow/nowuknow-07.jpg", alt: "A closer take under the restaurant's neon" },
+          { src: "/images/projects/nowuknow/nowuknow-08.jpg", alt: "The same scene through a green poster in the foreground" },
+        ],
+      },
+      {
+        title: "Rooftop car park",
+        caption: "Two takes of the same crouch, then in close on the front print.",
+        placement: "challenge",
+        images: [
+          { src: "/images/projects/nowuknow/nowuknow-01.jpg", alt: "A model in the black Nowuknow tee crouching on a rooftop car park" },
+          { src: "/images/projects/nowuknow/nowuknow-02.jpg", alt: "The same crouch on the rooftop, framed closer" },
+          { src: "/images/projects/nowuknow/nowuknow-03.jpg", alt: "Close on the tee's liquid-chrome front print" },
+        ],
+      },
+      {
+        title: "Lift lobby, level 4",
+        caption: "Two takes by the car park lift.",
+        placement: "approach",
+        images: [
+          { src: "/images/projects/nowuknow/nowuknow-04.jpg", alt: "Two models by a car park lift on level 4" },
+          { src: "/images/projects/nowuknow/nowuknow-05.jpg", alt: "A second take by the level 4 lift" },
+        ],
+      },
+      {
+        title: "Lantern street",
+        caption: "Walking away with the back prints showing, then a pause on the street.",
+        placement: "approach",
+        images: [
+          { src: "/images/projects/nowuknow/nowuknow-09.jpg", alt: "Two models walking away down a lantern-lit street, the back prints showing" },
+          { src: "/images/projects/nowuknow/nowuknow-10.jpg", alt: "Two models pausing on the street" },
+        ],
+      },
+      {
+        title: "The teal van",
+        caption: "Three takes of the back print, against a van outside a tobacconist.",
+        placement: "solution",
+        images: [
+          { src: "/images/projects/nowuknow/nowuknow-11.jpg", alt: "The back print, an arm around the shoulders, beside a teal van" },
+          { src: "/images/projects/nowuknow/nowuknow-12.jpg", alt: "The back print against the teal van and a tobacconist's sign" },
+          { src: "/images/projects/nowuknow/nowuknow-13.jpg", alt: "A third take of the back print by the van" },
+        ],
+      },
+      {
+        title: "Laneway and Commonwealth Street",
+        caption: "A laneway, then a window where the front and back prints share one frame.",
+        placement: "solution",
+        images: [
+          { src: "/images/projects/nowuknow/nowuknow-14.jpg", alt: "Two models in a laneway, one standing and one crouching" },
+          { src: "/images/projects/nowuknow/nowuknow-15.jpg", alt: "Two models at a window on Commonwealth Street, one showing the back print and one the front" },
+        ],
+      },
+      {
+        title: "On the television",
+        caption: "One frame set into an old CRT television, among tapes and stickers.",
+        placement: "outcome",
+        images: [
+          { src: "/images/projects/nowuknow/nowuknow-16.jpg", alt: "The pair on the screen of an old CRT television, among video tapes and stickers" },
+        ],
+      },
+    ],
   },
 ];
 
