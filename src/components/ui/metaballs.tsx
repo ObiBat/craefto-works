@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -182,7 +182,8 @@ interface MetaballsProps {
 
 type FrameLoop = "always" | "demand" | "never";
 
-export function Metaballs({ className }: MetaballsProps) {
+// Memoised: the hero re-renders on every headline rotation, the artwork needn't.
+export const Metaballs = memo(function Metaballs({ className }: MetaballsProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   // Render only while the artwork is on screen; with reduced motion, draw a
   // single still frame (and redraw only on resize).
@@ -211,6 +212,10 @@ export function Metaballs({ className }: MetaballsProps) {
     <div ref={rootRef} className={className}>
       <Canvas
         frameloop={frameloop}
+        // By default the canvas re-measures its page position on every
+        // scroll (re-rendering ~20 times a second). Only page-coordinate
+        // pointer events need that; the pointer here is canvas-relative.
+        resize={{ scroll: false }}
         camera={{ position: [0, 0, 1] }}
         dpr={[1, 1.5]} // Lower DPR for performance
         gl={{
@@ -226,4 +231,4 @@ export function Metaballs({ className }: MetaballsProps) {
       </Canvas>
     </div>
   );
-}
+});
