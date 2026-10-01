@@ -10,6 +10,7 @@ import styles from "./layout.module.css";
 const NAV_ITEMS = [
   { href: "/admin", label: "Command Center", icon: "command" },
   { href: "/admin/clients", label: "Clients", icon: "briefcase" },
+  { href: "/admin/members", label: "Members", icon: "card" },
   { href: "/admin/team", label: "Team", icon: "users" },
   { href: "/admin/projects", label: "Projects", icon: "folder" },
   { href: "/admin/finances", label: "Finances", icon: "dollar" },

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Separator, PageTransition, AnimatedSection, HeroText, SectionLabel } from "@/components/ui";
 import { Button } from "@/components/ui/button";
+import { chargesGst } from "@/lib/stripe";
+import { CheckoutButton } from "./checkout-button";
 import { cn } from "@/lib/utils";
 import { RevealText } from "@/components/editorial/reveal-text";
 import { Glide } from "@/components/editorial/glide";
@@ -48,7 +50,7 @@ const faqGroups: FaqGroup[] = [
       },
       {
         question: "How do monthly plans work?",
-        answer: "Each plan covers the work on its card, every month. Studio runs on requests: send them whenever you like and we work on one or two at a time. Media and Growth are planned with you each month. Plans are billed monthly in advance, come in larger sizes on request, and can be paused or cancelled before your next billing date.",
+        answer: "Each plan covers the work on its card, every month. Studio runs on unlimited requests: send them whenever you like. Media and Growth are planned with you each month. Plans are billed monthly in advance, come in larger sizes on request, and can be paused or cancelled before your next billing date.",
       },
       {
         question: "How does payment work?",
@@ -403,9 +405,7 @@ export default function ServicesPage() {
                         </ul>
                         <CapabilityTags ids={plan.capabilities} label={`Capabilities in ${plan.name}`} className="mt-6" />
                         <div className="mt-auto pt-8">
-                          <Button asChild size="md" className="w-full" hoverText={"Let\u2019s talk"}>
-                            <Link href={`/contact?plan=${plan.id}`}>Start with {plan.name}</Link>
-                          </Button>
+                          <CheckoutButton plan={plan.id} name={plan.name} />
                         </div>
                       </div>
                     </li>
@@ -415,7 +415,7 @@ export default function ServicesPage() {
                 <ScrollSpotlight selector=".plan-card" media="(hover: none) and (max-width: 767px)" />
 
                 <p className="text-sm text-[hsl(var(--color-foreground-muted))] max-w-2xl">
-                  Billed monthly in advance, in AUD excluding GST. Larger sizes on request, and plans can be combined. Not sure which fits?{" "}
+                  Billed monthly in advance, in AUD{chargesGst() ? " excluding GST" : ""}. Larger sizes on request, and plans can be combined. Not sure which fits?{" "}
                   <Link href="/contact" className="font-medium text-[hsl(var(--color-accent))] hover:underline">
                     Tell us what you&apos;re working on
                   </Link>

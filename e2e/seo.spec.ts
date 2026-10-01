@@ -13,7 +13,7 @@ test.describe("search and sharing", () => {
     const res = await request.get("/robots.txt");
     expect(res.ok()).toBeTruthy();
     const body = await res.text();
-    for (const path of ["/api/", "/admin/"]) expect(body).toContain(`Disallow: ${path}`);
+    for (const path of ["/api/", "/admin/", "/portal"]) expect(body).toContain(`Disallow: ${path}`);
     expect(body).toContain(`Sitemap: ${SITE}/sitemap.xml`);
   });
 

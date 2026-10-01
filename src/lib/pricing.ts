@@ -83,7 +83,7 @@ export const monthlyPlans: MonthlyPlan[] = [
     bestFor: "For teams that need design and development on call.",
     capabilities: ["brand", "product", "systems", "media", "growth"],
     includes: [
-      "Unlimited requests, 1\u20132 at a time",
+      "Unlimited requests",
       "Work across all five capabilities",
       "Hosting care for what we build",
       "Deliveries every few business days",

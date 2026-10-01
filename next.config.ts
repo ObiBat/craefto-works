@@ -6,15 +6,16 @@ import type { NextConfig } from "next";
 // Content-Security-Policy to enforce it. Inline scripts are allowed because
 // Next inlines its bootstrap data and the site runs an inline boot script.
 // vercel.live and pusher cover the Vercel toolbar on preview deployments.
+// app.cal.com and cal.com serve the booking calendar in the client portal.
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vercel.live",
+  "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vercel.live https://app.cal.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vercel.live",
-  "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://vercel.live https://vercel.com",
+  "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://vercel.live https://vercel.com https://app.cal.com https://cal.com",
   "font-src 'self' data: https://fonts.gstatic.com https://vercel.live https://assets.vercel.com",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://ws-us3.pusher.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://ws-us3.pusher.com https://app.cal.com",
   "media-src 'self' blob: https://*.supabase.co",
-  "frame-src 'self' blob: https://vercel.live",
+  "frame-src 'self' blob: https://vercel.live https://app.cal.com https://cal.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",

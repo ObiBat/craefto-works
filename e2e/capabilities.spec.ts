@@ -39,7 +39,9 @@ test.describe("capabilities", () => {
 
   test("a monthly plan opens the enquiry with the plan filled in", async ({ page }) => {
     await page.goto("/services");
-    await page.getByRole("link", { name: "Start with Studio" }).click();
+    // Subscribing goes to Stripe Checkout; asking first opens the enquiry.
+    await expect(page.getByRole("button", { name: "Start with Studio" })).toBeVisible();
+    await page.locator('a[href="/contact?plan=studio"]').click();
     await page.waitForURL(/\/contact\?plan=studio$/);
     await expect(page.locator("#budget")).toHaveValue("monthly");
     await expect(page.locator("#message")).toHaveValue(/Studio plan/);

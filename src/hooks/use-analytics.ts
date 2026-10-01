@@ -8,8 +8,8 @@ export function usePageView() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Don't track admin pages
-    if (pathname.startsWith("/admin")) return;
+    // Don't track admin pages, or clients in their portal.
+    if (pathname.startsWith("/admin") || pathname.startsWith("/portal")) return;
     // Only real visits: local development and automated browsers (tests,
     // screenshot tools) would otherwise write to the live analytics.
     if (process.env.NODE_ENV !== "production" || navigator.webdriver) return;
