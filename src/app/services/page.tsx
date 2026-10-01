@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RevealText } from "@/components/editorial/reveal-text";
 import { Glide } from "@/components/editorial/glide";
+import { ScrollSpotlight } from "@/components/editorial/scroll-spotlight";
 import { formatPrice, monthlyPlans, priceRanges, rangeLabel, weeksLabel, type MonthlyPlan } from "@/lib/pricing";
 import { getCaseStudy } from "@/content/case-studies";
 import {
@@ -21,7 +22,6 @@ import {
 } from "@/content/capabilities";
 import { CapabilityScroll } from "./capability-scroll";
 import { Faq, type FaqGroup } from "./faq";
-import { PlanSpotlight } from "./plan-spotlight";
 
 // The capabilities page. It keeps the /services address so existing links
 // work; the old service anchors are rewritten in CapabilityScroll.
@@ -122,10 +122,10 @@ function CheckMark() {
   );
 }
 
-/** A tick in a plan card; fills in after the ticks before it (see .plan-tick). */
-function PlanTick({ index }: { index: number }) {
+/** A tick in a list; fills in after the ticks before it once its card or section is on (see .tick). */
+function Tick({ index, className }: { index: number; className?: string }) {
   return (
-    <span className="plan-tick" style={{ "--i": index } as CSSProperties} aria-hidden="true">
+    <span className={cn("tick", className)} style={{ "--i": index } as CSSProperties} aria-hidden="true">
       <CheckMark />
     </span>
   );
@@ -158,7 +158,7 @@ function CapabilityTags({ ids, label, className }: { ids: CapabilityId[]; label:
 function CapabilityDetail({ capability }: { capability: Capability }) {
   const plan = capabilityPlan(capability);
   return (
-    <section aria-labelledby={capability.id} className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+    <section aria-labelledby={capability.id} className="capability grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
       <AnimatedSection className="lg:col-span-5">
         <h2
           id={capability.id}
@@ -167,7 +167,7 @@ function CapabilityDetail({ capability }: { capability: Capability }) {
           className="scroll-mt-8 font-semibold tracking-tight"
         >
           <span
-            className="mb-4 flex w-fit rounded-full bg-[hsl(var(--color-accent-subtle))] px-2.5 py-1 font-mono text-xs font-medium tabular-nums tracking-normal text-[hsl(var(--color-accent))]"
+            className="capability-number mb-4 flex w-fit rounded-full px-2.5 py-1 font-mono text-xs font-medium tabular-nums tracking-normal"
             aria-hidden="true"
           >
             {capability.number}
@@ -178,7 +178,7 @@ function CapabilityDetail({ capability }: { capability: Capability }) {
           {capability.summary}
         </p>
 
-        <div className="mt-10 rounded-2xl bg-[hsl(var(--color-accent-subtle))] p-6">
+        <div className="capability-price mt-10 rounded-2xl p-6">
           <h3 className="label-heading mb-4">Pricing, AUD ex GST</h3>
           <ul className="space-y-3">
             {capabilityPrices(capability).map((range) => (
@@ -210,14 +210,9 @@ function CapabilityDetail({ capability }: { capability: Capability }) {
           <div>
             <h3 className="label-heading mb-4">Deliverables</h3>
             <ul className="space-y-3">
-              {capability.deliverables.map((item) => (
+              {capability.deliverables.map((item, index) => (
                 <li key={item} className="flex gap-3 text-[hsl(var(--color-foreground))]">
-                  <span
-                    className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[hsl(var(--color-accent-subtle))] text-[hsl(var(--color-accent))]"
-                    aria-hidden="true"
-                  >
-                    <CheckMark />
-                  </span>
+                  <Tick index={index} className="mt-0.5" />
                   {item}
                 </li>
               ))}
@@ -327,6 +322,7 @@ export default function ServicesPage() {
                   <CapabilityDetail key={capability.id} capability={capability} />
                 ))}
               </div>
+              <ScrollSpotlight selector=".capability" />
             </Container>
           </div>
 
@@ -452,7 +448,7 @@ export default function ServicesPage() {
                         <ul className="space-y-3">
                           {plan.includes.map((item, index) => (
                             <li key={item} className="flex gap-3 text-sm text-[hsl(var(--color-foreground))]">
-                              <PlanTick index={index} />
+                              <Tick index={index} />
                               {item}
                             </li>
                           ))}
@@ -467,7 +463,8 @@ export default function ServicesPage() {
                     </li>
                   ))}
                 </ul>
-                <PlanSpotlight />
+                {/* Phones can't hover: there the plan in mid-screen lights up instead. */}
+                <ScrollSpotlight selector=".plan-card" media="(hover: none) and (max-width: 767px)" />
 
                 <p className="text-sm text-[hsl(var(--color-foreground-muted))] max-w-2xl">
                   Billed monthly in advance, in AUD excluding GST. Larger sizes on request, and plans can be combined. Not sure which fits?{" "}

@@ -48,6 +48,19 @@ test.describe("interactions", () => {
     }
   });
 
+  test("the capability in the middle of the screen is lit, one at a time", async ({ page }) => {
+    await page.goto("/services");
+    const sections = page.locator("section.capability");
+    const lit = () => sections.evaluateAll((all) => all.filter((s) => s.hasAttribute("data-spotlight")).map((s) => s.getAttribute("aria-labelledby")));
+    for (const id of ["product", "media"]) {
+      await page.locator(`#${id}`).evaluate((heading) => {
+        const box = heading.closest("section")!.getBoundingClientRect();
+        window.scrollTo(0, window.scrollY + box.top + Math.min(box.height, window.innerHeight) / 2 - window.innerHeight / 2);
+      });
+      await expect.poll(lit).toEqual([id]);
+    }
+  });
+
   test("back to top appears only after scrolling", async ({ page }) => {
     await page.goto("/");
     const button = page.getByRole("button", { name: "Back to top" });
