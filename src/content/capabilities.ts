@@ -193,10 +193,3 @@ export const engagements: { title: string; capabilities: CapabilityId[]; descrip
     description: "Campaign creative and landing pages, new photography and video, and product changes where analytics shows people dropping off.",
   },
 ];
-
-/** Case studies shown on the capabilities page, with the capabilities each drew on. */
-export const selectedWork: { slug: string; capabilities: CapabilityId[] }[] = [
-  { slug: "japanoma", capabilities: ["brand", "product", "systems", "media", "growth"] },
-  { slug: "mng-steel", capabilities: ["brand", "product", "systems", "growth"] },
-  { slug: "tav-partners", capabilities: ["brand", "product", "growth"] },
-];

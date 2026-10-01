@@ -1,6 +1,5 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Separator, PageTransition, AnimatedSection, HeroText, SectionLabel } from "@/components/ui";
 import { Button } from "@/components/ui/button";
@@ -9,14 +8,12 @@ import { RevealText } from "@/components/editorial/reveal-text";
 import { Glide } from "@/components/editorial/glide";
 import { ScrollSpotlight } from "@/components/editorial/scroll-spotlight";
 import { formatPrice, monthlyPlans, priceRanges, rangeLabel, weeksLabel, type MonthlyPlan } from "@/lib/pricing";
-import { getCaseStudy } from "@/content/case-studies";
 import {
   capabilities,
   capabilityPlan,
   capabilityPrices,
   engagements,
   getCapability,
-  selectedWork,
   type Capability,
   type CapabilityId,
 } from "@/content/capabilities";
@@ -25,11 +22,6 @@ import { Faq, type FaqGroup } from "./faq";
 
 // The capabilities page. It keeps the /services address so existing links
 // work; the old service anchors are rewritten in CapabilityScroll.
-
-const work = selectedWork.flatMap(({ slug, capabilities: ids }) => {
-  const study = getCaseStudy(slug);
-  return study ? [{ study, ids, thumbnail: `/images/projects/${slug}/${slug}-thumb.jpg` }] : [];
-});
 
 // The FAQ quotes the published prices (lib/pricing.ts), so it can't drift.
 const smallest = priceRanges.reduce((a, b) => (b.min < a.min ? b : a));
@@ -353,67 +345,23 @@ export default function ServicesPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link
-                    href="/process"
-                    className="group inline-flex w-fit items-center gap-2 text-sm font-medium text-[hsl(var(--color-accent))]"
-                  >
-                    How a project runs
-                    <Arrow className="transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </div>
-              </div>
-            </Container>
-          </Section>
-
-          {/* Selected work */}
-          <Section spacing="lg" className="pt-0 md:pt-0" aria-labelledby="work-heading">
-            <Container>
-              <div className="flex flex-col gap-14 md:gap-10">
-                <AnimatedSection>
-                  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                    <div className="flex flex-col gap-4">
-                      <SectionLabel number="07" label="Work" />
-                      <h2 id="work-heading" className="font-semibold tracking-tight"><RevealText text={"Selected work"} /></h2>
-                      <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
-                        Case studies, and the capabilities each one drew on.
-                      </p>
-                    </div>
+                  <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                    <Link
+                      href="/process"
+                      className="group inline-flex w-fit items-center gap-2 text-sm font-medium text-[hsl(var(--color-accent))]"
+                    >
+                      How a project runs
+                      <Arrow className="transition-transform group-hover:translate-x-1" />
+                    </Link>
                     <Link
                       href="/work"
-                      className="group flex shrink-0 items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-foreground))]"
+                      className="group inline-flex w-fit items-center gap-2 text-sm font-medium text-[hsl(var(--color-accent))]"
                     >
-                      All case studies
+                      See real projects in our case studies
                       <Arrow className="transition-transform group-hover:translate-x-1" />
                     </Link>
                   </div>
-                </AnimatedSection>
-
-                <Separator />
-
-                <ul className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-6 lg:gap-8">
-                  {work.map(({ study, ids, thumbnail }) => (
-                    <li key={study.slug}>
-                      <article>
-                        <Link href={`/work/${study.slug}`} className="group block">
-                          <div className="relative mb-5 aspect-[4/3] overflow-hidden rounded-xl transition-shadow duration-500 group-hover:shadow-2xl">
-                            <Image
-                              src={thumbnail}
-                              alt=""
-                              fill
-                              sizes="(max-width: 768px) 100vw, 33vw"
-                              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                            />
-                          </div>
-                          <h3 className="text-lg font-semibold tracking-tight text-[hsl(var(--color-foreground))] transition-colors group-hover:text-[hsl(var(--color-accent))]">
-                            {study.title}
-                          </h3>
-                          <p className="mt-2 leading-relaxed text-[hsl(var(--color-foreground-muted))]">{study.description}</p>
-                        </Link>
-                        <CapabilityTags ids={ids} label={`Capabilities in ${study.title}`} className="mt-4" />
-                      </article>
-                    </li>
-                  ))}
-                </ul>
+                </div>
               </div>
             </Container>
           </Section>
@@ -424,7 +372,7 @@ export default function ServicesPage() {
               <div className="flex flex-col gap-14 md:gap-10">
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
-                    <SectionLabel number="08" label="Plans" />
+                    <SectionLabel number="07" label="Plans" />
                     <h2 id="plans" className="scroll-mt-8 font-semibold tracking-tight"><RevealText text={"Monthly plans"} /></h2>
                     <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
                       One monthly price for ongoing work. Pick the plan that fits, and pause or cancel any time.
@@ -483,7 +431,7 @@ export default function ServicesPage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
                 <div className="lg:col-span-4">
                   <AnimatedSection className="lg:sticky lg:top-28 flex flex-col gap-4">
-                    <SectionLabel number="09" label="FAQ" />
+                    <SectionLabel number="08" label="FAQ" />
                     <h2 id="faq-heading" className="font-semibold tracking-tight"><RevealText text={"Common questions"} /></h2>
                     <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
                       Straight answers on pricing, plans and how we work together.
