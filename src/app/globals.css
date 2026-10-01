@@ -2286,9 +2286,13 @@ html.intro-delay .hero-in {
   html.site.js [data-reveal="count"][data-in] .count-up-num::after {
     animation-play-state: running;
   }
-  /* In the hero, count as the figures rise into place. */
+  /* In the hero, count as the figures rise into place. They start with the
+     hero's entrance rather than when scrolled to: on a phone the figures sit
+     near the bottom edge and were marked in view late, so they waited on 0
+     after appearing. */
   html.site.js .hero-in .count-up-num::after {
     --count-delay: calc(var(--hero-delay, 0s) + 400ms);
+    animation-play-state: running;
   }
   html.site.js.intro-delay .hero-in .count-up-num::after {
     --count-delay: calc(var(--hero-delay, 0s) + 2.5s);

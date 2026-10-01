@@ -19,6 +19,23 @@ test.describe("logo intro", () => {
     await expect.poll(() => classes(page)).not.toMatch(/logo-intro|intro-delay/);
   });
 
+  test.describe("on a short phone screen", () => {
+    test.use({ viewport: { width: 375, height: 629 } });
+
+    // The hero figures sit near the bottom edge there. They used to wait to be
+    // marked in view, which happened only once they rose in after the intro,
+    // and then they sat on 0 for the whole intro delay (2.9s on an iPhone mini).
+    test("the hero figures count with the entrance, not when scrolled to", async ({ page }) => {
+      await page.goto("/", { waitUntil: "load" });
+      // Well inside the 3s intro, so a counter still waiting to be seen fails.
+      await expect
+        .poll(() => page.evaluate(() => document.getAnimations().find((a) => a.animationName === "count-up")?.playState), {
+          timeout: 1_000,
+        })
+        .toBe("running");
+    });
+  });
+
   test("other pages draw the header logo in place", async ({ page }) => {
     await page.goto("/about", { waitUntil: "domcontentloaded" });
     const onLoad = await classes(page);
