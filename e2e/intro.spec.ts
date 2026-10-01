@@ -29,7 +29,7 @@ test.describe("logo intro", () => {
       await page.goto("/", { waitUntil: "load" });
       // Well inside the 3s intro, so a counter still waiting to be seen fails.
       await expect
-        .poll(() => page.evaluate(() => document.getAnimations().find((a) => a.animationName === "count-up")?.playState), {
+        .poll(() => page.evaluate(() => document.getAnimations().find((a) => a instanceof CSSAnimation && a.animationName === "count-up")?.playState), {
           timeout: 1_000,
         })
         .toBe("running");

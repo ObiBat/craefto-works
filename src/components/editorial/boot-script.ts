@@ -11,6 +11,11 @@
  *    with reduced motion): html.logo-intro draws the header logo in place; on
  *    the home page html.logo-intro-home runs the full construction intro
  *    instead, and html.intro-delay holds the hero until the veil opens.
+ * 5. Counters (<AnimatedCounter>) count in CSS, but Safari doesn't redraw a
+ *    counter() whose value is animated, so the figures sat on 0 and then
+ *    jumped. While one runs, its value is copied to [data-n] each frame,
+ *    which the counter shows instead (see "Counters" in globals.css). It is
+ *    rounded, as Safari reports the animated integer as a decimal.
  */
 export const editorialBootScript = `(function(){
 var d=document.documentElement;
@@ -18,6 +23,7 @@ function mark(){d.classList.toggle('site',!/^\\/admin(\\/|$)/.test(location.path
 mark();window.__cwMarkSite=mark;
 try{if(d.classList.contains('site')&&!matchMedia('(prefers-reduced-motion: reduce)').matches){var h=location.pathname==='/';d.classList.add('logo-intro');if(h)d.classList.add('logo-intro-home','intro-delay');setTimeout(function(){d.classList.remove('logo-intro','logo-intro-home');},h?3100:1750);if(h)setTimeout(function(){d.classList.remove('intro-delay');},6800);}}catch(e){}
 d.classList.add('js');
+document.addEventListener('animationstart',function(e){if(e.animationName!=='count-up')return;var el=e.target,on=true;function tick(){if(!on)return;var n=Math.round(parseFloat(getComputedStyle(el,'::after').getPropertyValue('--count')));if(n===n&&el.getAttribute('data-n')!==String(n))el.setAttribute('data-n',n);requestAnimationFrame(tick);}requestAnimationFrame(tick);el.addEventListener('animationend',function end(a){if(a.animationName!=='count-up')return;on=false;el.removeEventListener('animationend',end);el.removeAttribute('data-n');});});
 if(!('IntersectionObserver' in window)){d.classList.remove('js');return;}
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.setAttribute('data-in','');io.unobserve(e.target);}});},{rootMargin:'0px 0px -12% 0px',threshold:0});
 function watch(el){if(!el.hasAttribute('data-in')&&!el.__cw){el.__cw=1;io.observe(el);}}

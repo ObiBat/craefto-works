@@ -244,7 +244,8 @@ export function AnimatedCounter({
       <span className="sr-only">{`${prefix}${value}${suffix}`}</span>
       <span aria-hidden="true">
         {prefix}
-        <span className="count-up-num">
+        {/* The boot script sets data-n here while it counts. */}
+        <span className="count-up-num" suppressHydrationWarning>
           <span className="count-up-value">{value}</span>
         </span>
         {suffix}

@@ -2286,6 +2286,11 @@ html.intro-delay .hero-in {
   html.site.js [data-reveal="count"][data-in] .count-up-num::after {
     animation-play-state: running;
   }
+  /* While counting, show the value the boot script copies each frame:
+     Safari doesn't redraw the animated counter() itself. */
+  html.site.js .count-up-num[data-n]::after {
+    content: attr(data-n);
+  }
   /* In the hero, count as the figures rise into place. They start with the
      hero's entrance rather than when scrolled to: on a phone the figures sit
      near the bottom edge and were marked in view late, so they waited on 0
