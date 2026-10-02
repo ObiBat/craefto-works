@@ -34,6 +34,27 @@ test.describe("client portal", () => {
     await expect(page.getByText("That link has expired or was already used.")).toBeVisible();
   });
 
+  test("a plan's start page asks for the terms before checkout, offers a call and stays out of search", async ({ page, request }) => {
+    await page.goto("/subscribe/studio");
+    await expect(page.getByRole("heading", { name: "Start your Studio plan" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What's included" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "The plan terms" })).toBeVisible();
+
+    // Paying without agreeing sends nothing: the page explains instead.
+    await page.getByRole("button", { name: "Continue to payment" }).click();
+    await expect(page.getByText("Tick the box to agree to the plan terms first.")).toBeVisible();
+    await expect(page).toHaveURL(/\/subscribe\/studio$/);
+    await expect(page.getByRole("checkbox")).toBeFocused();
+
+    // Or talk first: the Discovery Call, with the plan written in.
+    await expect(page.getByRole("link", { name: "Book a call", exact: true })).toHaveAttribute(
+      "href",
+      /^https:\/\/cal\.com\/craefto\/discovery-call\?.*Studio\+plan/,
+    );
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    expect((await request.get("/subscribe/not-a-plan")).status()).toBe(404);
+  });
+
   test("the checkout return page without a session goes to sign-in", async ({ page }) => {
     await page.goto("/portal/welcome");
     await page.waitForURL(/\/portal\/login$/);

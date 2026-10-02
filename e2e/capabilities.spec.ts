@@ -37,11 +37,11 @@ test.describe("capabilities", () => {
     expect(groups).toEqual(NAMES);
   });
 
-  test("a monthly plan opens the enquiry with the plan filled in", async ({ page }) => {
+  test("a monthly plan opens its start page, and from there the enquiry with the plan filled in", async ({ page }) => {
     await page.goto("/services");
-    // Subscribing goes to Stripe Checkout; asking first opens the enquiry.
-    await expect(page.getByRole("button", { name: "Start with Studio" })).toBeVisible();
-    await page.locator('a[href="/contact?plan=studio"]').click();
+    await page.locator('li.plan-card a[href="/subscribe/studio"]').click();
+    await page.waitForURL(/\/subscribe\/studio$/);
+    await page.getByRole("link", { name: "Or send us a message", exact: true }).click();
     await page.waitForURL(/\/contact\?plan=studio$/);
     await expect(page.locator("#budget")).toHaveValue("monthly");
     await expect(page.locator("#message")).toHaveValue(/Studio plan/);

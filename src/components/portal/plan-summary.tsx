@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatPrice, monthlyPlans } from "@/lib/pricing";
+import { formatPrice, planById, type PlanInfo } from "@/lib/pricing";
 import { subscriptionLabel, type ClientSubscription } from "@/lib/portal/types";
 import { StatusPill, type Tone } from "./status-pill";
 import { sydneyDate } from "./thread";
@@ -34,7 +34,8 @@ export function PlanSummary({ subscription, children }: { subscription: ClientSu
       </div>
     );
   }
-  const plan = monthlyPlans.find((entry) => entry.id === subscription.plan)!;
+  // A retired plan has a name and price but no card copy.
+  const plan: PlanInfo = planById(subscription.plan) ?? { id: subscription.plan, name: subscription.plan, price: 0 };
   const ended = subscription.status === "canceled";
   const date = subscription.current_period_end ? sydneyDate(subscription.current_period_end) : null;
   return (
@@ -49,7 +50,7 @@ export function PlanSummary({ subscription, children }: { subscription: ClientSu
         <p className="mt-3 font-[family-name:var(--font-heading)] text-4xl font-semibold tracking-tight text-[hsl(var(--color-accent))]">
           {plan.name}
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-[hsl(var(--color-foreground-muted))]">{plan.bestFor}</p>
+        {plan.bestFor && <p className="mt-2 text-sm leading-relaxed text-[hsl(var(--color-foreground-muted))]">{plan.bestFor}</p>}
         <p className="mt-6 flex items-baseline gap-1.5">
           <span className="text-3xl font-semibold tracking-tight tabular-nums">{formatPrice(plan.price)}</span>
           <span className="text-sm text-[hsl(var(--color-foreground-muted))]">/ month</span>
@@ -62,7 +63,7 @@ export function PlanSummary({ subscription, children }: { subscription: ClientSu
       </div>
       <div className="flex flex-col gap-6 p-6">
         <ul className="space-y-3">
-          {plan.includes.map((item) => (
+          {(plan.includes ?? []).map((item) => (
             <li key={item} className="flex gap-3 text-sm text-[hsl(var(--color-foreground))]">
               <Tick />
               {item}

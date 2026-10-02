@@ -6,10 +6,12 @@
  *   node --no-warnings scripts/stripe-setup.mjs --webhook https://www.craefto.com/api/stripe/webhook
  *
  * - A product and a monthly AUD price for each plan in src/lib/pricing.ts,
- *   found again by the price's lookup key (craefto_<plan>_monthly). When a
- *   plan's price changes there, a new price takes over the lookup key and the
- *   old one is archived; existing subscribers keep paying the old price until
- *   they're moved.
+ *   found again by the price's lookup key (craefto_<plan>_monthly). Every
+ *   price also carries craefto_plan metadata. When a plan's price changes
+ *   there, a new price takes over the lookup key and the old one is
+ *   archived; existing subscribers keep paying the old price (still known by
+ *   its metadata) until they're moved. Products of plans no longer in
+ *   pricing.ts are archived, so they can't be bought.
  * - The billing portal clients reach from the site's Billing page: invoices,
  *   card updates, cancelling at the end of the period, and switching plans
  *   (upgrades charged straight away, downgrades from the next renewal).
@@ -78,6 +80,7 @@ for (const plan of monthlyPlans) {
     current.recurring?.interval === "month" &&
     current.product === product.id;
   if (upToDate) {
+    if (price.metadata?.craefto_plan !== plan.id) await stripe.prices.update(price.id, { metadata: { craefto_plan: plan.id } });
     console.log(`${plan.name}: A$${plan.price} a month, up to date (${price.id})`);
   } else {
     price = await stripe.prices.create({
@@ -88,13 +91,26 @@ for (const plan of monthlyPlans) {
       // Listed prices are before GST (none is charged until Craefto registers).
       tax_behavior: "exclusive",
       nickname: `${plan.name} monthly`,
+      metadata: { craefto_plan: plan.id },
       lookup_key: lookupKey,
       transfer_lookup_key: true,
     });
-    if (current?.active) await stripe.prices.update(current.id, { active: false });
+    // The old price keeps its plan in metadata for anyone still paying it.
+    if (current) await stripe.prices.update(current.id, { active: false, metadata: { craefto_plan: plan.id } });
     console.log(`${plan.name}: A$${plan.price} a month (${price.id})${current ? `, replacing ${current.id}` : ""}`);
   }
   portalProducts.push({ product: product.id, prices: [price.id] });
+}
+
+// Plans no longer offered: archive their products and prices (subscribers
+// already on them carry on until moved).
+for (const product of products) {
+  const plan = product.metadata?.craefto_plan;
+  if (!plan || monthlyPlans.some((entry) => entry.id === plan) || !product.active) continue;
+  const prices = (await stripe.prices.list({ product: product.id, active: true, limit: 100 })).data;
+  for (const price of prices) await stripe.prices.update(price.id, { active: false, metadata: { craefto_plan: plan } });
+  await stripe.products.update(product.id, { active: false });
+  console.log(`${product.name}: retired (archived ${prices.length} price${prices.length === 1 ? "" : "s"})`);
 }
 
 // ── Billing portal ────────────────────────────────────────────────────────

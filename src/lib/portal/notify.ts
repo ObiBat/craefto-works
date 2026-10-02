@@ -1,6 +1,6 @@
 import "server-only";
 import { EMAIL_FROM, isEmailEnabled, resend } from "@/lib/resend";
-import { formatPrice, monthlyPlans } from "@/lib/pricing";
+import { formatPrice, planById } from "@/lib/pricing";
 import * as emails from "@/emails/portal";
 import { formatBytes } from "./file-rules";
 import { REQUEST_STATUSES, type ClientAccount, type ClientFile, type ClientMessage, type ClientRequest, type ClientSubscription } from "./types";
@@ -12,8 +12,8 @@ import { REQUEST_STATUSES, type ClientAccount, type ClientFile, type ClientMessa
 /** Where portal alerts go, and where clients' replies land. */
 export const CRAEFTO_INBOX = process.env.PORTAL_ALERTS_EMAIL || "obi@craefto.com";
 
-export const planName = (plan: string) => monthlyPlans.find((entry) => entry.id === plan)?.name ?? plan;
-const planPrice = (plan: string) => monthlyPlans.find((entry) => entry.id === plan)?.price;
+export const planName = (plan: string) => planById(plan)?.name ?? plan;
+const planPrice = (plan: string) => planById(plan)?.price;
 
 const dateLabel = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "Australia/Sydney" }) : null;

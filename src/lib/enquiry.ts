@@ -62,9 +62,9 @@ export const ENQUIRY_PRESELECT: Record<string, string> = {
 
 /** /contact?plan=… to the plan, and the project type it usually concerns. */
 export const PLAN_PROJECT_TYPE: Record<MonthlyPlan["id"], string> = {
+  essential: "",
   studio: "",
-  media: "media",
-  growth: "growth",
+  partner: "",
 };
 
 export function enquiryPlan(id: string | null): MonthlyPlan | undefined {

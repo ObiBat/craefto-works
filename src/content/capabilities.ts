@@ -3,7 +3,7 @@
 // Related work points at real case studies (content/case-studies.ts) and
 // says only what those pages show. Prices come from lib/pricing.ts.
 
-import { combinedRange, monthlyPlans, priceRanges, type MonthlyPlan, type PriceRange, type ServiceKey } from "@/lib/pricing";
+import { combinedRange, priceRanges, type PriceRange, type ServiceKey } from "@/lib/pricing";
 
 export type CapabilityId = "brand" | "product" | "systems" | "media" | "growth";
 
@@ -23,8 +23,6 @@ export interface Capability {
   work: { slug: string; project: string; detail: string }[];
   /** Published price ranges this capability covers. */
   pricing: ServiceKey[];
-  /** The monthly plan that suits ongoing work of this kind. */
-  plan: MonthlyPlan["id"];
 }
 
 export const capabilities: Capability[] = [
@@ -51,7 +49,6 @@ export const capabilities: Capability[] = [
       { slug: "mng-steel", project: "MNG Steel", detail: "A brand mark generated in light, dark and mono variants." },
     ],
     pricing: ["brand"],
-    plan: "studio",
   },
   {
     id: "product",
@@ -76,7 +73,6 @@ export const capabilities: Capability[] = [
       { slug: "tactix", project: "TACTIX", detail: "A 3D chess learning platform with interactive lessons." },
     ],
     pricing: ["web", "product"],
-    plan: "studio",
   },
   {
     id: "systems",
@@ -101,7 +97,6 @@ export const capabilities: Capability[] = [
       { slug: "artisan", project: "Artisan", detail: "A Supabase backend with 40 SQL functions and an operations dashboard." },
     ],
     pricing: ["ai", "tools"],
-    plan: "studio",
   },
   {
     id: "media",
@@ -126,7 +121,6 @@ export const capabilities: Capability[] = [
       { slug: "globfam", project: "GlobFam", detail: "Animated logo variants and a motion language of reusable animation components." },
     ],
     pricing: ["photo", "video"],
-    plan: "media",
   },
   {
     id: "growth",
@@ -151,7 +145,6 @@ export const capabilities: Capability[] = [
       { slug: "artisan", project: "Artisan", detail: "A bilingual marketing site with SEO and a live Founding-100 counter." },
     ],
     pricing: ["landing", "seo"],
-    plan: "growth",
   },
 ];
 
@@ -169,10 +162,6 @@ export function capabilityPrice(capability: Capability): PriceRange | null {
 /** The published price rows for a capability, in table order. */
 export function capabilityPrices(capability: Capability): PriceRange[] {
   return priceRanges.filter((range) => capability.pricing.includes(range.service));
-}
-
-export function capabilityPlan(capability: Capability): MonthlyPlan | undefined {
-  return monthlyPlans.find((plan) => plan.id === capability.plan);
 }
 
 /** How capabilities combine. Illustrative, not past projects. */

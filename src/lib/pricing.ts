@@ -1,11 +1,18 @@
 // Published prices: the one source for the prices in each capability and
 // the monthly plans on /services, and for the contact form's budget hint.
-// AUD, excluding GST. Set in September 2026 against Australian market rates:
-// projects sit below typical agency ranges, since AI-assisted production
-// shortens the routine work; the monthly plans are fuller bundles, priced at
-// mid-market retainer levels. Change prices here.
-
-import type { CapabilityId } from "@/content/capabilities";
+// AUD, before GST. Project prices were set in September 2026 against
+// Australian market rates, below typical agency ranges since AI-assisted
+// production shortens the routine work. Change prices here.
+//
+// The monthly plans (October 2026) are sold by budget, not by discipline:
+// Essential, Studio and Partner each reserve studio time across all five
+// capabilities, and priorities are agreed within that budget. AI Automation
+// is a one-off custom project at the "ai" price range above. Benchmarks
+// (advertised, checked 1 October 2026; scope and staffing differ): Graphiker
+// $1,190-$3,490/month design subscriptions; SLICK from $3,990/month; ID
+// Digital 30 hours/month at $6,500-$7,300 (2024-25 rate card); Kursol AI
+// implementation $1,750/month for 5 hours. At these allowances revenue is
+// about $190-$200 a delivery hour before costs.
 
 export type ServiceKey = "brand" | "web" | "product" | "ai" | "tools" | "photo" | "video" | "landing" | "seo";
 
@@ -33,63 +40,89 @@ export const priceRanges: PriceRange[] = [
 ];
 
 export interface MonthlyPlan {
-  id: "media" | "growth" | "studio";
+  id: "essential" | "studio" | "partner";
   name: string;
-  /** AUD a month, excluding GST. */
+  /** AUD a month, before GST. */
   price: number;
+  /** Studio time reserved each month (planning, revisions, testing and meetings included). */
+  hours: number;
   /** Who it suits, in one short line. */
   bestFor: string;
-  /** The capabilities it draws on (content/capabilities.ts). */
-  capabilities: CapabilityId[];
   /** The headline inclusions. */
   includes: string[];
 }
 
 /**
- * Subscriptions for ongoing work, billed monthly in advance, each drawing on
- * several capabilities. Larger sizes are quoted on request.
+ * Monthly plans: a budget ladder, each drawing on all five capabilities and
+ * billed monthly in advance. Scope is agreed before a plan starts.
  */
 export const monthlyPlans: MonthlyPlan[] = [
   {
-    id: "media",
-    name: "Media",
-    price: 2400,
-    bestFor: "For brands that need fresh content every month, from shoots to motion design.",
-    capabilities: ["media", "brand", "growth"],
-    includes: [
-      "1\u20132 half-day shoots a month, people or products",
-      "Photo and video editing, ready to publish",
-      "Motion design and marketing videos",
-      "Cuts sized for web, social and ads",
-    ],
-  },
-  {
-    id: "growth",
-    name: "Growth",
-    price: 2900,
-    bestFor: "For businesses that want more enquiries from their website.",
-    capabilities: ["growth", "product", "media", "brand"],
-    includes: [
-      "A campaign and landing page each month",
-      "SEO improvements and on-brand campaign creative",
-      "Tracking and data capture across your site",
-      "Data analysis and a monthly report",
-    ],
+    id: "essential",
+    name: "Essential",
+    price: 1900,
+    hours: 10,
+    bestFor: "For small businesses with a foundation in place and a short list of improvements.",
+    includes: ["10 hours of studio time a month", "One active task at a time", "Monthly planning", "Estimates agreed before we start"],
   },
   {
     id: "studio",
     name: "Studio",
-    price: 4900,
-    bestFor: "For teams that need design and development on call.",
-    capabilities: ["brand", "product", "systems", "media", "growth"],
+    price: 3900,
+    hours: 20,
+    bestFor: "For consistent work across your website, brand, content and systems.",
+    includes: ["20 hours of studio time a month", "One active workstream", "Fortnightly planning", "Shift priorities month to month"],
+  },
+  {
+    id: "partner",
+    name: "Partner",
+    price: 6900,
+    hours: 35,
+    bestFor: "For teams with a sustained roadmap and more to deliver.",
     includes: [
-      "Unlimited requests",
-      "Work across all five capabilities",
-      "Hosting care for what we build",
-      "Deliveries every few business days",
+      "35 hours of studio time a month",
+      "Milestones coordinated across design, development and content",
+      "Weekly planning",
+      "Larger work delivered in stages",
     ],
   },
 ];
+
+/** The one-off custom project for AI and automation, priced as the "ai" range above. */
+export const aiAutomationProject = {
+  name: "AI Automation",
+  service: "ai" as ServiceKey,
+  bestFor: "For businesses ready to take repetitive work off their team.",
+  includes: [
+    "We start with one workflow and measure the time it saves",
+    "Built, tested and handed over to you",
+    "A fixed price agreed before we start",
+    "AI and software running costs billed to you directly",
+  ],
+};
+
+/**
+ * Plans no longer offered, so subscriptions still on them read properly in
+ * the portal and admin.
+ */
+const retiredPlans: PlanInfo[] = [
+  { id: "media", name: "Media", price: 2400 },
+  { id: "growth", name: "Growth", price: 2900 },
+];
+
+/** A plan as stored on a subscription: current plans in full, retired ones by name and price. */
+export type PlanInfo = Omit<Partial<MonthlyPlan>, "id"> & { id: string; name: string; price: number };
+
+/** A plan by id, current or retired. */
+export function planById(id: string): PlanInfo | undefined {
+  return monthlyPlans.find((plan) => plan.id === id) ?? retiredPlans.find((plan) => plan.id === id);
+}
+
+/** The ids Stripe prices and subscriptions may carry: current and retired plans. */
+export const knownPlanIds: string[] = [...monthlyPlans, ...retiredPlans].map((plan) => plan.id);
+
+/** The lowest monthly plan price, for "from" lines. */
+export const plansFrom = Math.min(...monthlyPlans.map((plan) => plan.price));
 
 export function priceFor(service: string): PriceRange | undefined {
   return priceRanges.find((range) => range.service === service);

@@ -13,8 +13,8 @@ import { Glide } from "@/components/editorial/glide";
 import { formatPrice, monthlyPlans } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
-// The monthly plans, named under the capabilities: "Media, Growth and Studio,
-// from A$2,400 a month". Prices and plans live in lib/pricing.ts. The names
+// The monthly plans, named under the capabilities: "Essential, Studio and
+// Partner, from A$1,900 a month". Prices and plans live in lib/pricing.ts. The names
 // are joined by hand: Intl.ListFormat gives "Growth and Studio" in Node but
 // "Growth, and Studio" in Safari, and that mismatch broke hydration.
 const planNames = monthlyPlans.map((plan) => plan.name);

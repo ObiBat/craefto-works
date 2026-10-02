@@ -1,6 +1,6 @@
 import "server-only";
 import { createServerClient } from "@/lib/supabase";
-import { monthlyPlans } from "@/lib/pricing";
+import { planById } from "@/lib/pricing";
 import { isLive, type ClientAccount, type ClientFile, type ClientMeeting, type ClientMessage, type ClientRequest, type ClientSubscription } from "./types";
 
 // Reads for the admin's Members screens (service role; the admin API is
@@ -49,7 +49,7 @@ export async function membersOverview(): Promise<MembersOverview> {
     const own = ((subscriptions.data ?? []) as ClientSubscription[]).filter((row) => row.account_id === account.id);
     const theirRequests = (requests.data ?? []).filter((row) => row.account_id === account.id);
     const threads = [...latest].filter(([thread]) => thread.startsWith(`${account.id}:`)).map(([, message]) => message);
-    for (const running of own.filter(isLive)) monthly += monthlyPlans.find((plan) => plan.id === running.plan)?.price ?? 0;
+    for (const running of own.filter(isLive)) monthly += planById(running.plan)?.price ?? 0;
     const times = [account.created_at, ...theirRequests.map((row) => row.updated_at), ...threads.map((message) => message.created_at)];
     return {
       account,

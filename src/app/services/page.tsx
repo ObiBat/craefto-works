@@ -4,15 +4,13 @@ import { Header, Footer, Container, Section } from "@/components/layout";
 import { Separator, PageTransition, AnimatedSection, HeroText, SectionLabel } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { chargesGst } from "@/lib/stripe";
-import { CheckoutButton } from "./checkout-button";
 import { cn } from "@/lib/utils";
 import { RevealText } from "@/components/editorial/reveal-text";
 import { Glide } from "@/components/editorial/glide";
 import { ScrollSpotlight } from "@/components/editorial/scroll-spotlight";
-import { formatPrice, monthlyPlans, priceRanges, rangeLabel, weeksLabel, type MonthlyPlan } from "@/lib/pricing";
+import { aiAutomationProject, formatPrice, monthlyPlans, plansFrom, priceFor, priceRanges, rangeLabel, weeksLabel, type MonthlyPlan } from "@/lib/pricing";
 import {
   capabilities,
-  capabilityPlan,
   capabilityPrices,
   engagements,
   getCapability,
@@ -41,16 +39,20 @@ const faqGroups: FaqGroup[] = [
         answer: `Most projects fall between ${formatPrice(smallest.min)} (${midSentence(smallest.label)}) and ${formatPrice(largest.max)} (${midSentence(largest.label)}), and each capability lists its prices above. We give you a fixed price before any work begins. For ongoing work, a monthly plan is usually simpler.`,
       },
       {
-        question: "Why are your prices lower than most agencies?",
-        answer: "We use AI for the repetitive parts of the work, such as first drafts, boilerplate code, image clean-up and rough cuts, and spend our time on the decisions and the finish. Every piece is still directed and checked by us, and you get the same fixed price before work begins.",
+        question: "How do you decide what gets done each month?",
+        answer: "Together, within the budget you\u2019ve chosen. You add ideas and requests to a shared, prioritised work queue; at each planning session we agree what matters most and estimate it before we start. What fits this month gets done this month, and larger work spans several months with the total estimated upfront.",
       },
       {
         question: "Which monthly plan do I need?",
-        answer: "Media for fresh content, from shoots to motion design; Growth for more enquiries from your website, with the data to show what works; and Studio for work across every capability, with design and development on call. Plans can be combined, and if you\u2019re unsure, tell us what you\u2019re working on and we\u2019ll suggest one.",
+        answer: "Choose the support you can budget for. Essential suits a short list of improvements, Studio suits consistent work across your website, brand, content and systems, and Partner suits a sustained roadmap. All three draw on all five capabilities; the difference is how much studio time you reserve and how closely we plan together. If you\u2019re unsure, tell us what you\u2019re working on and we\u2019ll suggest one.",
       },
       {
         question: "How do monthly plans work?",
-        answer: "Each plan covers the work on its card, every month. Studio runs on unlimited requests: send them whenever you like. Media and Growth are planned with you each month. Plans are billed monthly in advance, come in larger sizes on request, and can be paused or cancelled before your next billing date.",
+        answer: "Each plan reserves studio time every month: 10 hours on Essential, 20 on Studio and 35 on Partner. That time covers planning, revisions, testing and meetings as well as the work itself, and we agree estimates before starting anything. Advertising, software, AI usage, hosting and production costs (including shoot preparation, travel and editing) are budgeted separately. Plans are billed monthly in advance.",
+      },
+      {
+        question: "What happens if we stop?",
+        answer: "Cancelling takes effect at your next renewal. Work that\u2019s complete and paid for is yours, and we hand over the accounts we\u2019ve set up for you. If we built automations, we agree who looks after them, and their running costs stay with your accounts.",
       },
       {
         question: "How does payment work?",
@@ -75,7 +77,7 @@ const faqGroups: FaqGroup[] = [
       },
       {
         question: "Do you support the project after launch?",
-        answer: "Yes. Every project includes 30 days of post launch support. After that, the Studio plan covers fixes, updates and new work.",
+        answer: "Yes. Every project includes 30 days of post launch support. After that, any monthly plan covers fixes, updates and new work.",
       },
       {
         question: "What technologies do you use?",
@@ -99,11 +101,32 @@ function PlanHead({ plan, copy = false }: { plan: MonthlyPlan; copy?: boolean })
   return (
     <>
       {copy ? name : <h3>{name}</h3>}
-      <p className="plan-for mt-2 text-sm leading-relaxed md:min-h-[2lh]">{plan.bestFor}</p>
+      <p className="plan-for mt-2 text-sm leading-relaxed md:min-h-[3lh] xl:min-h-[2lh]">{plan.bestFor}</p>
       <p className="mt-6 flex items-baseline gap-1.5">
         <span className="plan-price text-3xl font-semibold tracking-tight tabular-nums">{formatPrice(plan.price)}</span>
         <span className="plan-per text-sm">/ month</span>
       </p>
+    </>
+  );
+}
+
+/** The AI Automation project's header, laid out like a plan's. The copy, laid over it, is decoration: no heading. */
+function ProjectHead({ copy = false }: { copy?: boolean }) {
+  const range = priceFor(aiAutomationProject.service)!;
+  const name = <span className="plan-name block text-4xl font-semibold tracking-tight">{aiAutomationProject.name}</span>;
+  return (
+    <>
+      <p className="mb-3">
+        <span className="plan-label inline-flex rounded-full px-2.5 py-1 font-mono text-[0.6875rem] uppercase leading-none tracking-[0.06em]">
+          One-off project
+        </span>
+      </p>
+      {copy ? name : <h3>{name}</h3>}
+      <p className="plan-for mt-2 text-sm leading-relaxed">{aiAutomationProject.bestFor}</p>
+      <p className="mt-6">
+        <span className="plan-price text-3xl font-semibold tracking-tight tabular-nums">{rangeLabel(range)}</span>
+      </p>
+      <p className="plan-per mt-1 text-sm">Fixed price, {weeksLabel(range)}</p>
     </>
   );
 }
@@ -150,7 +173,6 @@ function CapabilityTags({ ids, label, className }: { ids: CapabilityId[]; label:
 }
 
 function CapabilityDetail({ capability }: { capability: Capability }) {
-  const plan = capabilityPlan(capability);
   return (
     <section aria-labelledby={capability.id} className="capability grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
       <AnimatedSection className="lg:col-span-5">
@@ -185,15 +207,13 @@ function CapabilityDetail({ capability }: { capability: Capability }) {
               </li>
             ))}
           </ul>
-          {plan && (
-            <a
-              href="#plans"
-              className="group mt-5 inline-flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-accent))]"
-            >
-              Or monthly: {plan.name}, {formatPrice(plan.price)} a month
-              <Arrow className="transition-transform group-hover:translate-x-1" />
-            </a>
-          )}
+          <a
+            href="#plans"
+            className="group mt-5 inline-flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-accent))]"
+          >
+            Or ongoing, on a monthly plan from {formatPrice(plansFrom)} a month
+            <Arrow className="transition-transform group-hover:translate-x-1" />
+          </a>
         </div>
       </AnimatedSection>
 
@@ -276,7 +296,7 @@ export default function ServicesPage() {
               </div>
 
               <HeroText delay={0.3}>
-                <nav aria-label="Capabilities on this page" className="mt-14 md:mt-20">
+                <nav id="capabilities" aria-label="Capabilities on this page" className="mt-14 scroll-mt-8 md:mt-20">
                   <Glide bleed={16}>
                     <ol>
                       {capabilities.map((capability) => (
@@ -368,7 +388,7 @@ export default function ServicesPage() {
             </Container>
           </Section>
 
-          {/* Monthly plans (lib/pricing.ts) */}
+          {/* Monthly plans and the AI Automation project (lib/pricing.ts) */}
           <Section spacing="lg" className="pt-0 md:pt-0" aria-labelledby="plans">
             <Container>
               <div className="flex flex-col gap-14 md:gap-10">
@@ -377,7 +397,7 @@ export default function ServicesPage() {
                     <SectionLabel number="07" label="Plans" />
                     <h2 id="plans" className="scroll-mt-8 font-semibold tracking-tight"><RevealText text={"Monthly plans"} /></h2>
                     <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
-                      One monthly price for ongoing work. Pick the plan that fits, and pause or cancel any time.
+                      Choose the support you can budget for each month. Every plan draws on all five capabilities, and we help you decide where that budget will have the most impact.
                     </p>
                   </div>
                 </AnimatedSection>
@@ -403,9 +423,21 @@ export default function ServicesPage() {
                             </li>
                           ))}
                         </ul>
-                        <CapabilityTags ids={plan.capabilities} label={`Capabilities in ${plan.name}`} className="mt-6" />
+                        <p className="mt-6">
+                          <a
+                            href="#capabilities"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--color-background-muted))] px-3 py-1.5 text-xs font-medium text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-accent))]"
+                          >
+                            <span className="font-mono text-[hsl(var(--color-accent))]" aria-hidden="true">
+                              01&ndash;05
+                            </span>
+                            All five capabilities
+                          </a>
+                        </p>
                         <div className="mt-auto pt-8">
-                          <CheckoutButton plan={plan.id} name={plan.name} />
+                          <Button asChild size="md" className="w-full">
+                            <Link href={`/subscribe/${plan.id}`}>Choose this plan</Link>
+                          </Button>
                         </div>
                       </div>
                     </li>
@@ -414,8 +446,36 @@ export default function ServicesPage() {
                 {/* Phones can't hover: there the plan in mid-screen lights up instead. */}
                 <ScrollSpotlight selector=".plan-card" media="(hover: none) and (max-width: 767px)" />
 
+                {/* A one-off project rather than a plan. It lights up like the plans (a plan-card). */}
+                <AnimatedSection>
+                  <div className="plan-card grid rounded-3xl bg-[hsl(var(--color-background-subtle))] p-2 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+                    <div className="plan-card-head rounded-[1.25rem] bg-[hsl(var(--color-accent-subtle))] px-6 pt-6 pb-7 md:px-8 md:pt-8">
+                      <ProjectHead />
+                      {/* The same header in white on green, uncovered while the card is on. */}
+                      <div className="plan-card-flood px-6 pt-6 pb-7 md:px-8 md:pt-8" aria-hidden="true">
+                        <ProjectHead copy />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-8 p-6 md:p-8">
+                      <ul className="space-y-3">
+                        {aiAutomationProject.includes.map((item, index) => (
+                          <li key={item} className="flex gap-3 text-sm text-[hsl(var(--color-foreground))]">
+                            <Tick index={index} />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-auto">
+                        <Button asChild size="md">
+                          <Link href="/contact?service=ai">Discuss your project</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </AnimatedSection>
+
                 <p className="text-sm text-[hsl(var(--color-foreground-muted))] max-w-2xl">
-                  Billed monthly in advance, in AUD{chargesGst() ? " excluding GST" : ""}. Larger sizes on request, and plans can be combined. Not sure which fits?{" "}
+                  Monthly plans are billed in advance, in AUD{chargesGst() ? " excluding GST" : ""}. Studio time covers planning, revisions, testing and meetings, and we estimate each piece of work before starting. Advertising, software, AI usage, hosting and production costs are budgeted separately. Prefer a single fixed-price project?{" "}
                   <Link href="/contact" className="font-medium text-[hsl(var(--color-accent))] hover:underline">
                     Tell us what you&apos;re working on
                   </Link>

@@ -829,6 +829,16 @@ img {
 .plan-card-head {
   position: relative;
 }
+/* A small label in a card's header (the AI Automation project's), pale on
+   the tint and white once the green covers it. */
+.plan-label {
+  background: hsl(var(--color-background));
+  color: hsl(var(--color-accent));
+}
+.plan-card-flood .plan-label {
+  background: rgb(255 255 255 / 0.16);
+  color: #fff;
+}
 .plan-card-flood {
   position: absolute;
   inset: 0;

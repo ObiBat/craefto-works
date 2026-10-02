@@ -5,6 +5,9 @@ import { Header, Footer, Container, Section } from "@/components/layout";
 import { PageTransition, AnimatedSection, HeroText } from "@/components/ui";
 import { Separator } from "@/components/ui/separator";
 import { RevealText } from "@/components/editorial/reveal-text";
+import { planTerms } from "@/content/plan-terms";
+import { monthlyPlans } from "@/lib/pricing";
+import { chargesGst } from "@/lib/stripe";
 
 export const metadata: Metadata = pageMetadata({
   title: "Terms of Service",
@@ -75,8 +78,18 @@ const sections: SectionData[] = [
     title: "Payment Terms",
     content: [
       {
-        text: "Payment terms will be specified in your project proposal. Typically, we require a deposit before work begins, with remaining payments due at agreed milestones or upon project completion. Late payments may result in work suspension and may incur additional fees. All fees are non-refundable once work has commenced, except as otherwise specified.",
+        text: "Payment terms will be specified in your project proposal. Typically, we require a deposit before work begins, with remaining payments due at agreed milestones or upon project completion. Late payments may result in work suspension and may incur additional fees. All fees are non-refundable once work has commenced, except as otherwise specified. Monthly plans are billed monthly in advance, as set out under Monthly Plans.",
       },
+    ],
+  },
+  {
+    id: "monthly-plans",
+    title: "Monthly Plans",
+    content: [
+      {
+        text: `These terms apply to our monthly plans (${monthlyPlans.map((plan) => plan.name).join(", ").replace(/, ([^,]*)$/, " and $1")}) alongside the rest of these Terms of Service. You agree to them when you start a plan.`,
+      },
+      ...planTerms(chargesGst()).map(({ title, text }) => ({ subtitle: title, text })),
     ],
   },
   {
@@ -167,7 +180,7 @@ export default function TermsPage() {
                 </HeroText>
                 <HeroText delay={0.3}>
                   <p className="text-sm text-[hsl(var(--color-foreground-subtle))] mt-6">
-                    Last updated: January 2026
+                    Last updated: October 2026
                   </p>
                 </HeroText>
               </div>

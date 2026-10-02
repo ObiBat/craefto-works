@@ -1,6 +1,6 @@
 import "server-only";
 import Stripe from "stripe";
-import { monthlyPlans, type MonthlyPlan } from "@/lib/pricing";
+import { knownPlanIds, monthlyPlans, type MonthlyPlan } from "@/lib/pricing";
 
 // Stripe for the monthly plans: Checkout to subscribe, webhooks to keep each
 // client's subscription in sync, and Stripe's billing portal for invoices,
@@ -39,9 +39,14 @@ export async function planPrice(plan: PlanId): Promise<Stripe.Price> {
 }
 
 /** The plan a Stripe price belongs to, from its lookup key. */
-export function planForPrice(price: Stripe.Price | null | undefined): PlanId | null {
-  const match = price?.lookup_key?.match(/^craefto_(\w+)_monthly$/);
-  return match && isPlanId(match[1]) ? match[1] : null;
+/**
+ * The plan a Stripe price belongs to: by its lookup key, or else its
+ * craefto_plan metadata (a price that's been replaced loses the lookup key,
+ * and subscribers on it keep it). Retired plans count too.
+ */
+export function planForPrice(price: Stripe.Price | null | undefined): string | null {
+  const id = price?.lookup_key?.match(/^craefto_(\w+)_monthly$/)?.[1] ?? price?.metadata?.craefto_plan;
+  return id && knownPlanIds.includes(id) ? id : null;
 }
 
 /**

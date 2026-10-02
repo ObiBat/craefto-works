@@ -48,6 +48,26 @@ test.describe("interactions", () => {
     }
   });
 
+  test("the AI Automation project lights up like the plans", async ({ page, isMobile }) => {
+    await page.goto("/services");
+    const card = page.locator("div.plan-card", { has: page.getByRole("link", { name: "Discuss your project" }) });
+    const on = () => card.evaluate((el) => getComputedStyle(el).getPropertyValue("--on").trim());
+    await card.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      window.scrollTo(0, window.scrollY + box.top + box.height / 2 - window.innerHeight / 2);
+    });
+
+    if (isMobile) {
+      await expect.poll(on).toBe("1");
+    } else {
+      await page.mouse.move(1, 1);
+      await page.waitForTimeout(300);
+      expect(await on()).toBe("0");
+      await card.hover();
+      await expect.poll(on).toBe("1");
+    }
+  });
+
   test("the capability in the middle of the screen is lit, one at a time", async ({ page }) => {
     await page.goto("/services");
     const sections = page.locator("section.capability");

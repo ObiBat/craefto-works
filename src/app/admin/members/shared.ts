@@ -1,7 +1,7 @@
-import { monthlyPlans } from "@/lib/pricing";
+import { planById } from "@/lib/pricing";
 import { isLive, type ClientSubscription, type RequestStatus } from "@/lib/portal/types";
 
-export const planName = (plan: string) => monthlyPlans.find((entry) => entry.id === plan)?.name ?? plan;
+export const planName = (plan: string) => planById(plan)?.name ?? plan;
 
 /** A plan's badge colour: running, needing attention (ending, unpaid) or over. */
 export function planVariant(subscription: ClientSubscription) {

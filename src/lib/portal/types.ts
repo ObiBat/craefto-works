@@ -1,5 +1,3 @@
-import type { MonthlyPlan } from "@/lib/pricing";
-
 // Rows of the client portal tables (supabase/migrations/014_client_portal.sql).
 
 export interface ClientAccount {
@@ -19,7 +17,8 @@ export interface ClientSubscription {
   account_id: string;
   /** The Stripe customer paying for it (a returning client may have a second). */
   stripe_customer_id: string | null;
-  plan: MonthlyPlan["id"];
+  /** A plan id from lib/pricing.ts, current or retired. */
+  plan: string;
   status: string;
   /** When it renews or ends; for an ended plan, when it ended. */
   current_period_end: string | null;
