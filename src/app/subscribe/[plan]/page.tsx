@@ -10,7 +10,7 @@ import { formatPrice, monthlyPlans } from "@/lib/pricing";
 import { pageMetadata } from "@/lib/seo";
 import { chargesGst } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
-import { BookCall } from "./book-call";
+import { BookCall } from "@/components/book-call";
 import { PlanCheckout } from "./plan-checkout";
 
 // A plan's start page, from its card on /services: review the scope, agree to
@@ -246,7 +246,11 @@ export default async function SubscribePage({ params }: { params: Promise<{ plan
                     you&apos;re ready.
                   </p>
                 </div>
-                <BookCall project={`I'd like to talk about the ${plan.name} plan (${formatPrice(plan.price)} a month).`} />
+                <BookCall
+                  project={`I'd like to talk about the ${plan.name} plan (${formatPrice(plan.price)} a month).`}
+                  bookedNote="Start your plan whenever you're ready."
+                  className="w-full"
+                />
                 <Link
                   href={`/contact?plan=${plan.id}`}
                   className={cn("text-center text-sm transition-colors hover:text-[hsl(var(--color-foreground))]", muted)}

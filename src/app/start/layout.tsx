@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "First time here?",
   description:
-    "Craefto is a small, focused team in Sydney that designs and builds digital products for businesses that care about quality. Here is how we work.",
+    "New to Craefto Works? The short version: who we are, the three ways to work with us and what they cost, what's different, and how to start.",
   path: "/start",
   image: "route",
 });
