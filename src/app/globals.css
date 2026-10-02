@@ -1874,46 +1874,33 @@ html:has([data-subbar][data-scrolled]) .site-header::after {
   }
 }
 
-/* Images unmask as they scroll in: a rounded window opens evenly from the
-   centre while the picture eases back from a light zoom. Both run on one
-   scroll timeline with one gentle in-out easing: soft as the image appears,
-   most of the opening while it's in view, settled just before the middle
-   of the screen. The second of two images side
-   by side follows a beat behind. (Tied to scroll, like the copy.) */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    html.site:not(.sd-fallback) [data-unmask]:not(:is(.overflow-hidden, .overflow-auto, .overflow-scroll, .overflow-x-auto, .overflow-x-hidden, .overflow-x-scroll, .overflow-y-auto, .overflow-y-hidden, .overflow-y-scroll, .sm\:overflow-x-auto) *) {
-      view-timeline-name: --unmask;
-      animation: unmask cubic-bezier(0.37, 0, 0.63, 1) both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 42%;
-    }
-    html.site:not(.sd-fallback) [data-unmask] img {
-      animation: settle cubic-bezier(0.37, 0, 0.63, 1) both;
-      animation-timeline: --unmask;
-      animation-range: entry 0% cover 42%;
-    }
-    html.site:not(.sd-fallback) [data-unmask] + [data-unmask],
-    html.site:not(.sd-fallback) [data-unmask] + [data-unmask] img {
-      animation-range: entry 6% cover 47%;
-    }
+/* Images unveil once, slowly, as they come into view: the rounded frame
+   opens out from a little smaller while the picture settles back from a
+   gentle zoom, fading up as it goes. It runs on its own clock rather than
+   the scroll, so it looks equally calm however fast the page moves, and it
+   animates only transform and opacity, so it stays smooth while the page
+   glides. The second of two images side by side follows a beat behind.
+   The boot script marks it in view; reduced motion shows it at rest. */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal="unmask"] {
+    transition:
+      opacity 1400ms cubic-bezier(0.61, 1, 0.88, 1),
+      transform 2200ms cubic-bezier(0.33, 1, 0.68, 1);
+    transition-delay: var(--unmask-delay, 0ms);
   }
-}
-@keyframes unmask {
-  from {
-    clip-path: inset(9% 7% round 2rem);
+  .js [data-reveal="unmask"] img {
+    transition: transform 2800ms cubic-bezier(0.33, 1, 0.68, 1);
+    transition-delay: var(--unmask-delay, 0ms);
   }
-  to {
-    /* The frame's own rounded corners take over. */
-    clip-path: inset(0);
+  .js [data-reveal="unmask"]:not([data-in]) {
+    opacity: 0;
+    transform: scale(0.92);
   }
-}
-@keyframes settle {
-  from {
-    transform: scale(1.14);
+  .js [data-reveal="unmask"]:not([data-in]) img {
+    transform: scale(1.2);
   }
-  to {
-    transform: none;
+  .js [data-reveal="unmask"] + [data-reveal="unmask"] {
+    --unmask-delay: 180ms;
   }
 }
 
@@ -1962,12 +1949,6 @@ html:has([data-subbar][data-scrolled]) .site-header::after {
   }
   html.sd-fallback [data-sd-fx="marker"][data-sd] {
     animation: marker-on 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
-  }
-  html.sd-fallback [data-sd-fx="unmask"][data-sd] {
-    animation: unmask 1400ms cubic-bezier(0.33, 1, 0.68, 1) both;
-  }
-  html.sd-fallback [data-sd-fx="unmask"][data-sd] img {
-    animation: settle 1400ms cubic-bezier(0.33, 1, 0.68, 1) both;
   }
   html.sd-fallback [data-sd="wait"],
   html.sd-fallback [data-sd="wait"] img {

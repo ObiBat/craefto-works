@@ -196,7 +196,7 @@ function CustomImage({
 }: React.ImgHTMLAttributes<HTMLImageElement>) {
   return (
     <figure className="my-10 md:my-14 max-w-2xl mx-auto">
-      <div data-unmask className="overflow-hidden rounded-lg bg-background-muted">
+      <div data-reveal="unmask" suppressHydrationWarning className="overflow-hidden rounded-lg bg-background-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}

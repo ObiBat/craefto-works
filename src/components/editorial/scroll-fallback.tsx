@@ -6,13 +6,12 @@ import { usePathname } from "next/navigation";
 // Mirrors the scroll-driven rules in globals.css (keep the two in step).
 const CLIP_BOXES = ".overflow-hidden, .overflow-auto, .overflow-scroll, [class*='overflow-x-'], [class*='overflow-y-']";
 const NO_COPY_INSIDE = `li, dd, figcaption, form, nav, [data-ink], [data-no-reveal], ${CLIP_BOXES}`;
-const CANDIDATES = "main p, main dd, main figcaption, main li, [data-ink], .phase-marker, .entry-dot, [data-unmask]";
+const CANDIDATES = "main p, main dd, main figcaption, main li, [data-ink], .phase-marker, .entry-dot";
 
-type Effect = "copy" | "item" | "ink" | "marker" | "unmask";
+type Effect = "copy" | "item" | "ink" | "marker";
 
 function effectFor(el: HTMLElement): Effect | null {
   const insideClipBox = !!el.parentElement?.closest(CLIP_BOXES);
-  if (el.matches("[data-unmask]")) return insideClipBox ? null : "unmask";
   if (el.matches(".phase-marker, .entry-dot")) return "marker";
   if (el.matches("[data-ink]")) return insideClipBox ? null : "ink";
   if (el.matches("[data-no-reveal], [class*='opacity-'], .sr-only") || el.parentElement?.closest(NO_COPY_INSIDE)) return null;
@@ -23,8 +22,9 @@ function effectFor(el: HTMLElement): Effect | null {
 
 /**
  * For browsers without scroll-driven animations (older iOS Safari, some
- * Android browsers): the same text, image and marker effects play once,
- * over time, as each element scrolls into view. Only elements that start
+ * Android browsers): the same text and marker effects play once, over time,
+ * as each element scrolls into view. (Images unveil on their own clock in
+ * every browser: [data-reveal="unmask"] in globals.css.) Only elements that start
  * below the fold take part, so nothing already on screen flickers; it runs
  * after hydration, so the server HTML is never altered.
  */

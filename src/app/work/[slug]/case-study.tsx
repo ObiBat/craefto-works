@@ -341,8 +341,8 @@ export function CaseStudyView({
           ) : (
             <Section spacing="sm">
               <Container>
-                {/* One motion: the scroll-linked unmask ([data-unmask] in globals.css), no timed fade on top. */}
-                <div data-unmask className={cn(mockups ? "mockup-frame aspect-[4/3]" : "aspect-[16/9]", "rounded-xl overflow-hidden relative")}>
+                {/* One motion: the image's own unveil ([data-reveal="unmask"] in globals.css), no section fade on top. */}
+                <div data-reveal="unmask" suppressHydrationWarning className={cn(mockups ? "mockup-frame aspect-[4/3]" : "aspect-[16/9]", "rounded-xl overflow-hidden relative")}>
                   <ProjectImage
                     project={project}
                     src={project.gallery[0]?.src}
@@ -374,9 +374,9 @@ export function CaseStudyView({
           ) : (
             <Section spacing="sm">
               <Container>
-                {/* One motion: the scroll-linked unmask ([data-unmask] in globals.css), no timed fade on top. */}
+                {/* One motion: the image's own unveil ([data-reveal="unmask"] in globals.css), no section fade on top. */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <div data-unmask className="aspect-[4/3] rounded-xl overflow-hidden relative">
+                  <div data-reveal="unmask" suppressHydrationWarning className="aspect-[4/3] rounded-xl overflow-hidden relative">
                     <ProjectImage
                       project={project}
                       src={project.gallery[1]?.src}
@@ -385,7 +385,7 @@ export function CaseStudyView({
                       imageType="gallery"
                     />
                   </div>
-                  <div data-unmask className="aspect-[4/3] rounded-xl overflow-hidden relative">
+                  <div data-reveal="unmask" suppressHydrationWarning className="aspect-[4/3] rounded-xl overflow-hidden relative">
                     {/* Interactive logo for GlobFam, regular image for others */}
                     {project.slug === "globfam" ? (
                       <InteractiveLogo />
@@ -455,9 +455,9 @@ export function CaseStudyView({
           ) : (
             <Section spacing="sm">
               <Container>
-                {/* One motion: the scroll-linked unmask ([data-unmask] in globals.css), no timed fade on top. */}
+                {/* One motion: the image's own unveil ([data-reveal="unmask"] in globals.css), no section fade on top. */}
                 {mockups && project.gallery[3] ? (
-                  <div data-unmask className="mockup-frame aspect-[4/3] rounded-xl overflow-hidden relative">
+                  <div data-reveal="unmask" suppressHydrationWarning className="mockup-frame aspect-[4/3] rounded-xl overflow-hidden relative">
                     <ProjectImage
                       project={project}
                       src={project.gallery[3].src}
@@ -467,7 +467,7 @@ export function CaseStudyView({
                     />
                   </div>
                 ) : (
-                  <div data-unmask className="aspect-[21/9] rounded-xl overflow-hidden relative">
+                  <div data-reveal="unmask" suppressHydrationWarning className="aspect-[21/9] rounded-xl overflow-hidden relative">
                     <ProjectImage
                       project={project}
                       src={project.heroImage}
