@@ -299,17 +299,16 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
           ) : (
             <Section spacing="sm">
               <Container>
-                <AnimatedSection variant="scaleIn">
-                  <div data-unmask className={cn(mockups ? "mockup-frame aspect-[4/3]" : "aspect-[16/9]", "rounded-xl overflow-hidden relative")}>
-                    <ProjectImage
-                      project={project}
-                      src={project.gallery[0]?.src}
-                      alt={project.gallery[0]?.alt || "Project gallery"}
-                      caption={project.gallery[0]?.caption || "Challenge context visualization"}
-                      imageType="gallery"
-                    />
-                  </div>
-                </AnimatedSection>
+                {/* One motion: the scroll-linked unmask ([data-unmask] in globals.css), no timed fade on top. */}
+                <div data-unmask className={cn(mockups ? "mockup-frame aspect-[4/3]" : "aspect-[16/9]", "rounded-xl overflow-hidden relative")}>
+                  <ProjectImage
+                    project={project}
+                    src={project.gallery[0]?.src}
+                    alt={project.gallery[0]?.alt || "Project gallery"}
+                    caption={project.gallery[0]?.caption || "Challenge context visualization"}
+                    imageType="gallery"
+                  />
+                </div>
               </Container>
             </Section>
           )}
@@ -333,33 +332,32 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
           ) : (
             <Section spacing="sm">
               <Container>
-                <AnimatedSection>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                    <div data-unmask className="aspect-[4/3] rounded-xl overflow-hidden relative">
+                {/* One motion: the scroll-linked unmask ([data-unmask] in globals.css), no timed fade on top. */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <div data-unmask className="aspect-[4/3] rounded-xl overflow-hidden relative">
+                    <ProjectImage
+                      project={project}
+                      src={project.gallery[1]?.src}
+                      alt={project.gallery[1]?.alt || "Design process"}
+                      caption={project.gallery[1]?.caption || "Design process & iterations"}
+                      imageType="gallery"
+                    />
+                  </div>
+                  <div data-unmask className="aspect-[4/3] rounded-xl overflow-hidden relative">
+                    {/* Interactive logo for GlobFam, regular image for others */}
+                    {project.slug === "globfam" ? (
+                      <InteractiveLogo />
+                    ) : (
                       <ProjectImage
                         project={project}
-                        src={project.gallery[1]?.src}
-                        alt={project.gallery[1]?.alt || "Design process"}
-                        caption={project.gallery[1]?.caption || "Design process & iterations"}
+                        src={project.gallery[2]?.src}
+                        alt={project.gallery[2]?.alt || "Implementation"}
+                        caption={project.gallery[2]?.caption || "Implementation details"}
                         imageType="gallery"
                       />
-                    </div>
-                    <div data-unmask className="aspect-[4/3] rounded-xl overflow-hidden relative">
-                      {/* Interactive logo for GlobFam, regular image for others */}
-                      {project.slug === "globfam" ? (
-                        <InteractiveLogo />
-                      ) : (
-                        <ProjectImage
-                          project={project}
-                          src={project.gallery[2]?.src}
-                          alt={project.gallery[2]?.alt || "Implementation"}
-                          caption={project.gallery[2]?.caption || "Implementation details"}
-                          imageType="gallery"
-                        />
-                      )}
-                    </div>
+                    )}
                   </div>
-                </AnimatedSection>
+                </div>
               </Container>
             </Section>
           )}
@@ -415,29 +413,28 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
           ) : (
             <Section spacing="sm">
               <Container>
-                <AnimatedSection variant="scaleIn">
-                  {mockups && project.gallery[3] ? (
-                    <div data-unmask className="mockup-frame aspect-[4/3] rounded-xl overflow-hidden relative">
-                      <ProjectImage
-                        project={project}
-                        src={project.gallery[3].src}
-                        alt={project.gallery[3].alt}
-                        caption={project.gallery[3].caption || "Full showcase view"}
-                        imageType="gallery"
-                      />
-                    </div>
-                  ) : (
-                    <div data-unmask className="aspect-[21/9] rounded-xl overflow-hidden relative">
-                      <ProjectImage
-                        project={project}
-                        src={project.heroImage}
-                        alt={project.heroAlt ?? `${project.title} showcase`}
-                        caption="Full showcase view"
-                        imageType="hero"
-                      />
-                    </div>
-                  )}
-                </AnimatedSection>
+                {/* One motion: the scroll-linked unmask ([data-unmask] in globals.css), no timed fade on top. */}
+                {mockups && project.gallery[3] ? (
+                  <div data-unmask className="mockup-frame aspect-[4/3] rounded-xl overflow-hidden relative">
+                    <ProjectImage
+                      project={project}
+                      src={project.gallery[3].src}
+                      alt={project.gallery[3].alt}
+                      caption={project.gallery[3].caption || "Full showcase view"}
+                      imageType="gallery"
+                    />
+                  </div>
+                ) : (
+                  <div data-unmask className="aspect-[21/9] rounded-xl overflow-hidden relative">
+                    <ProjectImage
+                      project={project}
+                      src={project.heroImage}
+                      alt={project.heroAlt ?? `${project.title} showcase`}
+                      caption="Full showcase view"
+                      imageType="hero"
+                    />
+                  </div>
+                )}
               </Container>
             </Section>
           )}

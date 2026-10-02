@@ -1874,34 +1874,43 @@ html:has([data-subbar][data-scrolled]) .site-header::after {
   }
 }
 
-/* Images open from a slightly inset frame and settle from a gentle zoom
-   as they scroll in, echoing the text (tied to scroll, like the copy). */
+/* Images unmask as they scroll in: a rounded window opens evenly from the
+   centre while the picture eases back from a light zoom. Both run on one
+   scroll timeline with one gentle in-out easing: soft as the image appears,
+   most of the opening while it's in view, settled just before the middle
+   of the screen. The second of two images side
+   by side follows a beat behind. (Tied to scroll, like the copy.) */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     html.site:not(.sd-fallback) [data-unmask]:not(:is(.overflow-hidden, .overflow-auto, .overflow-scroll, .overflow-x-auto, .overflow-x-hidden, .overflow-x-scroll, .overflow-y-auto, .overflow-y-hidden, .overflow-y-scroll, .sm\:overflow-x-auto) *) {
       view-timeline-name: --unmask;
-      animation: unmask linear both;
+      animation: unmask cubic-bezier(0.37, 0, 0.63, 1) both;
       animation-timeline: view();
-      animation-range: entry 0% cover 38%;
+      animation-range: entry 0% cover 42%;
     }
     html.site:not(.sd-fallback) [data-unmask] img {
-      animation: settle linear both;
+      animation: settle cubic-bezier(0.37, 0, 0.63, 1) both;
       animation-timeline: --unmask;
-      animation-range: entry 0% cover 60%;
+      animation-range: entry 0% cover 42%;
+    }
+    html.site:not(.sd-fallback) [data-unmask] + [data-unmask],
+    html.site:not(.sd-fallback) [data-unmask] + [data-unmask] img {
+      animation-range: entry 6% cover 47%;
     }
   }
 }
 @keyframes unmask {
   from {
-    clip-path: inset(12% 5% 0 5% round 1.25rem);
+    clip-path: inset(9% 7% round 2rem);
   }
   to {
-    clip-path: inset(0 0 0 0 round 1.25rem);
+    /* The frame's own rounded corners take over. */
+    clip-path: inset(0);
   }
 }
 @keyframes settle {
   from {
-    transform: scale(1.1);
+    transform: scale(1.14);
   }
   to {
     transform: none;
@@ -1955,10 +1964,10 @@ html:has([data-subbar][data-scrolled]) .site-header::after {
     animation: marker-on 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
   }
   html.sd-fallback [data-sd-fx="unmask"][data-sd] {
-    animation: unmask 1300ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation: unmask 1400ms cubic-bezier(0.33, 1, 0.68, 1) both;
   }
   html.sd-fallback [data-sd-fx="unmask"][data-sd] img {
-    animation: settle 1600ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation: settle 1400ms cubic-bezier(0.33, 1, 0.68, 1) both;
   }
   html.sd-fallback [data-sd="wait"],
   html.sd-fallback [data-sd="wait"] img {
