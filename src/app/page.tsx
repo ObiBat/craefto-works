@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Header, Footer, Container } from "@/components/layout";
 import { BrandIntro } from "@/components/editorial/brand-intro";
 import { Hero } from "@/components/sections/hero";
+import { caseStudies } from "@/content/case-studies";
 import { ServicesOverview } from "@/components/sections/services-overview";
 import { SelectedWork } from "@/components/sections/selected-work";
 import { StackMarquee } from "@/components/sections/team";
@@ -31,7 +32,7 @@ export default function Home() {
       <BrandIntro />
       <Header />
       <main id="main-content">
-        <Hero />
+        <Hero projectCount={caseStudies.length} />
         <ServicesOverview />
         <SelectedWork />
         <JournalStrip />

@@ -19,13 +19,15 @@ const VALUE_PROPS = [
   "Design, technology and media under one roof.",
 ];
 
-const SOCIAL_PROOF = [
-  { value: 12, suffix: "+", label: "Projects delivered" },
+// The project count comes from the case studies, as on /about and /start,
+// so the three pages always agree.
+const socialProof = (projectCount: number) => [
+  { value: projectCount, suffix: "", label: "Projects shipped" },
   { value: 5, suffix: "", label: "Capabilities, one studio" },
   { value: 3, suffix: "-4 weeks", label: "To MVP, then iterate" },
 ];
 
-export function Hero() {
+export function Hero({ projectCount }: { projectCount: number }) {
   // The line on show, and the one leaving (none until the first change).
   const [line, setLine] = useState({ current: 0, previous: -1 });
   const paused = useRef(false);
@@ -174,7 +176,7 @@ export function Hero() {
           {/* Social Proof Stats */}
           <HeroText delay={0.5}>
             <div className="flex items-center gap-8 pt-8 border-t-0 md:border-t border-[hsl(var(--color-border))] mt-4">
-              {SOCIAL_PROOF.map((stat, index) => (
+              {socialProof(projectCount).map((stat, index) => (
                 <div key={index} className="flex flex-col">
                   <span className="font-heading text-2xl sm:text-3xl font-semibold text-[hsl(var(--color-foreground))] tabular-nums">
                     <AnimatedCounter value={stat.value} duration={2 + index * 0.2} />
