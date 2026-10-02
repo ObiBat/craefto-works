@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Badge, Separator, PageTransition, AnimatedSection, HeroText, StaggeredGrid, StaggeredItem, ProjectImagePlaceholder, InteractiveLogo, BrandMoment } from "@/components/ui";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,38 @@ import { RevealText } from "@/components/editorial/reveal-text";
 import { cn } from "@/lib/utils";
 
 import { caseStudies, getCaseStudy, PROJECTS_WITH_REAL_IMAGES, type CaseStudy, type PhotoSet } from "@/content/case-studies";
+import type { RelatedWork } from "@/content/related-work";
 
 // Blurred previews keyed by image path (see npm run images:placeholders).
 const BlurContext = createContext<Record<string, string>>({});
+
+// Case studies opened this session, so "next" never sends a visitor back to
+// one they've just read. Storage can be blocked; the ranking then decides.
+const SEEN_KEY = "craefto:seen-work";
+const neverChanges = () => () => {};
+function readSeen() {
+  try {
+    return sessionStorage.getItem(SEEN_KEY) ?? "[]";
+  } catch {
+    return "[]";
+  }
+}
+function parseSeen(raw: string): string[] {
+  try {
+    const value: unknown = JSON.parse(raw);
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+function rememberSeen(slug: string) {
+  try {
+    const seen = parseSeen(readSeen()).filter((item) => item !== slug);
+    sessionStorage.setItem(SEEN_KEY, JSON.stringify([...seen, slug].slice(-12)));
+  } catch {
+    // Blocked storage: nothing to remember.
+  }
+}
 
 // Section labels and headings: for a build, and for a photo shoot.
 const STORY = {
@@ -139,7 +168,16 @@ function PhotoSets({ project, sets }: { project: CaseStudy; sets: PhotoSet[] }) 
   );
 }
 
-export function CaseStudyView({ slug, placeholders = {} }: { slug: string; placeholders?: Record<string, string> }) {
+export function CaseStudyView({
+  slug,
+  placeholders = {},
+  related = [],
+}: {
+  slug: string;
+  placeholders?: Record<string, string>;
+  /** The other case studies, most related first (see related-work.ts). */
+  related?: RelatedWork[];
+}) {
   // The server page only renders known slugs (dynamicParams = false).
   const project = getCaseStudy(slug) as CaseStudy;
 
@@ -152,12 +190,16 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
   // 4:3 device mockups keep their shape in the wide frames (see .mockup-frame).
   const mockups = project.imageAspect === "4/3";
 
-  // Only cycle through featured (real) projects for "next project"
-  const featuredProjects = caseStudies.filter((p) => p.featured);
-  const currentFeaturedIndex = featuredProjects.findIndex((p) => p.slug === slug);
-  const nextProject = currentFeaturedIndex !== -1
-    ? featuredProjects[(currentFeaturedIndex + 1) % featuredProjects.length]
-    : featuredProjects[0];
+  // Next: the most related case study this visitor hasn't opened yet this
+  // session. The server renders the top pick; the visitor's history (only
+  // in their browser) can move it along after hydration.
+  const seenRaw = useSyncExternalStore(neverChanges, readSeen, () => "[]");
+  const next = useMemo(() => {
+    const seen = parseSeen(seenRaw);
+    return related.find((entry) => !seen.includes(entry.slug)) ?? related[0];
+  }, [related, seenRaw]);
+  const nextProject = (next && getCaseStudy(next.slug)) || caseStudies.find((study) => study.slug !== slug)!;
+  useEffect(() => rememberSeen(slug), [slug]);
 
   return (
     <BlurContext.Provider value={placeholders}>
@@ -589,12 +631,13 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
                     </div>
 
                     {/* Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 transition-opacity group-hover:from-black/80" />
+                    {/* Deeper on phones, where the text covers most of the image (light screens too). */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/65 to-black/40 transition-opacity group-hover:from-black/80 sm:via-black/50 sm:to-black/20" />
 
                     {/* Content */}
                     <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 lg:p-12">
                       <p className="text-[10px] sm:text-xs uppercase font-mono tracking-[0.06em] text-white/60 mb-2 sm:mb-3">
-                        Next Case Study
+                        Next case study{next?.reason ? ` · ${next.reason}` : ""}
                       </p>
                       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
                         <div className="min-w-0">

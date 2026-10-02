@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { caseStudies, getCaseStudy } from "@/content/case-studies";
+import { relatedWork } from "@/content/related-work";
 import { pageMetadata, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { CaseStudyView } from "./case-study";
 import imagePlaceholders from "@/content/image-placeholders.json";
@@ -75,7 +76,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <CaseStudyView slug={slug} placeholders={blur} />
+      <CaseStudyView slug={slug} placeholders={blur} related={relatedWork(slug)} />
     </>
   );
 }
