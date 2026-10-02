@@ -50,12 +50,13 @@ export async function startCheckout(formData: FormData) {
           message: "Billed monthly in advance. Once you've paid, you'll go straight to your client portal to make your first request.",
         },
       },
-      // Checkout in the site's colours (fonts are Stripe's own; Be Vietnam Pro is nearest to DM Sans).
+      // Checkout in the site's colours: its warm white, and the sage accent for the button, as in
+      // the dashboard's Branding (fonts are Stripe's own; Be Vietnam Pro is nearest to DM Sans).
       branding_settings: {
         display_name: "Craefto",
         icon: { type: "url", url: "https://www.craefto.com/android-chrome-512x512.png" },
         background_color: "#FDFCFA",
-        button_color: "#121110",
+        button_color: "#4B6C59",
         border_style: "rounded",
         font_family: "be_vietnam_pro",
       },

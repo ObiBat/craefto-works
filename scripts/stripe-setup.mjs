@@ -4,6 +4,7 @@
  *
  *   node --no-warnings scripts/stripe-setup.mjs
  *   node --no-warnings scripts/stripe-setup.mjs --webhook https://www.craefto.com/api/stripe/webhook
+ *   node --no-warnings scripts/stripe-setup.mjs --webhook <url> --secret-file <path>
  *
  * - A product and a monthly AUD price for each plan in src/lib/pricing.ts,
  *   found again by the price's lookup key (craefto_<plan>_monthly). Every
@@ -17,12 +18,14 @@
  *   (upgrades charged straight away, downgrades from the next renewal).
  * - With --webhook, the endpoint Stripe notifies. Its signing secret is then
  *   in the dashboard (Developers > Webhooks > the endpoint): set it as
- *   STRIPE_WEBHOOK_SECRET where the site runs.
+ *   STRIPE_WEBHOOK_SECRET where the site runs. Stripe returns the secret only
+ *   when the endpoint is created; with --secret-file it's written there
+ *   (readable by you alone) instead of being printed.
  *
  * Reads STRIPE_SECRET_KEY from the environment or .env.local; a test key sets
  * up test mode, a live key live mode. Prints IDs only, never keys or secrets.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import Stripe from "stripe";
 import { monthlyPlans } from "../src/lib/pricing.ts";
 
@@ -169,7 +172,14 @@ if (webhookFlag !== -1) {
     console.log(`Webhook: updated (${endpoint.id})`);
   } else {
     const created = await stripe.webhookEndpoints.create({ url, enabled_events: EVENTS, description: "Craefto client portal" });
-    console.log(`Webhook: created (${created.id}). Copy its signing secret from the dashboard into STRIPE_WEBHOOK_SECRET.`);
+    const secretFlag = process.argv.indexOf("--secret-file");
+    const secretFile = secretFlag === -1 ? null : process.argv[secretFlag + 1];
+    if (secretFile && created.secret) {
+      writeFileSync(secretFile, created.secret, { mode: 0o600 });
+      console.log(`Webhook: created (${created.id}). Its signing secret is in ${secretFile}: set it as STRIPE_WEBHOOK_SECRET, then delete the file.`);
+    } else {
+      console.log(`Webhook: created (${created.id}). Copy its signing secret from the dashboard into STRIPE_WEBHOOK_SECRET.`);
+    }
   }
 }
 
