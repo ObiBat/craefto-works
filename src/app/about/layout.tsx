@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
+import { caseStudies } from "@/content/case-studies";
+
+const ownProducts = caseStudies.filter((study) => /^internal/i.test(study.client)).length;
 
 export const metadata: Metadata = pageMetadata({
   title: "About",
-  description:
-    "Craefto is a creative tech studio in Sydney building brands, products and systems for founders and teams who think long-term.",
+  description: `Craefto Works is a Sydney studio for brand, digital products, business systems, media and growth, founded in 2025. ${caseStudies.length} projects shipped: ${caseStudies.length - ownProducts} for clients and ${ownProducts} of our own.`,
   path: "/about",
   image: "route",
 });

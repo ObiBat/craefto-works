@@ -15,6 +15,7 @@
     "@calcom/embed-react": "^1.5.3",
     "@hookform/resolvers": "^5.2.2",
     "@next/mdx": "^16.1.1",
+    "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-slot": "^1.2.4",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
