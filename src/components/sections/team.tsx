@@ -186,7 +186,7 @@ const TEAM: TeamMember[] = [
     name: "Obi Batbileg",
     role: "Founder & Design Technologist",
     detail: "Coffee snob. Pixel perfectionist.",
-    image: "/team/obi.jpg",
+    image: "/team/obi-batbileg.jpg",
     featured: true,
     socials: { linkedin: "https://www.linkedin.com/in/obi-batbileg/" },
   },
