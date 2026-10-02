@@ -53,8 +53,14 @@ export interface CaseStudy {
   solution: string;
   outcome: string;
   heroImage: string;
+  /** Describes the hero image; without it the alt is "<title> hero". */
+  heroAlt?: string;
   thumbnail: string;
   gallery: GalleryImage[];
+  /** Device mockups made at 4:3. The hero and wide frames take that shape,
+      so nothing is cropped, and the closing showcase shows the fourth
+      gallery image rather than a 21:9 crop of the hero. */
+  imageAspect?: "4/3";
   metrics?: Metric[];
   testimonial?: Testimonial;
   awards?: string[];
@@ -118,13 +124,15 @@ export const caseStudies: CaseStudy[] = [
     approach: "We wrote a specification before any code and put every external dependency behind a swap-in seam, so the site could be complete and demonstrable with zero client input. Copy lives in typed content objects marked as draft until the client's wording replaced it, and regulatory fields render nothing until confirmed. The visual language is typography-led on a navy sampled from the client's own mark, with a verdigris accent chosen deliberately over the gold-on-navy default. After a first build read as plain and a second as oversized, we rebenchmarked the type and spacing scale against Carbon, Material 3, Atlassian and Geist, and varied the section shapes so pages read as designed rather than templated.",
     solution: "A fully static Next.js 16 site on Vercel with nine public routes, an unlisted brand reference page and ten typed content files. A ledger layout derived from the financial statement structures every page, using container queries so it holds in both full-bleed and nested contexts. The enquiry form is a Server Action with Zod validation, a honeypot, an in-memory rate limit and a transport interface that logs until a Resend key exists, then sends a branded notification and acknowledgement. Metadata, sitemap, robots, a generated social card and AccountingService JSON-LD are env-driven, so indexing is an explicit act at cutover. We also vectorised the supplied mark, produced a logo pack and email signature templates, and wrote the launch runbook.",
     outcome: "The first reviewable preview reached the client within days of kickoff, and the client's wording, team roster and regulatory details dropped in as they arrived without component changes. The site is live and indexed at www.tavpartners.com.au, with the enquiry form delivering to the firm and acknowledging enquirers. Recorded verification shows zero axe violations across every route and breakpoint, Lighthouse scores of 100 for performance, accessibility and best practices, and zero layout shift. The firm owns its own Vercel and Resend accounts, and the engagement has continued into team profiles, monthly traffic reporting and a team portrait session.",
-    heroImage: "/images/projects/tav-partners/tav-partners-hero.jpg",
+    heroImage: "/images/projects/tav-partners/tav-partners-home-in-hands.jpg",
+    heroAlt: "The TAV & Partners home page's 'Relationships measured in years, not engagements' section on a device held landscape in both hands",
     thumbnail: "/images/projects/tav-partners/tav-partners-thumb.jpg",
+    imageAspect: "4/3",
     gallery: [
-      { src: "/images/projects/tav-partners/tav-partners-gallery-01.jpg", alt: "The Services page on an iPad on a leather desk pad with Sydney Harbour through the window", caption: "Services. Eleven services in four clusters, set as a ledger with a cadence label on each row." },
-      { src: "/images/projects/tav-partners/tav-partners-gallery-02.jpg", alt: "The design-system page on a MacBook Pro beside navy and cream card stock", caption: "The brand reference page, built from the same tokens as the site, ready for print and signage." },
-      { src: "/images/projects/tav-partners/tav-partners-gallery-03.jpg", alt: "The contact form on a phone held in a marble office lobby at dusk", caption: "The enquiry path. Server Action, Zod validation, honeypot, rate limit, and a transport that swaps from log to Resend by environment." },
-      { src: "/images/projects/tav-partners/tav-partners-gallery-04.jpg", alt: "The About page introducing the practice", caption: "About. Typography-led on a navy sampled from the client's own mark." },
+      { src: "/images/projects/tav-partners/tav-partners-about-ipad.jpg", alt: "The About page, 'An independent practice, built deliberately', on an iPad held in both hands", caption: "About. A new firm with decades of practice behind it, typography-led on a navy sampled from the client's own mark." },
+      { src: "/images/projects/tav-partners/tav-partners-brand-system-ipad.jpg", alt: "The brand reference page's logo versions and colour palettes on an iPad resting on a dark upholstered chair with a walnut frame", caption: "The brand reference page, built from the same tokens as the site, ready for print and signage." },
+      { src: "/images/projects/tav-partners/tav-partners-services-iphone.jpg", alt: "The Services page on an iPhone standing on a round walnut side table against a black background", caption: "Services on a phone. The ledger layout uses container queries, so it holds in full-bleed and nested contexts." },
+      { src: "/images/projects/tav-partners/tav-partners-services-macbook.jpg", alt: "The Services page on a MacBook Air balanced on one hand against a grey background", caption: "Services. Four areas of practice set as a ledger, with a cadence label on each row." },
     ],
     metrics: [
       { label: "Lighthouse Scores", value: "100 / 100 / 100" },
@@ -151,13 +159,15 @@ export const caseStudies: CaseStudy[] = [
     approach: "We ran a three-week discovery that produced twelve architecture decision records, a scope-boundaries document separating v1 from v2, personas and sixty user stories before writing code. The visual language, Ma Space, treats emptiness as the primary material: a near-monochrome sumi and washi palette with one indigo accent, Shippori Mincho for headings, Satoshi for everything else, and a three-colour-per-screen rule. We chose Next.js with React Server Components and ISR so public pages are CDN-served, Supabase in Sydney for data residency, and Sanity so the client could edit without us. Every decision, and every later reversal, was written into the changelog with its reasoning, so the client inherits the why as well as the code.",
     solution: "We delivered a production platform with 49 pages and 19 API routes. Visitors take a seven-step lifestyle quiz that scores 29 launch areas across nine prefectures, explore them on a three.js map of Japan, and compare towns side by side. A weekly partner workbook feeds the property pipeline: parsing, haversine area assignment, deduplicated image mirroring, caption-based gallery selection and a Gemini-assisted floor-plan translation pilot. Registration gates listings, quiz and consultation booking; Stripe handles consultation credits and a dormant membership tier. A 33-second Remotion film opens the homepage, and a customer story turns one recorded interview into fifteen chapters with audio, word-timed captions and transcripts. An admin area covers leads, users, reviews, area media, compliance exports and insights.",
     outcome: "JapanoMa launched publicly on 26 May 2026 at japanoma.com.au, thirteen weeks after kickoff, and has been extended every month since. Production load testing drove the site to 2,000 concurrent users with zero failed requests. Go&C now runs its own editorial in Sanity, ingests partner stock weekly, and books and bills consultations through the platform. The quiz, once anonymous, now attaches every completion to a contactable account. Traffic, lead and revenue figures are not recorded in the repository.",
-    heroImage: "/images/projects/japanoma/japanoma-hero.jpg",
+    heroImage: "/images/projects/japanoma/japanoma-devices.jpg",
+    heroAlt: "JapanoMa on a desktop display, a MacBook Air and an iPad: the About page, the step-by-step pricing and the map of areas",
     thumbnail: "/images/projects/japanoma/japanoma-thumb.jpg",
+    imageAspect: "4/3",
     gallery: [
-      { src: "/images/projects/japanoma/japanoma-gallery-01.jpg", alt: "The Five Promises section: clarity, financial realism, risk awareness, trusted local network, lifestyle first", caption: "Five promises answer the buyer's real anxieties: honest costs, risk before excitement, and a trusted local network." },
-      { src: "/images/projects/japanoma/japanoma-gallery-02.jpg", alt: "JapanoMa mobile homepage on a phone held on a slushy snow-country street on an overcast afternoon", caption: "Decide with confidence. The promise is made on the phone, where an Australian skier first meets it." },
-      { src: "/images/projects/japanoma/japanoma-gallery-03.jpg", alt: "The five-step journey from Discover to Own Well on a laptop in an alpine lodge", caption: "From curiosity to confident ownership: five steps, each opening where the last one leads." },
-      { src: "/images/projects/japanoma/japanoma-gallery-04.jpg", alt: "Guide library with search by objective chips such as I want a ski home and I want train access", caption: "Twelve guides indexed by objective, edited by the client in Sanity." },
+      { src: "/images/projects/japanoma/japanoma-home-iphones.jpg", alt: "Three iPhones among dark blocks, two showing JapanoMa: the home page, 'Decide with Confidence', and the Myoko area page", caption: "Decide with confidence. The promise is made on the phone, where an Australian skier first meets it." },
+      { src: "/images/projects/japanoma/japanoma-journey-macbook.jpg", alt: "The home page's 'Where are you in your journey?' section, with four starting points such as 'I'm exploring' and 'I'm preparing to buy', on a MacBook Air resting on dark blocks", caption: "Where are you in your journey? Four starting points, and no wrong place to begin." },
+      { src: "/images/projects/japanoma/japanoma-envelopes.jpg", alt: "Two envelopes printed with the JapanoMa torii mark over a sumi-e mountain landscape", caption: "The Ma Space identity off screen: sumi and washi, with one indigo accent." },
+      { src: "/images/projects/japanoma/japanoma-areas-ipad.jpg", alt: "The 'Find your area' map of Japan on an iPad standing on a dark block, with Sapporo featured", caption: "Find your area: 29 launch areas across nine prefectures, on a map of Japan." },
     ],
     metrics: [
       { label: "Kickoff to Launch", value: "13 weeks" },

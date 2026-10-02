@@ -149,6 +149,8 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
   const setsAfter = (placement: PhotoSet["placement"]) => photoSets.filter((set) => set.placement === placement);
   const story = STORY[isShoot ? "shoot" : "build"];
   const liveLabel = project.liveLabel ?? "Visit live site";
+  // 4:3 device mockups keep their shape in the wide frames (see .mockup-frame).
+  const mockups = project.imageAspect === "4/3";
 
   // Only cycle through featured (real) projects for "next project"
   const featuredProjects = caseStudies.filter((p) => p.featured);
@@ -234,11 +236,11 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
             <Section spacing="sm">
               <Container>
                 <AnimatedSection variant="scaleIn">
-                  <div className="aspect-[16/9] rounded-2xl overflow-hidden relative">
+                  <div className={cn(mockups ? "mockup-frame aspect-[4/3]" : "aspect-[16/9]", "rounded-2xl overflow-hidden relative")}>
                     <ProjectImage
                       project={project}
                       src={project.heroImage}
-                      alt={`${project.title} hero`}
+                      alt={project.heroAlt ?? `${project.title} hero`}
                       caption="Main project showcase"
                       imageType="hero"
                     />
@@ -298,7 +300,7 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
             <Section spacing="sm">
               <Container>
                 <AnimatedSection variant="scaleIn">
-                  <div data-unmask className="aspect-[16/9] rounded-xl overflow-hidden relative">
+                  <div data-unmask className={cn(mockups ? "mockup-frame aspect-[4/3]" : "aspect-[16/9]", "rounded-xl overflow-hidden relative")}>
                     <ProjectImage
                       project={project}
                       src={project.gallery[0]?.src}
@@ -414,15 +416,27 @@ export function CaseStudyView({ slug, placeholders = {} }: { slug: string; place
             <Section spacing="sm">
               <Container>
                 <AnimatedSection variant="scaleIn">
-                  <div data-unmask className="aspect-[21/9] rounded-xl overflow-hidden relative">
-                    <ProjectImage
-                      project={project}
-                      src={project.heroImage}
-                      alt={`${project.title} showcase`}
-                      caption="Full showcase view"
-                      imageType="hero"
-                    />
-                  </div>
+                  {mockups && project.gallery[3] ? (
+                    <div data-unmask className="mockup-frame aspect-[4/3] rounded-xl overflow-hidden relative">
+                      <ProjectImage
+                        project={project}
+                        src={project.gallery[3].src}
+                        alt={project.gallery[3].alt}
+                        caption={project.gallery[3].caption || "Full showcase view"}
+                        imageType="gallery"
+                      />
+                    </div>
+                  ) : (
+                    <div data-unmask className="aspect-[21/9] rounded-xl overflow-hidden relative">
+                      <ProjectImage
+                        project={project}
+                        src={project.heroImage}
+                        alt={project.heroAlt ?? `${project.title} showcase`}
+                        caption="Full showcase view"
+                        imageType="hero"
+                      />
+                    </div>
+                  )}
                 </AnimatedSection>
               </Container>
             </Section>

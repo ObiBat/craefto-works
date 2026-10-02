@@ -1036,6 +1036,15 @@ img {
   }
 }
 
+/* Case-study frames for 4:3 device mockups (JapanoMa, TAV): as wide as the
+   column, but never taller than the screen below the header, so the whole
+   mockup is in view at once. */
+.mockup-frame {
+  width: 100%;
+  max-width: min(100%, calc((100svh - 7rem) * 4 / 3));
+  margin-inline: auto;
+}
+
 /* Border hover effect for secondary buttons */
 .btn-border-hover {
   position: relative;
