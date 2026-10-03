@@ -208,7 +208,7 @@ const TEAM: TeamMember[] = [
     name: "Urna Ganbat",
     role: "Financial Accountant",
     detail: "Numbers driven. Detail oriented.",
-    image: "/team/urna.jpg",
+    image: "/team/urna-ganbat.jpg",
     socials: { linkedin: "https://www.linkedin.com/in/urna-ganbat/" },
   },
 ];
