@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     template: "%s | Craefto",
   },
   description:
-    "Craefto Works is a creative & technology studio. We bring brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and operate.",
+    "Craefto Works is a creative & technology studio. We build how businesses look, communicate and operate: brand, product, systems, media and growth.",
   keywords: [
     "creative and technology studio",
     "brand identity",
@@ -71,9 +71,9 @@ export const metadata: Metadata = {
     "digital marketing",
     "Sydney studio",
   ],
-  authors: [{ name: "Craefto", url: "https://www.craefto.com" }],
-  creator: "Craefto",
-  publisher: "Craefto",
+  authors: [{ name: "Craefto Works", url: "https://www.craefto.com" }],
+  creator: "Craefto Works",
+  publisher: "Craefto Works",
   formatDetection: {
     email: false,
     address: false,
@@ -105,17 +105,17 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_AU",
     url: "./",
-    siteName: "Craefto",
+    siteName: "Craefto Works",
     title: "Craefto Works | Creative & Technology Studio",
     description:
-      "We bring brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and operate.",
+      "We build how businesses look, communicate and operate: brand, product, systems, media and growth, brought together under one studio.",
     // The image comes from app/opengraph-image.tsx (and each route's own card).
   },
   twitter: {
     card: "summary_large_image",
     title: "Craefto Works | Creative & Technology Studio",
     description:
-      "We bring brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and operate.",
+      "We build how businesses look, communicate and operate: brand, product, systems, media and growth, brought together under one studio.",
     creator: "@craefto",
     site: "@craefto",
   },
@@ -149,7 +149,7 @@ const jsonLd = {
   name: "Craefto Works",
   alternateName: "Craefto",
   description:
-    "Craefto Works is a creative & technology studio. We bring brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and operate.",
+    "Craefto Works is a creative & technology studio. We build how businesses look, communicate and operate: brand, product, systems, media and growth.",
   url: "https://www.craefto.com",
   logo: "https://www.craefto.com/logo.png",
   sameAs: [

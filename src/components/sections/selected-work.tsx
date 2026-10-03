@@ -330,7 +330,8 @@ export function SelectedWork() {
                 <div>
                   <h2 className="font-semibold tracking-tight"><RevealText text={"Featured case studies"} /></h2>
                   <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-3">
-                    Recent projects for founders building the future.
+                    {/* Two of the case studies: tav-partners and mng-steel. */}
+                    Recent work, from a Sydney accounting firm to a Mongolian steel plant.
                   </p>
                 </div>
                 <div className="flex items-center gap-5 shrink-0">

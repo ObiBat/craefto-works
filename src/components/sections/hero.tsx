@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Container } from "@/components/layout/container";
@@ -13,24 +13,17 @@ const Metaballs = dynamic(
   { ssr: false }
 );
 
-const VALUE_PROPS = [
-  "Design systems and digital products built with craft and intention.",
-  "From brand identity to production-ready code, end to end.",
-  "Design, technology and media under one roof.",
-];
-
 // The project count comes from the case studies, as on /about and /start,
-// so the three pages always agree.
-const socialProof = (projectCount: number) => [
+// so the three pages always agree, and the capabilities from
+// content/capabilities.ts. The 30 days of support after launch are a
+// commitment on /about and in the services FAQ.
+const socialProof = (projectCount: number, capabilityCount: number) => [
   { value: projectCount, suffix: "", label: "Projects shipped" },
-  { value: 5, suffix: "", label: "Capabilities, one studio" },
-  { value: 3, suffix: "-4 weeks", label: "To MVP, then iterate" },
+  { value: capabilityCount, suffix: "", label: "Capabilities, one team" },
+  { value: 30, suffix: "", label: "Days of support after launch" },
 ];
 
-export function Hero({ projectCount }: { projectCount: number }) {
-  // The line on show, and the one leaving (none until the first change).
-  const [line, setLine] = useState({ current: 0, previous: -1 });
-  const paused = useRef(false);
+export function Hero({ projectCount, capabilityNames }: { projectCount: number; capabilityNames: string[] }) {
   // The 3D artwork mounts once the browser is idle, so three.js never
   // competes with the first paint. Starting it is a long task (WebGL context
   // and shaders), so arriving by link it waits until the hero's entrance and
@@ -60,26 +53,19 @@ export function Hero({ projectCount }: { projectCount: number }) {
     };
   }, []);
 
-  // Rotate every 4s; hold while the pointer rests on it, and never with reduced motion.
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const interval = setInterval(() => {
-      if (paused.current) return;
-      setLine(({ current }) => ({ current: (current + 1) % VALUE_PROPS.length, previous: current }));
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <section className="relative min-h-[100vh] flex items-center pt-20 pb-16 overflow-hidden bg-[hsl(var(--color-background))]">
-      {/* 3D artwork: behind the content on phones, the right half on wider screens */}
-      <div className="absolute left-0 right-0 top-[15%] bottom-0 z-0 pointer-events-none translate-x-[20%] md:top-0 md:left-auto md:right-0 md:w-[55%] md:translate-x-0" aria-hidden="true">
+      {/* 3D artwork: behind the content on phones, lowered to sit beside the
+          buttons, clear of the text; the right half on wider screens, and a
+          smaller box at the right on portrait tablets, where a full-height one
+          would grow into the text. */}
+      <div className="absolute left-0 right-0 top-[15%] bottom-0 z-0 pointer-events-none translate-x-[20%] translate-y-16 md:top-0 md:left-auto md:right-0 md:w-[55%] md:translate-x-0 md:translate-y-0 md:portrait:top-1/4 md:portrait:bottom-1/4 md:portrait:w-[40%]" aria-hidden="true">
         {showBlob && <Metaballs className="blob-in w-full h-full" />}
       </div>
 
       {/* Content - left aligned */}
       <Container size="lg" className="relative z-10">
-        <div className="flex flex-col items-start text-left gap-6 max-w-xl lg:max-w-2xl">
+        <div className="flex flex-col items-start text-left gap-6 max-w-xl lg:max-w-[46rem]">
           {/* Badge */}
           <HeroText delay={0}>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(var(--color-accent))]/10 border border-[hsl(var(--color-accent))]/20">
@@ -93,33 +79,21 @@ export function Hero({ projectCount }: { projectCount: number }) {
             </div>
           </HeroText>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-semibold tracking-tighter leading-[0.95] text-[hsl(var(--color-foreground))]"><RevealText text={"Built to compound."} mode="load" /></h1>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tighter leading-[0.98] text-[hsl(var(--color-foreground))]">
+            <RevealText text={"We build how businesses look, communicate and operate."} mode="load" />
+          </h1>
 
-          {/* Rotating value prop */}
+          {/* The capabilities, named once: the sections below explain them. */}
           <HeroText delay={0.2}>
-            {/* All lines share one grid cell; CSS lifts the old one out, then the
-                new one in (see .rotator in globals.css). The first line is the
-                one in the HTML, visible from the first paint. */}
-            <div
-              className="rotator h-[56px] sm:h-[64px] overflow-hidden"
-              onPointerEnter={() => {
-                paused.current = true;
-              }}
-              onPointerLeave={() => {
-                paused.current = false;
-              }}
-            >
-              {VALUE_PROPS.map((text, i) => (
-                <p
-                  key={text}
-                  data-state={i === line.current ? "active" : i === line.previous ? "leaving" : "idle"}
-                  aria-hidden={i !== line.current}
-                  className="text-lg sm:text-xl max-w-lg leading-relaxed text-[hsl(var(--color-foreground-muted))]"
-                >
-                  {text}
-                </p>
+            <p className="text-lg sm:text-xl max-w-md leading-relaxed text-[hsl(var(--color-foreground-muted))]">
+              {capabilityNames.map((name, i) => (
+                <span key={name}>
+                  <span className="font-medium text-[hsl(var(--color-foreground))]">{name}</span>
+                  {i < capabilityNames.length - 2 ? ", " : i === capabilityNames.length - 2 ? " and " : ""}
+                </span>
               ))}
-            </div>
+              , brought together under one studio.
+            </p>
           </HeroText>
 
           <HeroText delay={0.35}>
@@ -176,7 +150,7 @@ export function Hero({ projectCount }: { projectCount: number }) {
           {/* Social Proof Stats */}
           <HeroText delay={0.5}>
             <div className="flex items-center gap-8 pt-8 border-t-0 md:border-t border-[hsl(var(--color-border))] mt-4">
-              {socialProof(projectCount).map((stat, index) => (
+              {socialProof(projectCount, capabilityNames.length).map((stat, index) => (
                 <div key={index} className="flex flex-col">
                   <span className="font-heading text-2xl sm:text-3xl font-semibold text-[hsl(var(--color-foreground))] tabular-nums">
                     <AnimatedCounter value={stat.value} duration={2 + index * 0.2} />

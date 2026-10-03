@@ -261,18 +261,19 @@ export function Header() {
                   isMobileMenuOpen && "logo-inverted"
                 )}
                 onClick={handleLogoClick}
-                aria-label="Craefto - Home"
+                aria-label="Craefto Works, home"
               >
                 <Logo
                   size="md"
                   inverted={isMobileMenuOpen}
                 />
               </Link>
-              <SectionIndicator className={cn("inline-flex md:hidden xl:inline-flex", isMobileMenuOpen && "invisible")} />
+              <SectionIndicator className={cn("inline-flex lg:hidden xl:inline-flex", isMobileMenuOpen && "invisible")} />
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1">
+            {/* Desktop navigation, from 1024px: below that the seven items don't fit
+                and the menu button takes over. */}
+            <nav className="hidden lg:flex items-center gap-1">
               {navigation.main.map((item, index) => (
                 <Link
                   key={item.name}
@@ -310,7 +311,7 @@ export function Header() {
             <button
               type="button"
               className={cn(
-                "md:hidden relative z-50 flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300",
+                "lg:hidden relative z-50 flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300",
                 isMobileMenuOpen
                   ? "bg-white/20"
                   : "hover:bg-[hsl(var(--color-background-muted))]"
@@ -341,7 +342,7 @@ export function Header() {
       {/* Mobile Menu - Full Screen Overlay */}
       <div
         className={cn(
-          "md:hidden fixed inset-0 z-40 transition-all duration-500 ease-out",
+          "lg:hidden fixed inset-0 z-40 transition-all duration-500 ease-out",
           isMobileMenuOpen
             ? "opacity-100 visible"
             : "opacity-0 invisible pointer-events-none"

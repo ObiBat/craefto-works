@@ -24,7 +24,7 @@ export function Footer() {
               <Link
                 href="/"
                 className="inline-block mb-4"
-                aria-label="Craefto - Home"
+                aria-label="Craefto Works, home"
               >
                 <Logo size="md" inverted />
               </Link>
@@ -32,8 +32,7 @@ export function Footer() {
                 Creative &amp; Technology Studio
               </p>
               <p className="mt-3 text-sm text-white/60 leading-relaxed">
-                Brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and
-                operate.
+                Based in Sydney, working globally.
               </p>
             </div>
 
@@ -152,7 +151,7 @@ export function Footer() {
                 <ul className="space-y-2.5">
                   <li>
                     <a
-                      href="/craefto-company-profile.pdf"
+                      href="/craefto-works-company-profile.pdf"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-white/70 hover:text-white transition-colors"
@@ -199,7 +198,7 @@ export function Footer() {
 
           {/* Bottom Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs text-white/40">
-            <p>&copy; {currentYear} {siteConfig.name}</p>
+            <p>&copy; {currentYear} {siteConfig.studioName}</p>
             <p className="whitespace-nowrap">
               <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
               {" · "}

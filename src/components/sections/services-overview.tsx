@@ -170,7 +170,7 @@ export function ServicesOverview() {
                 <div>
                   <h2 className="font-semibold tracking-tight"><RevealText text={"What we do"} /></h2>
                   <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-3">
-                    Brand, digital products, business systems, media and growth, as fixed-price projects or monthly plans.
+                    Start with one or combine several, at a fixed price agreed before work begins.
                   </p>
                 </div>
                 <Link

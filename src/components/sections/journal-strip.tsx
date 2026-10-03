@@ -50,7 +50,7 @@ export async function JournalStrip() {
                 <div>
                   <h2 className="font-semibold tracking-tight"><RevealText text={"From the journal"} /></h2>
                   <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] max-w-xl leading-relaxed mt-3">
-                    Notes on systems, applied AI and product craft.
+                    Notes from the studio on what we&apos;re learning.
                   </p>
                 </div>
                 <Link

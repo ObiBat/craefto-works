@@ -6,8 +6,8 @@ export const contentType = "image/png";
 
 export default function Image() {
   return ogCard({
-    eyebrow: "Creative & technology studio",
-    title: "Built to compound.",
-    description: "We bring brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and operate.",
+    eyebrow: "Craefto Works · Creative & Technology Studio",
+    title: "We build how businesses look, communicate and operate.",
+    description: "Brand, Product, Systems, Media and Growth, brought together under one studio.",
   });
 }

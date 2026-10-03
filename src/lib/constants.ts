@@ -4,9 +4,11 @@ export const siteConfig = {
   studioName: "Craefto Works",
   tagline: "Creative & Technology Studio",
   description:
-    "Craefto Works is a creative & technology studio. We bring brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and operate.",
+    "Craefto Works is a creative & technology studio. We build how businesses look, communicate and operate: brand, product, systems, media and growth.",
   url: "https://www.craefto.com",
   email: "hello@craefto.com",
+  /** The public Discovery Call on Cal.com: free, 30 minutes, on Google Meet. */
+  calLink: "craefto/discovery-call",
   links: {
     twitter: "https://x.com/craefto",
     linkedin: "https://www.linkedin.com/company/craefto",

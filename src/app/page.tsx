@@ -3,6 +3,7 @@ import { Header, Footer, Container } from "@/components/layout";
 import { BrandIntro } from "@/components/editorial/brand-intro";
 import { Hero } from "@/components/sections/hero";
 import { caseStudies } from "@/content/case-studies";
+import { capabilities } from "@/content/capabilities";
 import { ServicesOverview } from "@/components/sections/services-overview";
 import { SelectedWork } from "@/components/sections/selected-work";
 import { StackMarquee } from "@/components/sections/team";
@@ -20,9 +21,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_AU",
     url: "/",
-    siteName: "Craefto",
+    siteName: "Craefto Works",
     title: "Craefto Works | Creative & Technology Studio",
-    description: "We bring brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and operate.",
+    description: "We build how businesses look, communicate and operate: brand, product, systems, media and growth, brought together under one studio.",
   },
 };
 
@@ -32,7 +33,7 @@ export default function Home() {
       <BrandIntro />
       <Header />
       <main id="main-content">
-        <Hero projectCount={caseStudies.length} />
+        <Hero projectCount={caseStudies.length} capabilityNames={capabilities.map((capability) => capability.name)} />
         <ServicesOverview />
         <SelectedWork />
         <JournalStrip />

@@ -13,9 +13,8 @@ function unfinishedText(page: Page) {
       "main :is(h1, h2, h3, h4, p, li, dd, dt, figcaption, blockquote)"
     );
     for (const el of candidates) {
-      // Skip decorative and screen-reader-only text, and the hero's rotating line
-      // (it changes every few seconds, so it can be caught mid-change).
-      if (el.closest('[aria-hidden="true"], .sr-only, .rotator')) continue;
+      // Skip decorative and screen-reader-only text.
+      if (el.closest('[aria-hidden="true"], .sr-only')) continue;
       const text = el.innerText.trim();
       const box = el.getBoundingClientRect();
       if (!text || box.width === 0 || box.height === 0) continue;

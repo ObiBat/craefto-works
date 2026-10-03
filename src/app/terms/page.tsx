@@ -42,7 +42,7 @@ const sections: SectionData[] = [
     title: "Our Services",
     content: [
       {
-        text: "Craefto provides design and development services including brand identity, design systems, web design and development, creative technology products, SaaS development, and AI-powered systems. The specific scope, deliverables, timeline, and fees for any project will be outlined in a separate proposal or statement of work agreed upon by both parties.",
+        text: "Craefto provides creative and technology services across brand (identity, strategy, design systems and creative direction), product (websites, digital products, applications and digital experiences), systems (AI automation, integrations, internal tools and business systems), media (photography, video, motion and creative content) and growth (campaigns, digital growth, optimisation and ongoing creative support), as fixed-price projects or monthly plans. The specific scope, deliverables, timeline, and fees for any project will be outlined in a separate proposal or statement of work agreed upon by both parties.",
       },
     ],
   },
