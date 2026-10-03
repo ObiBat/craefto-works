@@ -10,7 +10,10 @@
  * 4. Logo intro on every full page load (not on in-site navigation, never
  *    with reduced motion): html.logo-intro draws the header logo in place; on
  *    the home page html.logo-intro-home runs the full construction intro
- *    instead, and html.intro-delay holds the hero until the veil opens.
+ *    instead, and html.intro-delay holds the hero until the veil opens. The
+ *    hero headline waits on html.hl-intro instead, which no timer removes:
+ *    its verb line loops forever, and changing its timing mid-loop made the
+ *    verbs jump (only navigating away clears it, in <SiteClassSync>).
  * 5. Counters (<AnimatedCounter>) count in CSS, but Safari doesn't redraw a
  *    counter() whose value is animated, so the figures sat on 0 and then
  *    jumped. While one runs, its value is copied to [data-n] each frame,
@@ -21,7 +24,7 @@ export const editorialBootScript = `(function(){
 var d=document.documentElement;
 function mark(){d.classList.toggle('site',!/^\\/admin(\\/|$)/.test(location.pathname));}
 mark();window.__cwMarkSite=mark;
-try{if(d.classList.contains('site')&&!matchMedia('(prefers-reduced-motion: reduce)').matches){var h=location.pathname==='/';d.classList.add('logo-intro');if(h)d.classList.add('logo-intro-home','intro-delay');setTimeout(function(){d.classList.remove('logo-intro','logo-intro-home');},h?3100:1750);if(h)setTimeout(function(){d.classList.remove('intro-delay');},6800);}}catch(e){}
+try{if(d.classList.contains('site')&&!matchMedia('(prefers-reduced-motion: reduce)').matches){var h=location.pathname==='/';d.classList.add('logo-intro');if(h)d.classList.add('logo-intro-home','intro-delay','hl-intro');setTimeout(function(){d.classList.remove('logo-intro','logo-intro-home');},h?3100:1750);if(h)setTimeout(function(){d.classList.remove('intro-delay');},6800);}}catch(e){}
 d.classList.add('js');
 document.addEventListener('animationstart',function(e){if(e.animationName!=='count-up')return;var el=e.target,on=true;function tick(){if(!on)return;var n=Math.round(parseFloat(getComputedStyle(el,'::after').getPropertyValue('--count')));if(n===n&&el.getAttribute('data-n')!==String(n))el.setAttribute('data-n',n);requestAnimationFrame(tick);}requestAnimationFrame(tick);el.addEventListener('animationend',function end(a){if(a.animationName!=='count-up')return;on=false;el.removeEventListener('animationend',end);el.removeAttribute('data-n');});});
 if(!('IntersectionObserver' in window)){d.classList.remove('js');return;}

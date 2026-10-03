@@ -1579,29 +1579,28 @@ html.site :is([class~="h-px"], [class~="w-px"], [class~="h-0.5"], [class~="w-0.5
   animation-delay: calc(150ms + var(--w, 0) * 110ms);
 }
 
-/* Hero headline (<HeroHeadline>): the opening types itself out behind a sage
-   caret, then each verb rises in green and hands the colour on to the next,
-   coming to rest on the full stop. Times are offsets in ms (--t, --k, --b)
-   from --hl-start, which waits for the logo intro. It all settles within
-   about 3.5s, so the reveal checks in e2e/pages.spec.ts still pass. */
+/* Hero headline (<HeroHeadline>): "We build how businesses" types itself out
+   behind a sage caret, then the line below loops through "look,",
+   "communicate" and "and operate.", each rising in green as the last lifts
+   away. Times are offsets in ms (--t, --dt, --first) from --hl-start, which
+   waits for the logo intro on html.hl-intro: unlike intro-delay, no timer
+   removes it, so the loop's timing never changes mid-cycle. The typing
+   settles within about 1.5s; the loop is infinite, which the reveal checks
+   in e2e/pages.spec.ts ignore. */
 .hl {
   --hl-start: 150ms;
-  --hl-ink: hsl(var(--color-foreground));
   --hl-green: hsl(var(--color-accent));
+  /* Each verb's turn. hl-cycle's keyframes assume three verbs. */
+  --hl-turn: 2500ms;
 }
-html.intro-delay .hl {
+html.hl-intro .hl {
   --hl-start: 2250ms;
 }
-.hl-word,
-.hl-mask {
+.hl-word {
   display: inline-block;
   vertical-align: top;
   padding-bottom: 0.1em;
   margin-bottom: -0.1em;
-}
-.hl-mask {
-  overflow: clip;
-  overflow-clip-margin: 0.14em;
 }
 .hl-c {
   position: relative;
@@ -1613,9 +1612,11 @@ html.intro-delay .hl {
     opacity: 0;
   }
 }
-/* The caret rides just after the newest key and stays until the next. */
-.hl-c::after,
-.hl-dot::after {
+/* The caret rides just after the newest key and stays until the next. It
+   shows only while its animation runs (no fill), then falls back to hidden:
+   a finished animation's progress can round to 0.9999…, which a stepped end
+   keyframe would read as still showing. */
+.hl-c::after {
   content: "";
   position: absolute;
   left: 100%;
@@ -1627,11 +1628,6 @@ html.intro-delay .hl {
   background: var(--hl-green);
   opacity: 0;
   pointer-events: none;
-}
-/* Shown only while its animation runs (no fill), then back to hidden: a
-   finished animation's progress can round to 0.9999…, which a stepped end
-   keyframe would read as still showing. */
-.hl-c::after {
   animation: hl-caret calc(var(--dt) * 1ms) linear;
   animation-delay: calc(var(--hl-start) + var(--t) * 1ms);
 }
@@ -1641,85 +1637,70 @@ html.intro-delay .hl {
     opacity: 1;
   }
 }
-.hl-rise {
-  display: inline-block;
-  animation: hl-rise 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--hl-start) + var(--t) * 1ms);
-}
-/* From past the mask's clip margin, so no sliver of the word shows early. */
-@keyframes hl-rise {
-  from {
-    transform: translate3d(0, 140%, 0);
-    opacity: 0;
-  }
-  40% {
-    opacity: 1;
-  }
-}
-/* Each verb lands in green; as the next one rises, the green wipes off left
-   to right into the ink colour. */
-@supports (background-clip: text) or (-webkit-background-clip: text) {
-  .hl-ink {
-    background-image: linear-gradient(90deg, var(--hl-ink) 0 40%, var(--hl-green) 60% 100%);
-    background-size: 250% 100%;
-    background-position: 0% 0;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: hl-ink 760ms cubic-bezier(0.65, 0, 0.35, 1) both;
-    animation-delay: calc(var(--hl-start) + var(--k) * 1ms);
-  }
-}
-@keyframes hl-ink {
-  from {
-    background-position: 100% 0;
-  }
-}
-/* The full stop pops in green and stays; the caret blinks once after it. */
-.hl-dot {
-  position: relative;
-  display: inline-block;
+/* The verb line: one line tall, with the verbs stacked in one cell taking
+   turns, so nothing around it moves as they change. Clipped flush top and
+   bottom (the padding holds the descenders), so a verb lifting away never
+   shows over the line above, nor the next one below before it rises. */
+.hl-slot {
+  display: grid;
+  clip-path: inset(0 -1em 0 -1em);
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
   color: var(--hl-green);
-  transform-origin: 50% 80%;
-  animation: hl-dot 620ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  animation-delay: calc(var(--hl-start) + var(--t) * 1ms);
 }
-@keyframes hl-dot {
-  from {
-    transform: scale(0);
-    opacity: 0;
-  }
-  30% {
-    opacity: 1;
-  }
+.hl-verb {
+  grid-area: 1 / 1;
+  justify-self: start;
+  animation: hl-cycle calc(var(--hl-turn) * 3) linear infinite both;
+  animation-delay: calc(var(--hl-start) + var(--first) * 1ms + var(--i) * var(--hl-turn));
 }
-.hl-dot::after {
-  animation: hl-blink 700ms steps(1, end);
-  animation-delay: calc(var(--hl-start) + var(--b) * 1ms);
-}
-@keyframes hl-blink {
+/* One verb's turn is a third of the cycle: rise in (8%), hold, lift away
+   while the next rises (8%), then wait below, out of sight. The way in and
+   the way out share one easing, so the two words move in step a line apart,
+   like a ticker, and never overlap. */
+@keyframes hl-cycle {
   0% {
-    opacity: 1;
+    transform: translate3d(0, 115%, 0);
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
   }
-  50%,
+  8%,
+  33.333% {
+    transform: none;
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  }
+  41.333% {
+    transform: translate3d(0, -115%, 0);
+    opacity: 0;
+  }
+  41.334%,
   100% {
+    transform: translate3d(0, 115%, 0);
     opacity: 0;
   }
 }
-@media (forced-colors: active) {
-  .hl-ink {
-    background: none;
-    color: CanvasText;
-  }
+/* "and" leads into the last verb in the ink of the typed words. */
+.hl-and {
+  color: hsl(var(--color-foreground));
+}
+/* With reduced motion: the whole sentence, still, with a green full stop. */
+.hl-still {
+  display: none;
+}
+.hl-stop {
+  color: var(--hl-green);
 }
 @media (prefers-reduced-motion: reduce) {
   .hl-c,
-  .hl-c::after,
-  .hl-rise,
-  .hl-ink,
-  .hl-dot,
-  .hl-dot::after {
+  .hl-c::after {
     animation: none;
+  }
+  .hl-slot {
+    display: none;
+  }
+  .hl-still {
+    display: inline;
   }
 }
 

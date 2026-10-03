@@ -16,7 +16,7 @@ export function SiteClassSync() {
     // Compare paths rather than counting runs: Strict Mode re-runs effects.
     if (previous.current !== pathname) {
       previous.current = pathname;
-      document.documentElement.classList.remove("logo-intro", "logo-intro-home", "intro-delay");
+      document.documentElement.classList.remove("logo-intro", "logo-intro-home", "intro-delay", "hl-intro");
     }
   }, [pathname]);
   return null;

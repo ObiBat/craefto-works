@@ -86,7 +86,7 @@ export function Hero({ projectCount, capabilityNames }: { projectCount: number; 
           />
 
           {/* The capabilities, named once: the sections below explain them. */}
-          <HeroText delay={1.45}>
+          <HeroText delay={1.05}>
             <p className="text-lg sm:text-xl max-w-md leading-relaxed text-[hsl(var(--color-foreground-muted))]">
               {capabilityNames.map((name, i) => (
                 <span key={name}>
@@ -98,7 +98,7 @@ export function Hero({ projectCount, capabilityNames }: { projectCount: number; 
             </p>
           </HeroText>
 
-          <HeroText delay={1.6}>
+          <HeroText delay={1.2}>
             <div className="flex flex-col sm:flex-row gap-4 mt-2">
               <Button size="lg" asChild>
                 <Link href="/contact">
@@ -150,7 +150,7 @@ export function Hero({ projectCount, capabilityNames }: { projectCount: number; 
           </HeroText>
 
           {/* Social Proof Stats */}
-          <HeroText delay={1.75}>
+          <HeroText delay={1.35}>
             <div className="flex items-center gap-8 pt-8 border-t-0 md:border-t border-[hsl(var(--color-border))] mt-4">
               {socialProof(projectCount, capabilityNames.length).map((stat, index) => (
                 <div key={index} className="flex flex-col">
