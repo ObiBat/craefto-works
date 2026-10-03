@@ -1579,6 +1579,150 @@ html.site :is([class~="h-px"], [class~="w-px"], [class~="h-0.5"], [class~="w-0.5
   animation-delay: calc(150ms + var(--w, 0) * 110ms);
 }
 
+/* Hero headline (<HeroHeadline>): the opening types itself out behind a sage
+   caret, then each verb rises in green and hands the colour on to the next,
+   coming to rest on the full stop. Times are offsets in ms (--t, --k, --b)
+   from --hl-start, which waits for the logo intro. It all settles within
+   about 3.5s, so the reveal checks in e2e/pages.spec.ts still pass. */
+.hl {
+  --hl-start: 150ms;
+  --hl-ink: hsl(var(--color-foreground));
+  --hl-green: hsl(var(--color-accent));
+}
+html.intro-delay .hl {
+  --hl-start: 2250ms;
+}
+.hl-word,
+.hl-mask {
+  display: inline-block;
+  vertical-align: top;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.hl-mask {
+  overflow: clip;
+  overflow-clip-margin: 0.14em;
+}
+.hl-c {
+  position: relative;
+  animation: hl-key 40ms linear both;
+  animation-delay: calc(var(--hl-start) + var(--t) * 1ms);
+}
+@keyframes hl-key {
+  from {
+    opacity: 0;
+  }
+}
+/* The caret rides just after the newest key and stays until the next. */
+.hl-c::after,
+.hl-dot::after {
+  content: "";
+  position: absolute;
+  left: 100%;
+  top: 0.12em;
+  height: 0.76em;
+  width: 0.065em;
+  margin-left: 0.04em;
+  border-radius: 0.02em;
+  background: var(--hl-green);
+  opacity: 0;
+  pointer-events: none;
+}
+/* Shown only while its animation runs (no fill), then back to hidden: a
+   finished animation's progress can round to 0.9999…, which a stepped end
+   keyframe would read as still showing. */
+.hl-c::after {
+  animation: hl-caret calc(var(--dt) * 1ms) linear;
+  animation-delay: calc(var(--hl-start) + var(--t) * 1ms);
+}
+@keyframes hl-caret {
+  from,
+  to {
+    opacity: 1;
+  }
+}
+.hl-rise {
+  display: inline-block;
+  animation: hl-rise 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--hl-start) + var(--t) * 1ms);
+}
+/* From past the mask's clip margin, so no sliver of the word shows early. */
+@keyframes hl-rise {
+  from {
+    transform: translate3d(0, 140%, 0);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+/* Each verb lands in green; as the next one rises, the green wipes off left
+   to right into the ink colour. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .hl-ink {
+    background-image: linear-gradient(90deg, var(--hl-ink) 0 40%, var(--hl-green) 60% 100%);
+    background-size: 250% 100%;
+    background-position: 0% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: hl-ink 760ms cubic-bezier(0.65, 0, 0.35, 1) both;
+    animation-delay: calc(var(--hl-start) + var(--k) * 1ms);
+  }
+}
+@keyframes hl-ink {
+  from {
+    background-position: 100% 0;
+  }
+}
+/* The full stop pops in green and stays; the caret blinks once after it. */
+.hl-dot {
+  position: relative;
+  display: inline-block;
+  color: var(--hl-green);
+  transform-origin: 50% 80%;
+  animation: hl-dot 620ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--hl-start) + var(--t) * 1ms);
+}
+@keyframes hl-dot {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+.hl-dot::after {
+  animation: hl-blink 700ms steps(1, end);
+  animation-delay: calc(var(--hl-start) + var(--b) * 1ms);
+}
+@keyframes hl-blink {
+  0% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@media (forced-colors: active) {
+  .hl-ink {
+    background: none;
+    color: CanvasText;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hl-c,
+  .hl-c::after,
+  .hl-rise,
+  .hl-ink,
+  .hl-dot,
+  .hl-dot::after {
+    animation: none;
+  }
+}
+
 /* Sections (AnimatedSection): a short rise as they scroll into view. Driven
    by the boot script's observer, so it starts before hydration. */
 [data-reveal="block"] {
