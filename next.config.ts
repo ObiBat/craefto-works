@@ -49,6 +49,12 @@ const nextConfig: NextConfig = {
         destination: "https://www.craefto.com/",
         permanent: false,
       },
+      // The company profile was renamed with the studio (October 2026).
+      {
+        source: "/craefto-company-profile.pdf",
+        destination: "/craefto-works-company-profile.pdf",
+        permanent: true,
+      },
       {
         source: "/journal/author/craefto-lab",
         destination: "/journal/author/craefto-works",

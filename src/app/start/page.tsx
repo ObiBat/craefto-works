@@ -4,18 +4,14 @@ import {
   ArrowRight,
   ArrowUpRight,
   CalendarCheck,
-  ChatCircleText,
   CheckCircle,
   Cube,
-  FileText,
   Lightbulb,
   Lightning,
   MapPin,
-  RocketLaunch,
   SmileyMeh,
   Stack,
   Target,
-  VideoCamera,
   XCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import { Header, Footer, Container, Section } from "@/components/layout";
@@ -27,6 +23,7 @@ import { Glide } from "@/components/editorial/glide";
 import { RevealText } from "@/components/editorial/reveal-text";
 import { ScrollSpotlight } from "@/components/editorial/scroll-spotlight";
 import { caseStudies } from "@/content/case-studies";
+import { startSteps } from "@/content/studio";
 import { formatPrice, monthlyPlans, plansFrom, priceFor, priceRanges, rangeLabel } from "@/lib/pricing";
 
 // "First time here?": the orientation page. Who we are in brief, the ways to
@@ -118,16 +115,6 @@ const startingPoints: { icon: Icon; text: string }[] = [
   { icon: Target, text: "A goal without a plan yet" },
 ];
 
-const steps: { icon: Icon; title: string; text: string }[] = [
-  { icon: ChatCircleText, title: "Tell us what you have in mind", text: "A sentence is enough. You don't need a polished brief." },
-  {
-    icon: VideoCamera,
-    title: "We talk it through",
-    text: "A free 30-minute discovery call on Google Meet, about your business and your goals.",
-  },
-  { icon: FileText, title: "You get a proposal", text: "A fixed price and a timeline, so you can decide with everything on the table." },
-  { icon: RocketLaunch, title: "We get to work", text: "You work directly with the people doing the work, and hear from us throughout." },
-];
 
 function SectionIntro({ id, number, label, title, children }: { id: string; number: string; label: string; title: string; children?: React.ReactNode }) {
   return (
@@ -319,7 +306,7 @@ export default function StartPage() {
                 </ul>
               </AnimatedSection>
               <ol className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {steps.map((step, index) => {
+                {startSteps.map((step, index) => {
                   const StepIcon = step.icon;
                   return (
                     <li key={step.title} className="lit-card flex flex-col gap-10 rounded-3xl p-7">

@@ -4,10 +4,10 @@ import { useEffect, useState, type ComponentProps, type MouseEvent, type ReactNo
 import { getCalApi } from "@calcom/embed-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { siteConfig } from "@/lib/constants";
 
 const NAMESPACE = "craefto-discovery";
-/** Craefto's public Discovery Call on Cal.com: free, 30 minutes, on Google Meet. */
-const CAL_LINK = "craefto/discovery-call";
+const CAL_LINK = siteConfig.calLink;
 /** The booking question a page can fill in (a plan's start page names the plan). */
 const PROJECT_FIELD = "Tell-us-about-your-project";
 

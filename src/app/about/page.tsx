@@ -1,21 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Icon } from "@phosphor-icons/react";
 import {
-  Aperture,
   ArrowRight,
   ArrowUpRight,
   ArrowsClockwise,
-  Browsers,
-  ChartLineUp,
-  Compass,
-  Flag,
-  FlowArrow,
-  Key,
-  Lifebuoy,
-  PenNib,
-  Receipt,
-  UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { AnimatedCounter, AnimatedSection, HeroText, PageTransition, SectionLabel } from "@/components/ui";
@@ -25,16 +13,14 @@ import { Team } from "@/components/sections/team";
 import { Glide } from "@/components/editorial/glide";
 import { RevealText } from "@/components/editorial/reveal-text";
 import { ScrollSpotlight } from "@/components/editorial/scroll-spotlight";
-import { capabilities, capabilityHref, type CapabilityId } from "@/content/capabilities";
+import { capabilities, capabilityHref } from "@/content/capabilities";
 import { caseStudies, type CaseStudy } from "@/content/case-studies";
+import { beliefs, capabilityIcons, clientWork, commitments, ownWork, studioFacts, studioStory } from "@/content/studio";
 import { formatPrice, plansFrom } from "@/lib/pricing";
 
-// Every claim here is one the site makes elsewhere: the numbers come from
-// the case studies, and the commitments from the services FAQ and the Terms.
-// Change those first, then this page.
+// Every claim here is one the site makes elsewhere: the facts, principles
+// and commitments live in content/studio.ts, shared with the company profile.
 
-const clientWork = caseStudies.filter((study) => !/^internal/i.test(study.client));
-const ownWork = caseStudies.filter((study) => /^internal/i.test(study.client));
 
 const WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 const inWords = (n: number) => WORDS[n] ?? String(n);
@@ -45,61 +31,6 @@ const heroArt = ["fx-foundations", "japanoma", "mng-steel", "tav-partners"]
   .map((slug) => caseStudies.find((study) => study.slug === slug))
   .filter((study): study is CaseStudy => Boolean(study));
 
-const facts = [
-  { value: caseStudies.length, label: "Projects shipped" },
-  { value: clientWork.length, label: "For clients" },
-  { value: ownWork.length, label: "Products of our own" },
-  // MNG Steel's site launched in Mongolian, English and Chinese.
-  { value: 3, label: "Languages launched" },
-];
-
-const capabilityIcons: Record<CapabilityId, Icon> = {
-  brand: PenNib,
-  product: Browsers,
-  systems: FlowArrow,
-  media: Aperture,
-  growth: ChartLineUp,
-};
-
-const beliefs = [
-  { title: "Clarity over cleverness.", text: "If it can't be explained simply, it isn't ready." },
-  { title: "Systems over shortcuts.", text: "Foundations that hold as you grow, not fixes that turn into debt." },
-  { title: "Craft over speed.", text: "We ship when it's right, not when it's rushed. The details are the work." },
-  { title: "Partnership over transactions.", text: "We work with you, not just for you, and plan for the years after launch." },
-];
-
-const commitments: { icon: Icon; title: string; text: string }[] = [
-  {
-    icon: Receipt,
-    title: "A fixed price before we start",
-    text: "We scope the work with you and give you a fixed price before any of it begins.",
-  },
-  {
-    icon: Flag,
-    title: "You pay as work is delivered",
-    text: "Projects run in milestones, typically 30% upfront, 40% at design approval and 30% on launch, so you never pay ahead of the work.",
-  },
-  {
-    icon: UsersThree,
-    title: "One team, no handoffs",
-    text: "Design and development happen in the same studio, as one continuous conversation, so nothing gets lost between teams.",
-  },
-  {
-    icon: Compass,
-    title: "No surprises",
-    text: "Your timeline is confirmed in the proposal, and we keep you informed throughout, in plain language.",
-  },
-  {
-    icon: Lifebuoy,
-    title: "We stay after launch",
-    text: "Every project includes 30 days of support. After that, a monthly plan covers fixes, updates and new work.",
-  },
-  {
-    icon: Key,
-    title: "What we make is yours",
-    text: "On full payment, the final work belongs to you, and we hand over the accounts we set up for you.",
-  },
-];
 
 const muted = "text-[hsl(var(--color-foreground-muted))]";
 
@@ -224,7 +155,7 @@ export default function AboutPage() {
               </div>
 
               <dl data-no-reveal className="mt-16 grid grid-cols-2 gap-x-8 gap-y-10 md:mt-24 md:grid-cols-4">
-                {facts.map((fact) => (
+                {studioFacts.map((fact) => (
                   <div key={fact.label} className="flex flex-col-reverse gap-2">
                     <dt className={`text-sm ${muted}`}>{fact.label}</dt>
                     <dd className="font-[family-name:var(--font-heading)] text-5xl font-semibold tracking-tight tabular-nums md:text-6xl">
@@ -246,17 +177,10 @@ export default function AboutPage() {
               <AnimatedSection delay={0.1}>
                 <div className="mt-12 grid gap-8 lg:grid-cols-2 lg:gap-20">
                   <p className={`text-lg leading-relaxed ${muted}`}>
-                    <strong className="font-medium text-[hsl(var(--color-foreground))]">
-                      Obi Batbileg founded Craefto Works in Sydney in 2025
-                    </strong>{" "}
-                    on a simple belief: businesses deserve better than overpriced templates and a different supplier for every part of
-                    the job.
+                    <strong className="font-medium text-[hsl(var(--color-foreground))]">{studioStory.founded}</strong>{" "}
+                    {studioStory.belief}
                   </p>
-                  <p className={`text-lg leading-relaxed ${muted}`}>
-                    A brand, a website, the systems behind it and the content that fills it too often come from different places, and
-                    they never quite fit together. So we brought all five capabilities into one studio, where design and engineering are
-                    one discipline and every piece is built to work with the next.
-                  </p>
+                  <p className={`text-lg leading-relaxed ${muted}`}>{studioStory.why}</p>
                 </div>
               </AnimatedSection>
               <p

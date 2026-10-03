@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "images:placeholders": "node scripts/generate-image-placeholders.mjs",
+    "profile:pdf": "node scripts/company-profile.mjs",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test"
   },

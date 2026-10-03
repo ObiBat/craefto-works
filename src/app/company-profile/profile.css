@@ -1,0 +1,1070 @@
+/*
+ * Company profile: A4 landscape sheets, printed to PDF by
+ * scripts/company-profile.mjs. The light tokens are fixed here, so the PDF
+ * never follows a dark system theme, and every class is prefixed "cp-".
+ *
+ * The generator prints with screen styles, because the site's print
+ * stylesheet strips backgrounds and colour, and marks the page with
+ * "cp-print" for what differs on paper: no grey desk, no gaps, no shadows.
+ */
+
+@page {
+  size: 297mm 210mm;
+  margin: 0;
+}
+
+/* Fixed elements print on every sheet: the dev tools badge and the site's
+   back-to-top button. */
+body:has(.cp) nextjs-portal,
+body:has(.cp) .back-to-top {
+  display: none !important;
+}
+
+.cp {
+  --bg: #fdfcfa;
+  --bg-subtle: #f7f5f1;
+  --bg-muted: #efece7;
+  --fg: #121110;
+  --fg-muted: #3f3b37;
+  --fg-subtle: #67615b;
+  --accent: hsl(145 18% 36%);
+  --accent-deep: hsl(145 20% 26%);
+  --accent-subtle: hsl(145 12% 94%);
+  --heading: var(--font-archivo), "Archivo", ui-sans-serif, sans-serif;
+  --sans: var(--font-dm-sans), "DM Sans", ui-sans-serif, sans-serif;
+  --mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
+  --side: 16mm;
+  counter-reset: sheet;
+  background: #d9d5ce;
+  padding: 10mm 0;
+  font-family: var(--sans);
+  color: var(--fg);
+}
+
+.cp-print .cp {
+  background: none;
+  padding: 0;
+}
+
+/* ---------------------------------------------------------------- sheets */
+
+.cp-sheet {
+  position: relative;
+  width: 297mm;
+  height: 210mm;
+  overflow: hidden;
+  margin: 0 auto 8mm;
+  background: var(--bg);
+  color: var(--fg);
+  counter-increment: sheet;
+  break-after: page;
+  box-shadow: 0 1.5mm 6mm rgb(0 0 0 / 0.14);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.cp-sheet:last-child {
+  break-after: auto;
+}
+
+.cp-print .cp-sheet {
+  margin: 0;
+  box-shadow: none;
+}
+
+.cp-subtle {
+  background: var(--bg-subtle);
+}
+
+.cp-dark {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.cp-accent-sheet {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* The page's working area, inside the running header and footer. */
+.cp-body {
+  position: absolute;
+  inset: 26mm var(--side) 20mm;
+}
+
+/* ------------------------------------------------------- running header */
+
+.cp-run,
+.cp-foot {
+  position: absolute;
+  left: var(--side);
+  right: var(--side);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cp-run {
+  top: 11mm;
+}
+
+.cp-foot {
+  bottom: 9mm;
+  color: var(--fg-subtle);
+}
+
+.cp-dark .cp-foot,
+.cp-accent-sheet .cp-foot {
+  color: rgb(255 255 255 / 0.6);
+}
+
+.cp-pageno::after {
+  content: counter(sheet, decimal-leading-zero);
+}
+
+.cp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.2mm;
+  font-family: var(--heading);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.cp-run .cp-brand {
+  font-size: 8.5pt;
+}
+
+/* ----------------------------------------------------------- type */
+
+.cp-mono {
+  font-family: var(--mono);
+  font-size: 6.6pt;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.cp-num {
+  color: var(--accent);
+  margin-right: 1.6mm;
+}
+
+.cp-dark .cp-num,
+.cp-accent-sheet .cp-num {
+  color: rgb(255 255 255 / 0.7);
+}
+
+.cp-heading {
+  font-family: var(--heading);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  color: inherit;
+  margin: 0;
+}
+
+.cp-title {
+  font-size: 34pt;
+  line-height: 0.98;
+}
+
+.cp-lead {
+  font-family: var(--heading);
+  font-size: 13pt;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1.32;
+  color: var(--fg-muted);
+  margin: 0;
+}
+
+.cp-text {
+  font-size: 9.2pt;
+  line-height: 1.55;
+  color: var(--fg-muted);
+  margin: 0;
+}
+
+.cp-small {
+  font-size: 8pt;
+  line-height: 1.5;
+  color: var(--fg-muted);
+  margin: 0;
+}
+
+.cp-label {
+  color: var(--fg-subtle);
+  margin: 0 0 3mm;
+}
+
+.cp-accent {
+  color: var(--accent);
+}
+
+.cp-strong {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+/* ----------------------------------------------------------- pieces */
+
+.cp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.6mm;
+}
+
+.cp-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.4mm;
+  padding: 1.3mm 2.6mm;
+  border-radius: 999px;
+  background: var(--accent-subtle);
+  color: var(--accent-deep);
+  font-family: var(--mono);
+  font-size: 6.2pt;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cp-tag b {
+  font-weight: 500;
+  opacity: 0.65;
+}
+
+.cp-ticks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2.2mm;
+}
+
+.cp-ticks li {
+  display: grid;
+  grid-template-columns: 4.2mm 1fr;
+  gap: 2.4mm;
+  align-items: start;
+  font-size: 8.8pt;
+  line-height: 1.4;
+  color: var(--fg-muted);
+}
+
+.cp-tick {
+  width: 4.2mm;
+  height: 4.2mm;
+  margin-top: 0.15mm;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+}
+
+.cp-icon-tile {
+  width: 12mm;
+  height: 12mm;
+  border-radius: 3.4mm;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+}
+
+.cp-card {
+  border-radius: 5mm;
+  background: var(--bg-subtle);
+  padding: 6mm;
+}
+
+.cp-subtle .cp-card {
+  background: var(--bg);
+}
+
+.cp-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cp-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 5mm;
+  background: var(--bg-muted);
+}
+
+.cp-caption {
+  position: absolute;
+  left: 4mm;
+  bottom: 4mm;
+  padding: 1.5mm 3mm;
+  border-radius: 999px;
+  background: rgb(253 252 250 / 0.92);
+  color: var(--fg);
+}
+
+.cp-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The site's touch-target minimum doesn't apply on paper. */
+.cp a {
+  min-height: 0;
+}
+
+/* ----------------------------------------------------------- cover */
+
+.cp-cover-top,
+.cp-cover-bottom {
+  position: absolute;
+  left: var(--side);
+  right: var(--side);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cp-cover-top {
+  top: 13mm;
+}
+
+.cp-cover-top .cp-brand {
+  font-size: 12pt;
+}
+
+.cp-cover-bottom {
+  bottom: 12mm;
+  color: var(--fg-subtle);
+}
+
+.cp-cover-form {
+  position: absolute;
+  right: 10mm;
+  top: 30mm;
+  width: 140mm;
+  height: 140mm;
+  object-fit: contain;
+}
+
+.cp-cover-body {
+  position: absolute;
+  left: var(--side);
+  bottom: 34mm;
+  width: 168mm;
+}
+
+.cp-cover-title {
+  font-size: 54pt;
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+  margin: 5mm 0 7mm;
+}
+
+.cp-cover-caps {
+  font-family: var(--heading);
+  font-size: 13pt;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--fg-muted);
+  margin: 0;
+}
+
+.cp-cover-caps span {
+  color: var(--accent);
+  margin: 0 1.6mm;
+}
+
+/* ----------------------------------------------------------- studio */
+
+.cp-studio {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 18mm;
+  height: 100%;
+}
+
+.cp-studio-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-studio-left .cp-title {
+  font-size: 38pt;
+  margin: 0 0 9mm;
+}
+
+.cp-story {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8mm;
+}
+
+.cp-pull {
+  margin-top: auto;
+  font-family: var(--heading);
+  font-size: 15pt;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.18;
+  color: var(--fg);
+}
+
+.cp-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4mm;
+}
+
+.cp-fact {
+  border-radius: 5mm;
+  background: var(--bg-subtle);
+  padding: 5mm 6mm 5.5mm;
+}
+
+.cp-fact-value {
+  font-family: var(--heading);
+  font-size: 34pt;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.cp-contents {
+  list-style: none;
+  margin: 9mm 0 0;
+  padding: 0;
+  display: grid;
+  gap: 2.4mm;
+}
+
+.cp-contents li {
+  display: grid;
+  grid-template-columns: 9mm 1fr auto;
+  align-items: baseline;
+  font-family: var(--heading);
+  font-size: 11.5pt;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.cp-contents li .cp-mono {
+  font-size: 6.6pt;
+}
+
+/* ----------------------------------------------------------- capabilities overview */
+
+.cp-overview {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4mm;
+  margin-top: 10mm;
+}
+
+.cp-overview .cp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 9mm;
+  min-height: 70mm;
+}
+
+.cp-overview-name {
+  font-size: 19pt;
+  margin: 1.5mm 0 2.5mm;
+}
+
+.cp-combos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8mm;
+  margin-top: 9mm;
+}
+
+.cp-combo-title {
+  font-family: var(--heading);
+  font-size: 11pt;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0 0 2mm;
+}
+
+/* ----------------------------------------------------------- one capability */
+
+.cp-capability {
+  display: grid;
+  grid-template-columns: 1fr 104mm;
+  gap: 14mm;
+  height: 100%;
+}
+
+.cp-capability-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 4mm;
+  margin-bottom: 4mm;
+}
+
+.cp-capability-number {
+  font-family: var(--heading);
+  font-weight: 600;
+  font-size: 15pt;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  padding-bottom: 2.6mm;
+}
+
+.cp-capability-name {
+  font-size: 52pt;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+
+.cp-capability-cols {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 9mm;
+  margin-top: 7mm;
+}
+
+.cp-price {
+  display: grid;
+  gap: 0.6mm;
+  margin-bottom: 3.4mm;
+}
+
+.cp-price-amount {
+  font-family: var(--heading);
+  font-size: 12.5pt;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.cp-brief {
+  margin-top: auto;
+  padding-top: 6mm;
+}
+
+.cp-brief-quote {
+  font-family: var(--heading);
+  font-size: 11pt;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  color: var(--fg);
+  margin: 0;
+}
+
+.cp-capability-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6mm;
+}
+
+.cp-capability-side .cp-frame {
+  height: 78mm;
+}
+
+.cp-work-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 3.4mm;
+}
+
+.cp-work-list li p {
+  margin: 0;
+}
+
+.cp-work-name {
+  font-family: var(--heading);
+  font-size: 10.5pt;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-bottom: 0.6mm !important;
+}
+
+/* ----------------------------------------------------------- process */
+
+.cp-stages {
+  list-style: none;
+  margin: 10mm 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5mm;
+  position: relative;
+}
+
+.cp-stage-marker {
+  width: 11mm;
+  height: 11mm;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: var(--heading);
+  font-weight: 700;
+  font-size: 10pt;
+  margin-bottom: 5mm;
+}
+
+.cp-stage-name {
+  font-size: 14pt;
+  margin: 0 0 2mm;
+}
+
+.cp-beliefs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6mm;
+  margin-top: 14mm;
+}
+
+.cp-belief-title {
+  font-family: var(--heading);
+  font-size: 13.5pt;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  margin: 2mm 0 2.4mm;
+}
+
+.cp-commitments {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4mm;
+  margin-top: 10mm;
+}
+
+.cp-commitments .cp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8mm;
+  min-height: 52mm;
+}
+
+.cp-card-title {
+  font-family: var(--heading);
+  font-size: 12pt;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.8mm;
+}
+
+/* ----------------------------------------------------------- prices */
+
+.cp-split {
+  display: grid;
+  grid-template-columns: 82mm 1fr;
+  gap: 16mm;
+  height: 100%;
+}
+
+.cp-split-intro {
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-split-intro .cp-title {
+  margin-bottom: 6mm;
+}
+
+.cp-note {
+  margin-top: auto;
+}
+
+.cp-price-groups {
+  display: grid;
+  align-content: start;
+  gap: 2.4mm;
+}
+
+.cp-price-group {
+  display: grid;
+  grid-template-columns: 30mm 1fr;
+  gap: 5mm;
+  align-items: start;
+  border-radius: 4mm;
+  background: var(--bg-subtle);
+  padding: 3.6mm 5mm;
+}
+
+.cp-price-group-name {
+  display: flex;
+  align-items: baseline;
+  gap: 1.8mm;
+  font-family: var(--heading);
+  font-size: 11.5pt;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.cp-price-row {
+  display: grid;
+  grid-template-columns: 1fr 44mm 26mm;
+  gap: 4mm;
+  align-items: baseline;
+  padding: 0.9mm 0;
+  font-size: 8.8pt;
+  color: var(--fg-muted);
+}
+
+.cp-price-row b {
+  font-family: var(--heading);
+  font-weight: 600;
+  font-size: 9.6pt;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+
+/* The cards share their rows (subgrid), so the prices line up whatever the
+   length of each plan's description. */
+.cp-plans {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto 1fr;
+  column-gap: 4mm;
+}
+
+.cp-plan {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  border-radius: 5mm;
+  background: var(--bg-subtle);
+  overflow: hidden;
+}
+
+.cp-plan-head {
+  padding: 5mm 5.5mm 4.6mm;
+  background: var(--accent-subtle);
+}
+
+.cp-plan-name {
+  font-size: 19pt;
+  color: var(--accent-deep);
+  margin: 0 0 1.6mm;
+}
+
+.cp-plan-body {
+  padding: 4.6mm 5.5mm 5.5mm;
+  display: flex;
+  flex-direction: column;
+  gap: 4.6mm;
+}
+
+.cp-plan-price {
+  font-family: var(--heading);
+  font-size: 21pt;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.cp-plan-price small {
+  font-size: 8.5pt;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--fg-subtle);
+  margin-left: 1mm;
+}
+
+.cp-plan-foot {
+  margin-top: auto;
+}
+
+.cp-ai {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 8mm;
+  align-items: start;
+  margin-top: 4mm;
+  border-radius: 5mm;
+  background: var(--fg);
+  color: var(--bg);
+  padding: 5.5mm 6mm;
+}
+
+.cp-ai .cp-text,
+.cp-ai .cp-ticks li {
+  color: rgb(253 252 250 / 0.78);
+}
+
+.cp-ai .cp-ticks {
+  grid-template-columns: 1fr 1fr;
+  column-gap: 6mm;
+}
+
+/* ----------------------------------------------------------- case studies */
+
+.cp-hero-image {
+  position: absolute;
+  inset: 0;
+}
+
+.cp-hero-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(10 10 9 / 0.94) 0%, rgb(10 10 9 / 0.78) 30%, rgb(10 10 9 / 0) 64%);
+}
+
+.cp-hero-text {
+  position: absolute;
+  left: var(--side);
+  right: var(--side);
+  bottom: 18mm;
+  color: #fff;
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 14mm;
+  align-items: end;
+}
+
+.cp-hero-text .cp-heading {
+  font-size: 58pt;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+  margin-top: 3mm;
+}
+
+.cp-hero-text .cp-lead {
+  color: rgb(255 255 255 / 0.86);
+}
+
+.cp-hero-text .cp-tag {
+  background: rgb(255 255 255 / 0.16);
+  color: #fff;
+}
+
+.cp-case {
+  display: grid;
+  grid-template-columns: 1fr 96mm;
+  gap: 13mm;
+  height: 100%;
+}
+
+.cp-case.cp-flip {
+  grid-template-columns: 96mm 1fr;
+}
+
+.cp-case-media {
+  display: grid;
+  gap: 4mm;
+  min-height: 0;
+}
+
+.cp-case-media .cp-frame {
+  min-height: 0;
+}
+
+.cp-case-text {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cp-case-text .cp-title {
+  font-size: 30pt;
+  margin: 1.5mm 0 3mm;
+}
+
+.cp-case-text .cp-lead {
+  font-size: 11.5pt;
+  margin-bottom: 4.5mm;
+}
+
+.cp-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.4mm;
+  margin-top: auto;
+  padding-top: 5mm;
+}
+
+.cp-metric {
+  border-radius: 3.6mm;
+  background: var(--bg-subtle);
+  padding: 3mm 3.6mm 3.2mm;
+}
+
+.cp-metric-value {
+  font-family: var(--heading);
+  font-size: 14.5pt;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.cp-metric-label {
+  margin-top: 1mm;
+  font-size: 7pt;
+  line-height: 1.3;
+  color: var(--fg-subtle);
+}
+
+.cp-more {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4mm;
+  margin-top: 9mm;
+}
+
+.cp-more-item .cp-frame {
+  aspect-ratio: 4 / 3;
+  border-radius: 4mm;
+  margin-bottom: 3.6mm;
+}
+
+.cp-more-name {
+  font-size: 13pt;
+  margin: 1.2mm 0 1.6mm;
+}
+
+/* ----------------------------------------------------------- team */
+
+.cp-team {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5mm;
+  margin-top: 9mm;
+}
+
+.cp-team .cp-frame {
+  aspect-ratio: 4 / 5;
+  border-radius: 5mm;
+  margin-bottom: 4mm;
+}
+
+/* A closer crop, so every portrait reads as head and shoulders. */
+.cp-team .cp-frame[data-zoom] .cp-img {
+  transform: scale(var(--zoom));
+  transform-origin: var(--focus);
+}
+
+.cp-team-name {
+  font-size: 14pt;
+  margin: 0 0 1.2mm;
+}
+
+/* ----------------------------------------------------------- start + back */
+
+.cp-start {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 18mm;
+  height: 100%;
+}
+
+.cp-start .cp-heading {
+  font-size: 46pt;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+  color: #fff;
+  margin: 4mm 0 7mm;
+}
+
+.cp-start .cp-lead {
+  color: rgb(255 255 255 / 0.84);
+}
+
+.cp-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  align-content: end;
+  gap: 3.4mm;
+}
+
+.cp-steps li {
+  display: grid;
+  grid-template-columns: 10mm 1fr;
+  gap: 4mm;
+  align-items: start;
+  border-radius: 4.5mm;
+  background: rgb(255 255 255 / 0.1);
+  padding: 4.2mm 5mm;
+}
+
+.cp-step-number {
+  width: 10mm;
+  height: 10mm;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--accent-deep);
+  display: grid;
+  place-items: center;
+  font-family: var(--heading);
+  font-weight: 700;
+  font-size: 9.5pt;
+}
+
+.cp-step-title {
+  font-family: var(--heading);
+  font-size: 12pt;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 1mm;
+}
+
+.cp-step-text {
+  font-size: 8.6pt;
+  line-height: 1.45;
+  color: rgb(255 255 255 / 0.8);
+  margin: 0;
+}
+
+.cp-contact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5mm 8mm;
+  margin-top: auto;
+}
+
+.cp-contact .cp-mono {
+  color: rgb(255 255 255 / 0.62);
+  margin: 0 0 1.4mm;
+}
+
+.cp-contact-value {
+  font-family: var(--heading);
+  font-size: 12pt;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #fff;
+  text-decoration: none;
+  margin: 0;
+}
+
+.cp-back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6mm;
+}
+
+.cp-back .cp-heading {
+  font-size: 30pt;
+  letter-spacing: -0.04em;
+  color: var(--bg);
+}
+
+.cp-back-tagline {
+  font-family: var(--heading);
+  font-size: 13pt;
+  font-weight: 500;
+  color: rgb(253 252 250 / 0.72);
+  margin: 0;
+}
