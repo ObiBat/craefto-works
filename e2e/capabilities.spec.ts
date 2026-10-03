@@ -32,7 +32,10 @@ test.describe("capabilities", () => {
   test("an enquiry can start from a capability", async ({ page }) => {
     await page.goto("/contact?service=media");
     const choices = page.locator('input[name="capability"]');
-    // The five capabilities, equally, then "a mix".
+    // The form renders once the page hydrates (it reads the address), so wait
+    // for it before reading the choices: the five capabilities, equally, then
+    // "a mix".
+    await expect(choices).toHaveCount(NAMES.length + 1);
     expect(await choices.evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))).toEqual([...NAMES.map((name) => name.toLowerCase()), "other"]);
     for (const name of NAMES) await expect(page.getByRole("radio", { name: new RegExp(`^\\d{2}\\s*${name}`) })).toHaveCount(1);
     await expect(page.locator('input[name="capability"][value="media"]')).toBeChecked();
