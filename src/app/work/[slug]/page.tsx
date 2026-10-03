@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { capabilityName } from "@/content/capabilities";
 import { notFound } from "next/navigation";
 import { caseStudies, getCaseStudy } from "@/content/case-studies";
 import { relatedWork } from "@/content/related-work";
@@ -45,7 +46,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         description: study.description,
         image: `${SITE_URL}${study.heroImage}`,
         dateCreated: String(study.year),
-        genre: study.category,
+        genre: study.capabilities.map(capabilityName).join(", "),
         keywords: study.services.join(", "),
         about: { "@type": "Organization", name: study.client },
         creator: studio,

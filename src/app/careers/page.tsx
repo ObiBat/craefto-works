@@ -1,27 +1,36 @@
-"use client";
-
 import Link from "next/link";
+import type { Icon } from "@phosphor-icons/react";
+import { ArrowUpRight, Code, Compass, FilmSlate, FlowArrow, PenNib, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { Header, Footer, Container, Section } from "@/components/layout";
-import {
-  Separator,
-  PageTransition,
-  AnimatedSection,
-  StaggeredGrid,
-  StaggeredItem,
-  HeroText,
-  SectionLabel,
-  Badge,
-} from "@/components/ui";
+import { AnimatedSection, Badge, HeroText, PageTransition } from "@/components/ui";
 import { Button } from "@/components/ui/button";
-import { roles } from "@/lib/careers";
-import { RevealText } from "@/components/editorial/reveal-text";
 import { Glide } from "@/components/editorial/glide";
+import { RevealText } from "@/components/editorial/reveal-text";
+import { ScrollSpotlight } from "@/components/editorial/scroll-spotlight";
+import { SectionIntro } from "@/components/editorial/section-intro";
+import { StudioCta } from "@/components/sections/studio-cta";
+import { capabilityName, type CapabilityId } from "@/content/capabilities";
+import { roles } from "@/lib/careers";
+
+// The studio as a place to work. The projects named here are case studies
+// (content/case-studies.ts); the perks and principles are the studio's own.
+
+const muted = "text-[hsl(var(--color-foreground-muted))]";
+
+const disciplines: { icon: Icon; title: string; text: string; capabilities: CapabilityId[] }[] = [
+  { icon: PenNib, title: "Designers", text: "Identities, interfaces and the design systems that hold them together.", capabilities: ["brand", "product"] },
+  { icon: Code, title: "Developers", text: "Websites, apps and platforms, built to last and handed over properly.", capabilities: ["product", "systems"] },
+  { icon: Compass, title: "Strategists", text: "Positioning, planning and campaigns that bring the right people in.", capabilities: ["brand", "growth"] },
+  { icon: FilmSlate, title: "Filmmakers and photographers", text: "Shoots, edits and motion, made for where they will run.", capabilities: ["media"] },
+  { icon: FlowArrow, title: "Technologists", text: "Automation, integrations and AI workflows that take work off a team.", capabilities: ["systems"] },
+  { icon: Sparkle, title: "And more", text: "Writers, marketers, producers: anyone whose craft makes the work better.", capabilities: ["brand", "product", "systems", "media", "growth"] },
+];
 
 const principles = [
-  { text: "Ship real work. No spec projects, no fake briefs." },
-  { text: "Trust taste over process. We hire creatives, not task completers." },
-  { text: "Small team means your voice carries. Every opinion shapes the output." },
-  { text: "Remote by default. Your best work happens where you feel best." },
+  { title: "Ship real work.", text: "No spec projects and no fake briefs. What you make goes live." },
+  { title: "Trust taste over process.", text: "We hire people for their judgement, then let them use it." },
+  { title: "Small team, loud voices.", text: "Every opinion shapes the work, whatever your craft." },
+  { title: "Remote by default.", text: "Your best work happens where you feel best." },
 ];
 
 const perks = [
@@ -39,270 +48,200 @@ export default function CareersPage() {
       <Header />
       <PageTransition>
         <main id="main-content" className="pt-20">
-
-          {/* ── HERO ── */}
+          {/* Hero */}
           <Section spacing="lg">
             <Container>
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-end">
-                {/* Left: headline */}
-                <div className="lg:col-span-8">
-                  <nav className="mb-10" aria-label="Breadcrumb">
-                    <ol className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
-                      <li>
-                        <Link href="/" className="hover:text-[hsl(var(--color-foreground))] transition-colors">Home</Link>
-                      </li>
-                      <li><span className="mx-2">/</span></li>
-                      <li className="text-[hsl(var(--color-foreground))] font-medium">Careers</li>
-                    </ol>
-                  </nav>
-
-                  <h1 className="font-semibold tracking-tight mb-0 leading-[0.92]">
-                    <RevealText text="We make things" mode="load" />
+              <div className="grid grid-cols-1 items-end gap-12 lg:grid-cols-12 lg:gap-8">
+                <div className="lg:col-span-7">
+                  <p className="mb-6 font-mono text-xs font-medium uppercase tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">
+                    Careers at Craefto Works
+                  </p>
+                  <h1 className="mb-0 font-semibold leading-[0.92] tracking-tight">
+                    <RevealText text="Many crafts." mode="load" />
                     <br />
-                    <span className="text-[hsl(var(--color-accent))]"><RevealText text="worth looking at." mode="load" delay={3} /></span>
+                    <span className="text-[hsl(var(--color-accent))]">
+                      <RevealText text="One studio." mode="load" delay={2} />
+                    </span>
                     <br />
-                    <RevealText text="Join us." mode="load" delay={6} />
+                    <RevealText text="Join us." mode="load" delay={4} />
                   </h1>
                 </div>
-
-                {/* Right: supporting text */}
-                <div className="lg:col-span-4">
+                <div className="lg:col-span-5">
                   <HeroText delay={0.15}>
-                    <p className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed">
-                      Craefto is a creative tech studio where design is not decoration. We build brands, products, and visual systems for companies that take craft seriously.
+                    <p className={`text-lg leading-relaxed ${muted}`}>
+                      Craefto Works is a creative &amp; technology studio in Sydney. Designers, developers, strategists, filmmakers,
+                      photographers and technologists work side by side on brand, product, systems, media and growth, often on the same
+                      project.
                     </p>
                   </HeroText>
                   <HeroText delay={0.25}>
-                    <div className="mt-8 flex items-center gap-4">
-                      <span className="inline-flex items-center gap-2 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">
-                        <span className="w-2 h-2 rounded-full bg-[hsl(var(--color-accent))] animate-pulse" />
-                        {roles.length} open {roles.length === 1 ? "role" : "roles"}
-                      </span>
-                      <span className="text-sm text-[hsl(var(--color-foreground-subtle))]">·</span>
-                      <span className="text-sm text-[hsl(var(--color-foreground-muted))]">Remote</span>
-                    </div>
+                    <p className="mt-8 flex items-center gap-3 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--color-accent))]" />
+                      {roles.length} open {roles.length === 1 ? "role" : "roles"}
+                      <span className="text-[hsl(var(--color-foreground-subtle))]">·</span>
+                      Remote
+                    </p>
                   </HeroText>
                 </div>
               </div>
             </Container>
           </Section>
 
-          {/* ── FULL WIDTH DIVIDER ── */}
-          <Container>
-            <Separator />
-          </Container>
-
-          {/* ── PHILOSOPHY — EDITORIAL PROSE ── */}
+          {/* 01: why the studio works the way it does. */}
           <Section spacing="lg">
             <Container>
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
-                <div className="lg:col-span-4">
-                  <AnimatedSection>
-                    <SectionLabel number="01" label="Philosophy" />
-                    <h2 className="font-semibold tracking-tight mt-4">
-                      Built for the
-                      <br />
-                      obsessive
-                    </h2>
-                  </AnimatedSection>
+              <SectionIntro number="01" label="The studio" title="One team, every craft" />
+              <AnimatedSection delay={0.1}>
+                <div className="mt-12 grid gap-8 lg:grid-cols-2 lg:gap-20">
+                  <p className={`text-lg leading-relaxed ${muted}`}>
+                    We bring brand, product, systems, media and growth under one roof, so the people who make each piece work together
+                    from the first conversation. A designer, a developer and a filmmaker can share a project, and the work is better
+                    for it.
+                  </p>
+                  <p className={`text-lg leading-relaxed ${muted}`}>
+                    The work is varied and it ships. So far that has meant a brand system for a cross-border fintech, the automation
+                    behind a property platform, a 3D chess learning platform and a street shoot for a Sydney event collective.
+                  </p>
                 </div>
-
-                <div className="lg:col-span-7 lg:col-start-6">
-                  <AnimatedSection delay={0.1}>
-                    <div className="space-y-8 text-lg text-[hsl(var(--color-foreground-muted))] leading-[1.8]">
-                      <p data-ink>
-                        Most agencies hire creatives then micromanage them into mediocrity. We do the opposite. We set the vision together, then get out of your way. No design by committee. No pixel policing. If we hired you, we trust your taste.
-                      </p>
-                      <p data-ink>
-                        Projects here go live. You will build real brands, real campaigns, and real products that people actually see and interact with. Not pitch decks that collect dust in someone&apos;s inbox.
-                      </p>
-                      <p data-ink>
-                        One week you might be crafting a fintech brand identity. The next, social campaigns for a wellness startup. Then a presentation deck for a Series A raise. The variety keeps things fresh and your portfolio stacked.
-                      </p>
-                    </div>
-                  </AnimatedSection>
-                </div>
-              </div>
-            </Container>
-          </Section>
-
-          {/* ── PRINCIPLES — LINEAR STYLE NUMBERED LIST ── */}
-          <Section spacing="lg">
-            <Container>
-              <AnimatedSection>
-                <SectionLabel number="02" label="How we work" />
               </AnimatedSection>
-
-              <div className="mt-12 border-t border-[hsl(var(--color-border))]">
-                {principles.map((p, i) => (
-                  <AnimatedSection key={i} delay={i * 0.05}>
-                    <div className="flex items-start gap-4 py-6 border-b border-[hsl(var(--color-border))]">
-                      <span className="mt-2.5 w-1.5 h-1.5 rounded-full bg-[hsl(var(--color-accent))] flex-shrink-0" />
-                      <p className="text-lg md:text-xl font-medium text-[hsl(var(--color-foreground))] leading-snug tracking-tight">
-                        {p.text}
-                      </p>
-                    </div>
-                  </AnimatedSection>
-                ))}
-              </div>
+              <p
+                data-ink
+                className="mt-16 max-w-4xl font-[family-name:var(--font-heading)] text-3xl font-semibold leading-tight tracking-tight md:mt-24 md:text-5xl"
+              >
+                We set the direction together, then trust you with the craft.
+              </p>
             </Container>
           </Section>
 
-          {/* ── OPEN POSITIONS ── */}
+          {/* 02: who works here. */}
           <Section spacing="lg">
             <Container>
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
-                <div className="lg:col-span-4">
-                  <AnimatedSection>
-                    <SectionLabel number="03" label="Open roles" />
-                    <h2 className="font-semibold tracking-tight mt-4"><RevealText text={"Current openings"} /></h2>
-                  </AnimatedSection>
-                </div>
-
-                <div className="lg:col-span-7 lg:col-start-6">
-                  {roles.length > 0 ? (
-                    <Glide bleed={0} className="flex flex-col">
-                      {roles.map((role, i) => (
-                        <AnimatedSection key={role.slug} delay={i * 0.08}>
-                          <Link
-                            href={`/careers/${role.slug}`}
-                            data-glide-item
-                            className="group block -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 py-7 rounded-2xl transition-colors"
-                          >
-                            {/* Department + Meta */}
-                            <div className="flex flex-wrap items-center gap-3 mb-4">
-                              <Badge variant="accent">{role.department}</Badge>
-                              <span className="text-xs text-[hsl(var(--color-foreground-subtle))]">{role.location}</span>
-                              <span className="text-xs text-[hsl(var(--color-foreground-subtle))]">·</span>
-                              <span className="text-xs text-[hsl(var(--color-foreground-subtle))]">{role.type}</span>
-                            </div>
-
-                            {/* Title */}
-                            <div className="flex items-center justify-between gap-6">
-                              <h3 className="text-2xl md:text-3xl font-semibold tracking-tight group-hover:text-[hsl(var(--color-accent))] transition-colors duration-300">
-                                {role.title}
-                              </h3>
-                              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--color-background-muted))] flex items-center justify-center group-hover:bg-[hsl(var(--color-foreground))] transition-all duration-300">
-                                <svg
-                                  className="w-4 h-4 text-[hsl(var(--color-foreground-muted))] group-hover:text-[hsl(var(--color-background))] transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7v10" />
-                                </svg>
-                              </div>
-                            </div>
-
-                            {/* Description */}
-                            <p className="mt-3 text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-lg">
-                              {role.description.length > 160
-                                ? role.description.slice(0, 160).trim() + "..."
-                                : role.description}
-                            </p>
-                          </Link>
-                        </AnimatedSection>
-                      ))}
-                    </Glide>
-                  ) : (
-                    <AnimatedSection delay={0.1}>
-                      <div className="py-16 text-center">
-                        <p className="text-lg text-[hsl(var(--color-foreground-muted))] mb-6">
-                          No open positions right now.
-                        </p>
-                        <Button asChild>
-                          <Link href="/contact">
-                            <span className="btn-text-wrapper">
-                              <span className="btn-text-primary">Send a general application</span>
-                              <span className="btn-text-secondary" aria-hidden="true">Introduce yourself</span>
-                            </span>
-                          </Link>
-                        </Button>
-                      </div>
-                    </AnimatedSection>
-                  )}
-                </div>
-              </div>
-            </Container>
-          </Section>
-
-          {/* ── PERKS — MINIMAL GRID ── */}
-          <Section spacing="lg">
-            <Container>
-              <AnimatedSection>
-                <SectionLabel number="04" label="What you get" />
-              </AnimatedSection>
-
-              <StaggeredGrid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 mt-12 border-t border-[hsl(var(--color-border))]">
-                {perks.map((perk, i) => (
-                  <StaggeredItem key={perk.label}>
-                    <div className={`py-8 px-1 border-b border-[hsl(var(--color-border))] ${
-                      i % 3 !== 2 ? "lg:border-r" : ""
-                    } ${i % 2 !== 1 ? "sm:border-r lg:border-r-0" : "sm:border-r-0"} ${
-                      i % 3 !== 2 ? "lg:border-r" : "lg:border-r-0"
-                    } sm:px-6 lg:px-8`}>
-                      <span className="block mb-4 font-mono text-xs tabular-nums text-[hsl(var(--color-accent))]">
-                        {String(i + 1).padStart(2, "0")}
+              <SectionIntro number="02" label="Disciplines" title="Who you'd work with">
+                Each craft leads where it&apos;s strongest, and every project draws on several.
+              </SectionIntro>
+              <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {disciplines.map((discipline) => {
+                  const DisciplineIcon = discipline.icon;
+                  return (
+                    <li key={discipline.title} className="lit-card flex flex-col gap-10 rounded-3xl p-7">
+                      <span className="icon-tile">
+                        <DisciplineIcon size={30} weight="duotone" aria-hidden="true" />
                       </span>
-                      <p className="font-semibold tracking-tight text-[hsl(var(--color-foreground))] mb-2">
-                        {perk.label}
-                      </p>
-                      <p className="text-sm text-[hsl(var(--color-foreground-muted))] leading-relaxed">
-                        {perk.detail}
-                      </p>
-                    </div>
-                  </StaggeredItem>
-                ))}
-              </StaggeredGrid>
+                      <span className="flex flex-col gap-2">
+                        <span className="lit-card-title font-[family-name:var(--font-heading)] text-2xl font-semibold tracking-tight">
+                          {discipline.title}
+                        </span>
+                        <span className={`text-sm leading-relaxed ${muted}`}>{discipline.text}</span>
+                        <span className="mt-2 font-mono text-xs text-[hsl(var(--color-accent))]">
+                          {discipline.capabilities.length === 5 ? "All five capabilities" : discipline.capabilities.map(capabilityName).join(" · ")}
+                        </span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
             </Container>
           </Section>
 
-          {/* ── OPEN APPLICATION CTA — FULL BLEED ── */}
-          <Section spacing="xl">
+          {/* 03: how the team works. */}
+          <Section spacing="lg">
             <Container>
-              <AnimatedSection variant="scaleIn">
-                <div className="relative overflow-hidden rounded-2xl bg-[hsl(var(--color-foreground))] p-10 sm:p-16 md:p-24">
-                  <div className="relative z-10 max-w-2xl">
-                    <span className="text-xs font-medium uppercase font-mono tracking-[0.06em] text-white/40 mb-6 block">
-                      Open application
-                    </span>
-                    <h2 className="font-semibold tracking-tight !text-white text-3xl md:text-4xl lg:text-5xl leading-[1.05] mb-6">
-                      Don&apos;t see your role?
-                      <br />
-                      <span className="text-white/50">Introduce yourself.</span>
-                    </h2>
-                    <p className="text-white/60 text-lg leading-relaxed mb-10 max-w-md">
-                      We are always looking for people with sharp taste and genuine craft. If that is you, we want to hear from you.
-                    </p>
-                    <Button
-                      size="lg"
-                      variant="secondary"
-                      className="!bg-white !text-[hsl(var(--color-foreground))] hover:!bg-[hsl(var(--color-accent))] hover:!text-white !border-0"
-                      asChild
+              <SectionIntro number="03" label="How we work" title="Four principles" />
+              <Glide bleed={20}>
+                <ol className="mt-10">
+                  {principles.map((principle, index) => (
+                    <li
+                      key={principle.title}
+                      data-glide-item
+                      className="grid gap-2 rounded-2xl py-7 md:grid-cols-[4rem_minmax(0,1.15fr)_minmax(0,1fr)] md:items-baseline md:gap-8"
                     >
-                      <Link href="/contact">
-                        <span className="btn-text-wrapper">
-                          <span className="btn-text-primary">
-                            Get in touch
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7v10" />
-                            </svg>
+                      <span className="font-mono text-sm text-[hsl(var(--color-accent))] tabular-nums" aria-hidden="true">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <p data-ink className="font-[family-name:var(--font-heading)] text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
+                        {principle.title}
+                      </p>
+                      <p className={`text-lg leading-relaxed ${muted}`}>{principle.text}</p>
+                    </li>
+                  ))}
+                </ol>
+              </Glide>
+            </Container>
+          </Section>
+
+          {/* 04: open roles. */}
+          <Section spacing="lg">
+            <Container>
+              <SectionIntro number="04" label="Open roles" title="Current openings" />
+              {roles.length > 0 ? (
+                <Glide bleed={16}>
+                  <ul className="mt-10">
+                    {roles.map((role) => (
+                      <li key={role.slug} data-glide-item className="rounded-2xl">
+                        <Link href={`/careers/${role.slug}`} className="group flex flex-col gap-3 py-7 md:flex-row md:items-center md:justify-between md:gap-10">
+                          <span className="flex min-w-0 flex-col gap-3">
+                            <span className="flex flex-wrap items-center gap-3">
+                              <Badge variant="accent">{role.department}</Badge>
+                              <span className="text-xs text-[hsl(var(--color-foreground-subtle))]">
+                                {role.location} · {role.type}
+                              </span>
+                            </span>
+                            <span className="font-[family-name:var(--font-heading)] text-2xl font-semibold tracking-tight transition-colors duration-300 group-hover:text-[hsl(var(--color-accent))] md:text-3xl">
+                              {role.title}
+                            </span>
+                            <span className={`max-w-2xl leading-relaxed ${muted}`}>
+                              {role.description.length > 180 ? `${role.description.slice(0, 180).trim()}…` : role.description}
+                            </span>
                           </span>
-                          <span className="btn-text-secondary" aria-hidden="true">
-                            Say hello
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7v10" />
-                            </svg>
-                          </span>
-                        </span>
-                      </Link>
+                          <ArrowUpRight
+                            size={22}
+                            aria-hidden="true"
+                            className="shrink-0 text-[hsl(var(--color-foreground-subtle))] transition-[transform,color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[hsl(var(--color-accent))]"
+                          />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </Glide>
+              ) : (
+                <AnimatedSection delay={0.1}>
+                  <div className="mt-10 flex flex-col items-start gap-6">
+                    <p className={`text-lg ${muted}`}>No open roles right now, but we&apos;re always glad to hear from people with real craft.</p>
+                    <Button asChild>
+                      <Link href="/contact">Introduce yourself</Link>
                     </Button>
                   </div>
-                </div>
-              </AnimatedSection>
+                </AnimatedSection>
+              )}
             </Container>
           </Section>
 
+          {/* 05: what working here includes. */}
+          <Section spacing="lg">
+            <Container>
+              <SectionIntro number="05" label="What you get" title="How we look after the team" />
+              <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {perks.map((perk, index) => (
+                  <li key={perk.label} className="lit-card flex flex-col gap-8 rounded-3xl p-7">
+                    <span className="font-mono text-xs tabular-nums text-[hsl(var(--color-accent))]">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="flex flex-col gap-2">
+                      <span className="lit-card-title font-[family-name:var(--font-heading)] text-xl font-semibold tracking-tight">{perk.label}</span>
+                      <span className={`text-sm leading-relaxed ${muted}`}>{perk.detail}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Container>
+          </Section>
+
+          <StudioCta
+            eyebrow="Open application"
+            title="Don't see your role? Introduce yourself."
+            text="Designers, developers, strategists, filmmakers, photographers, technologists: if you have sharp taste and real craft, tell us what you do best and show us something you've made."
+            primary={{ kind: "link", href: "/contact", label: "Introduce yourself" }}
+            secondary={{ href: "/work", label: "See our work" }}
+          />
+          <ScrollSpotlight selector=".lit-card" media="(hover: none) and (max-width: 767px)" />
         </main>
       </PageTransition>
       <Footer />

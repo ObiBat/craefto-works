@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     locale: "en_AU",
     url: "/",
     siteName: "Craefto",
-    title: "Craefto | Creative Tech Studio",
-    description: "We design and build brands, products, and tools for founders and teams who value craft.",
+    title: "Craefto Works | Creative & Technology Studio",
+    description: "We bring brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and operate.",
   },
 };
 

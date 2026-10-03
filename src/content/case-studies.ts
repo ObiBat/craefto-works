@@ -1,4 +1,6 @@
-// Case studies: the single source for /work/[slug], its metadata and the sitemap.
+// Case studies: the single source for /work, /work/[slug], their metadata and the sitemap.
+
+import type { CapabilityId } from "./capabilities";
 
 export interface Metric {
   label: string;
@@ -36,7 +38,13 @@ export interface CaseStudy {
   slug: string;
   title: string;
   description: string;
-  category: "Brand" | "Web" | "Product" | "SaaS" | "Creative" | "Media";
+  /**
+   * The capabilities (content/capabilities.ts) this work shows, most prominent
+   * first. Only what the case study itself shows: its services and its pages.
+   */
+  capabilities: CapabilityId[];
+  /** A one-off project, or ongoing work under a monthly plan. Defaults to project. */
+  engagement?: "project" | "ongoing";
   client: string;
   industry: string;
   timeline: string;
@@ -79,7 +87,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "mng-steel",
     title: "MNG Steel",
     description: "Trilingual website, brand mark and a private DBM financing dossier for a Mongolian grinding-ball plant.",
-    category: "Web",
+    capabilities: ["product", "brand", "growth"],
     client: "MNG Steel LLC",
     industry: "Industrial Manufacturing / Mining Supply",
     timeline: "Sep 2026",
@@ -111,7 +119,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "tav-partners",
     title: "TAV & Partners",
     description: "A typography-led static site and brand system for a new Sydney chartered accounting and tax advisory firm.",
-    category: "Web",
+    capabilities: ["product", "brand", "growth"],
     client: "TAV & Partners Pty Ltd",
     industry: "Professional Services / Accounting and Tax Advisory",
     timeline: "Jul 2026 – Sep 2026",
@@ -146,7 +154,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "japanoma",
     title: "JapanoMa",
     description: "A decision-aid platform helping Australian skiers weigh a Japan snow-country home base, from quiz to purchase.",
-    category: "Product",
+    capabilities: ["product", "systems", "media", "brand", "growth"],
     client: "Go&C Partners",
     industry: "Property / Cross-border Lifestyle Real Estate",
     timeline: "Feb 2026 – Ongoing",
@@ -181,7 +189,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "artisan",
     title: "Artisan",
     description: "Crew OS and spot marketplace for construction labour, built as a mobile app, site, deck and backend.",
-    category: "Product",
+    capabilities: ["product", "systems", "brand", "growth"],
     client: "Internal Product",
     industry: "Construction / Workforce Marketplace",
     timeline: "Jan 2026 – Jul 2026",
@@ -213,7 +221,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "fx-foundations",
     title: "FX Foundations",
     description: "A bilingual forex education platform with 163 researched lessons, a trading simulator and Pro plans.",
-    category: "Product",
+    capabilities: ["product", "brand", "growth"],
     client: "Internal Product",
     industry: "Fintech / Trading Education",
     timeline: "Feb 2026 – Mar 2026",
@@ -247,7 +255,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "fontkin",
     title: "Fontkin",
     description: "Professional font pairing lab for designers & developers with curated combinations and one-click exports.",
-    category: "Web",
+    capabilities: ["product", "brand", "growth"],
     client: "Internal Project",
     industry: "Design Tools",
     timeline: "Completed",
@@ -280,7 +288,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "globfam",
     title: "GlobFam",
     description: "Cross-border family finance platform with premium branding & motion design system.",
-    category: "Brand",
+    capabilities: ["brand", "media", "product"],
     client: "GlobFam Financial Technologies Inc.",
     industry: "Fintech / Family Finance",
     timeline: "Completed",
@@ -318,7 +326,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "tactix",
     title: "TACTIX",
     description: "The world's most beautiful 3D chess learning platform with AI-powered coaching.",
-    category: "Product",
+    capabilities: ["product", "brand"],
     client: "Internal Product",
     industry: "EdTech / Gaming",
     timeline: "In Development",
@@ -356,7 +364,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "nuu",
     title: "NUU",
     description: "AI-powered property matching platform for the Australian rental market.",
-    category: "SaaS",
+    capabilities: ["product", "brand"],
     client: "NUU Systems",
     industry: "PropTech / Real Estate",
     timeline: "MVP Complete",
@@ -396,7 +404,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "nowuknow",
     title: "Nowuknow",
     description: "A merch shoot for Nowuknow, the Sydney collective behind hip-hop, R&B and underground club nights.",
-    category: "Media",
+    capabilities: ["media"],
     client: "Nowuknow Sydney",
     industry: "Events / Club Nights",
     timeline: "Feb 2025",

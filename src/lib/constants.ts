@@ -1,7 +1,10 @@
 export const siteConfig = {
   name: "Craefto",
+  /** The studio's full name, used where a page speaks as the studio. */
+  studioName: "Craefto Works",
+  tagline: "Creative & Technology Studio",
   description:
-    "Craefto is a creative tech studio. We design and build brands, products, and tools for founders and teams who value craft.",
+    "Craefto Works is a creative & technology studio. We bring brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and operate.",
   url: "https://www.craefto.com",
   email: "hello@craefto.com",
   links: {
@@ -24,51 +27,3 @@ export const navigation = {
   ],
   cta: { name: "Contact", href: "/contact" },
 };
-
-export const processSteps = [
-  {
-    number: "01",
-    title: "Understand",
-    description:
-      "We start with questions, not assumptions. What are you building? Who is it for? What does success look like?",
-  },
-  {
-    number: "02",
-    title: "Design the system",
-    description:
-      "Before pixels, we map the structure. Information architecture, user flows, and technical decisions all aligned.",
-  },
-  {
-    number: "03",
-    title: "Build with precision",
-    description:
-      "Design and development happen together. Every component is intentional, every interaction considered.",
-  },
-  {
-    number: "04",
-    title: "Evolve",
-    description:
-      "Launch is the beginning. We build foundations that grow with you.",
-  },
-];
-
-export const positioningPoints = [
-  {
-    number: "01",
-    title: "Systems, not templates",
-    description:
-      "Every project is built from first principles — tailored to your goals, not pulled from a library.",
-  },
-  {
-    number: "02",
-    title: "Design + engineering",
-    description:
-      "One team, one vision. No handoffs, no lost context. Strategy to deployment, unified.",
-  },
-  {
-    number: "03",
-    title: "Long-term partners",
-    description:
-      "We build foundations, not quick fixes. Our work is designed to evolve with you.",
-  },
-];

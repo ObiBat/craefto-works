@@ -1,12 +1,13 @@
-import { capabilities } from "@/content/capabilities";
+import { capabilities, capabilityName } from "@/content/capabilities";
 import { caseStudies, type CaseStudy } from "@/content/case-studies";
 
 // The "next case study" at the foot of each case study: the others, ranked by
 // how closely they relate to it, with ties going to more recent work.
 // Relevance comes from what the site already says about each study: the
-// capabilities that list it as their work, its services, sector and category,
-// and whether it's client work or one of our own products. The page shows the
-// first one the visitor hasn't opened yet this session (see case-study.tsx).
+// capabilities that list it as their work, its services, sector and lead
+// capability, and whether it's client work or one of our own products. The
+// page shows the first one the visitor hasn't opened yet this session (see
+// case-study.tsx).
 
 export interface RelatedWork {
   slug: string;
@@ -45,7 +46,7 @@ export function relatedWork(slug: string): RelatedWork[] {
       if (study.slug === slug) return [];
       const sharedCapabilities = capabilitiesOf(study).filter((name) => ownCapabilities.includes(name));
       const sharedSector = sectorsOf(study).find((key) => ownSectors.includes(key));
-      const sameCategory = study.category === current.category;
+      const sameLead = study.capabilities[0] === current.capabilities[0];
       const overlap = study.services.filter((service) => services.has(service)).length;
       const servicesShared = overlap / (services.size + study.services.length - overlap);
       const recency = (study.year === latestYear ? 0.8 : 0) + (0.6 * (caseStudies.length - index)) / caseStudies.length;
@@ -53,15 +54,15 @@ export function relatedWork(slug: string): RelatedWork[] {
         3 * sharedCapabilities.length +
         4 * servicesShared +
         (sharedSector ? 2 : 0) +
-        (sameCategory ? 1.5 : 0) +
+        (sameLead ? 1.5 : 0) +
         (isOwnProduct(study) === isOwnProduct(current) ? 1.5 : 0) +
         recency;
       const reason = sharedCapabilities.length
         ? `More ${list(sharedCapabilities)} work`
         : sharedSector
           ? `More ${SECTORS[sharedSector].label} work`
-          : sameCategory
-            ? `More ${study.category === "SaaS" ? "SaaS" : study.category.toLowerCase()} work`
+          : sameLead
+            ? `More ${capabilityName(study.capabilities[0])} work`
             : study.year === latestYear
               ? "Recent work"
               : undefined;

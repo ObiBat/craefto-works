@@ -66,6 +66,8 @@ function calculateLeadScore(data: {
     'ai': 15,
     'web': 12,
     'brand': 10,
+    'media': 10,
+    'growth': 10,
     'other': 5,
   };
   score += serviceScores[data.service || ''] || 0;

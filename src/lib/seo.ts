@@ -8,7 +8,7 @@ export const SITE_NAME = "Craefto";
  * opengraph-image.tsx takes precedence; these cover pages without one, since
  * a page's openGraph block replaces its parents' rather than merging.
  */
-export const DEFAULT_OG_IMAGE = { url: "/opengraph-image", width: 1200, height: 630, alt: "Craefto, a creative tech studio in Sydney" };
+export const DEFAULT_OG_IMAGE = { url: "/opengraph-image", width: 1200, height: 630, alt: "Craefto Works, a creative & technology studio in Sydney" };
 export const JOURNAL_OG_IMAGE = { url: "/journal/opengraph-image", width: 1200, height: 630, alt: "The Craefto Journal" };
 
 interface PageMetadataInput {

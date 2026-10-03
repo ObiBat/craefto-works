@@ -7,7 +7,7 @@ export const contentType = "image/png";
 export default function Image() {
   return ogCard({
     eyebrow: "About",
-    title: "About Craefto",
-    description: "A creative tech studio in Sydney building brands, products and systems for founders and teams who think long-term.",
+    title: "About Craefto Works",
+    description: "A creative & technology studio in Sydney: brand, product, systems, media and growth under one roof.",
   });
 }

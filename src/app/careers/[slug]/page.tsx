@@ -64,7 +64,7 @@ export default async function RolePage({ params }: PageProps) {
       : "FULL_TIME",
     hiringOrganization: {
       "@type": "Organization",
-      name: "Craefto",
+      name: "Craefto Works",
       sameAs: "https://www.craefto.com",
       logo: "https://www.craefto.com/logo.png",
     },

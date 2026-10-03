@@ -3,8 +3,9 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "Case studies",
+  brand: "Craefto Works",
   description:
-    "Selected brand, web and product work by Craefto, each built as a system rather than a one-off.",
+    "Case studies across brand, product, systems, media and growth: identities, websites and apps, internal tools and automation, photography and film.",
   path: "/work",
   image: "route",
 });

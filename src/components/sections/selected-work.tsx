@@ -11,6 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { AnimatedSection } from "@/components/ui/motion";
 import { ProjectImagePlaceholder } from "@/components/ui/project-image-placeholder";
 import { RevealText } from "@/components/editorial/reveal-text";
+import { capabilityName } from "@/content/capabilities";
+import { caseStudies } from "@/content/case-studies";
+
+// The capabilities each project shows, from its case study (content/case-studies.ts).
+const capabilitiesOf = (slug: string) => caseStudies.find((study) => study.slug === slug)?.capabilities ?? [];
 
 // Featured projects for the homepage strip, newest first
 const featuredProjects = [
@@ -18,7 +23,6 @@ const featuredProjects = [
     slug: "tav-partners",
     title: "TAV & Partners",
     description: "A typography-led static site and brand system for a new Sydney chartered accounting and tax advisory firm.",
-    category: "Web",
     year: 2026,
     accentColor: "224 48% 21%",
     thumbnail: "/images/projects/tav-partners/tav-partners-thumb.jpg",
@@ -27,7 +31,6 @@ const featuredProjects = [
     slug: "japanoma",
     title: "JapanoMa",
     description: "A decision-aid platform helping Australian skiers weigh a Japan snow-country home base, from quiz to purchase.",
-    category: "Product",
     year: 2026,
     accentColor: "211 33% 36%",
     thumbnail: "/images/projects/japanoma/japanoma-thumb.jpg",
@@ -36,7 +39,6 @@ const featuredProjects = [
     slug: "artisan",
     title: "Artisan",
     description: "Crew OS and spot marketplace for construction labour, built as a mobile app, site, deck and backend.",
-    category: "Product",
     year: 2026,
     accentColor: "25 95% 53%",
     thumbnail: "/images/projects/artisan/artisan-thumb.jpg",
@@ -45,7 +47,6 @@ const featuredProjects = [
     slug: "fx-foundations",
     title: "FX Foundations",
     description: "A bilingual forex education platform with 163 researched lessons, a trading simulator and Pro plans.",
-    category: "Product",
     year: 2026,
     accentColor: "153 40% 30%",
     thumbnail: "/images/projects/fx-foundations/fx-foundations-thumb.jpg",
@@ -54,7 +55,6 @@ const featuredProjects = [
     slug: "fontkin",
     title: "Fontkin",
     description: "Professional font pairing lab for designers & developers with curated combinations and one-click exports.",
-    category: "Web",
     year: 2026,
     accentColor: "0 0% 6%",
     thumbnail: "/images/projects/fontkin/fontkin-thumb.jpg",
@@ -63,7 +63,6 @@ const featuredProjects = [
     slug: "globfam",
     title: "GlobFam",
     description: "Cross-border family finance platform with premium branding & motion design system.",
-    category: "Brand",
     year: 2025,
     accentColor: "195 78% 38%",
     thumbnail: "/images/projects/globfam/globfam-thumb.jpg",
@@ -72,7 +71,6 @@ const featuredProjects = [
     slug: "tactix",
     title: "TACTIX",
     description: "The world's most beautiful 3D chess learning platform with AI-powered coaching.",
-    category: "Product",
     year: 2025,
     accentColor: "45 61% 52%",
     thumbnail: "/images/projects/tactix/tactix-thumb.jpg",
@@ -81,7 +79,6 @@ const featuredProjects = [
     slug: "nuu",
     title: "NUU",
     description: "AI-powered property matching platform for the Australian rental market.",
-    category: "SaaS",
     year: 2025,
     accentColor: "90 30% 45%",
     thumbnail: "/images/projects/nuu/nuu-thumb.jpg",
@@ -125,7 +122,7 @@ function ProjectCard({ project, clone = false }: { project: Project; clone?: boo
       </div>
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
-          <Badge variant="secondary">{project.category}</Badge>
+          <Badge variant="secondary">{capabilitiesOf(project.slug).slice(0, 2).map(capabilityName).join(" · ")}</Badge>
           <span className="text-sm text-[hsl(var(--color-foreground-subtle))]">{project.year}</span>
         </div>
         <h3 className="text-lg font-semibold tracking-tight">

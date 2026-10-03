@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 import { caseStudies, getCaseStudy, PROJECTS_WITH_REAL_IMAGES, type CaseStudy, type PhotoSet } from "@/content/case-studies";
 import type { RelatedWork } from "@/content/related-work";
+import { capabilityName } from "@/content/capabilities";
 
 // Blurred previews keyed by image path (see npm run images:placeholders).
 const BlurContext = createContext<Record<string, string>>({});
@@ -228,9 +229,13 @@ export function CaseStudyView({
             <Container>
               <div className="max-w-4xl">
                 <HeroText>
-                  <div className="flex items-center gap-3 mb-4">
-                    <Badge>{project.category}</Badge>
-                    <span className="text-sm text-[hsl(var(--color-foreground-muted))]">{project.year}</span>
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    {project.capabilities.map((id) => (
+                      <Link key={id} href={`/work?capability=${id}`} className="rounded-full transition-opacity hover:opacity-80">
+                        <Badge>{capabilityName(id)}</Badge>
+                      </Link>
+                    ))}
+                    <span className="ml-1 text-sm text-[hsl(var(--color-foreground-muted))]">{project.year}</span>
                   </div>
                 </HeroText>
                 <HeroText delay={0.05}>
@@ -646,7 +651,7 @@ export function CaseStudyView({
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
                             <Badge variant="secondary" className="bg-white/10 text-white border-white/20 text-[10px] sm:text-xs">
-                              {nextProject.category}
+                              {nextProject.capabilities.slice(0, 2).map(capabilityName).join(" · ")}
                             </Badge>
                           </div>
                           <p className="text-xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-1.5 sm:mb-2 relative inline-block" style={{ color: '#ffffff' }}>

@@ -3,8 +3,9 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "Contact",
+  brand: "Craefto Works",
   description:
-    "Start a project with Craefto. Tell us what you're building and we'll reply within one to two days.",
+    "Start a project with Craefto Works: a brand, a campaign shoot, a website, a product or an automation system. Tell us what you need and we'll reply within one to two days.",
   path: "/contact",
   image: "route",
 });

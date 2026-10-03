@@ -1,5 +1,6 @@
 import { caseStudies, getCaseStudy } from "@/content/case-studies";
 import { ogCard } from "@/lib/og/card";
+import { capabilityName } from "@/content/capabilities";
 
 export const alt = "Craefto case study";
 export const size = { width: 1200, height: 630 };
@@ -14,7 +15,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const { slug } = await params;
   const study = getCaseStudy(slug);
   return ogCard({
-    eyebrow: study ? `Case study · ${study.category}` : "Case study",
+    eyebrow: study ? `Case study · ${study.capabilities.slice(0, 3).map(capabilityName).join(", ")}` : "Case study",
     title: study?.title ?? "Case study",
     description: study?.description,
     image: study?.thumbnail,

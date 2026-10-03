@@ -3,8 +3,9 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "How we work",
+  brand: "Craefto Works",
   description:
-    "Every Craefto project follows four clear phases, from understanding your goals to launch and growth. No surprises, no scope creep, fixed pricing.",
+    "Six stages, from Discover to Evolve, shaped to the work: brand, product, systems, media or growth. A fixed price before any work begins, and support after launch.",
   path: "/process",
   image: "route",
 });

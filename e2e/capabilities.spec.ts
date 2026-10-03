@@ -31,10 +31,43 @@ test.describe("capabilities", () => {
 
   test("an enquiry can start from a capability", async ({ page }) => {
     await page.goto("/contact?service=media");
-    const projectType = page.locator("#projectType");
-    await expect(projectType).toHaveValue("media");
-    const groups = await projectType.locator("optgroup").evaluateAll((els) => els.map((el) => el.getAttribute("label")));
-    expect(groups).toEqual(NAMES);
+    const choices = page.locator('input[name="capability"]');
+    // The five capabilities, equally, then "a mix".
+    expect(await choices.evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))).toEqual([...NAMES.map((name) => name.toLowerCase()), "other"]);
+    for (const name of NAMES) await expect(page.getByRole("radio", { name: new RegExp(`^\\d{2}\\s*${name}`) })).toHaveCount(1);
+    await expect(page.locator('input[name="capability"][value="media"]')).toBeChecked();
+    await expect(page.locator('input[name="projectType"]')).toHaveValue("media");
+  });
+
+  test("a Product enquiry asks whether it's a website or an app", async ({ page }) => {
+    await page.goto("/contact");
+    await page.locator('label:has(input[name="capability"][value="product"])').click();
+    await expect(page.locator('input[name="projectType"]')).toHaveValue("web");
+    await page.locator('label:has(input[name="projectTypeDetail"][value="saas"])').click();
+    await expect(page.locator('input[name="projectType"]')).toHaveValue("saas");
+    // The prompt follows the choice.
+    await expect(page.locator("#message")).toHaveAttribute("placeholder", /who is it for/);
+  });
+
+  test("case studies filter by capability, and the address keeps the filter", async ({ page }) => {
+    await page.goto("/work?capability=media");
+    const media = page.getByRole("radio", { name: /Media/ });
+    await expect(media).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator('main a[href="/work/nowuknow"]')).toHaveCount(1);
+    await expect(page.locator('main a[href="/work/tactix"]')).toHaveCount(0);
+    await page.getByRole("radio", { name: /All work/ }).click();
+    await expect(page.locator('main a[href="/work/tactix"]')).toHaveCount(1);
+    await expect(page).toHaveURL(/\/work$/);
+  });
+
+  test("the process shows each stage for the chosen capability", async ({ page }) => {
+    await page.goto("/process");
+    const stages = page.locator("main li.phase");
+    await expect(stages).toHaveCount(6);
+    await expect(stages.first().getByRole("heading", { level: 2 })).toHaveText("Discover");
+    await page.getByRole("radio", { name: /Media/ }).click();
+    await expect(page).toHaveURL(/\/process\?for=media$/);
+    await expect(page.locator("#build")).toContainText("The shoot or the recording");
   });
 
   test("a monthly plan opens its start page, and from there the enquiry with the plan filled in", async ({ page }) => {

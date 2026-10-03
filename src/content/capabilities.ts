@@ -15,6 +15,8 @@ export interface Capability {
   serviceName: string;
   /** One line: what the capability covers, and where it stops. */
   summary: string;
+  /** The capability's scope as a short list, for labels, filters and forms. */
+  scope: string;
   description: string;
   deliverables: string[];
   /** When a client would need it. */
@@ -32,6 +34,7 @@ export const capabilities: Capability[] = [
     name: "Brand",
     serviceName: "Brand identity and design systems",
     summary: "The identity and visual rules everything else follows.",
+    scope: "Identity, strategy, design systems and creative direction.",
     description:
       "We define how your business looks: the logo, typefaces, colours and the rules for using them together. We document it as a visual system and build it into a design system, so your website, signage, packaging and pitch deck read as the same company.",
     deliverables: [
@@ -56,6 +59,7 @@ export const capabilities: Capability[] = [
     name: "Product",
     serviceName: "Websites, apps and digital products",
     summary: "Websites, apps and platforms your customers use.",
+    scope: "Websites, digital products, applications and digital experiences.",
     description:
       "We design and build what your customers see and use: marketing websites, web and mobile apps, SaaS platforms and MVPs. UX, interface design and development happen together, and creative development covers the interactive and experimental work, from 3D scenes to custom tools.",
     deliverables: [
@@ -80,6 +84,7 @@ export const capabilities: Capability[] = [
     name: "Systems",
     serviceName: "Custom software, automation and AI",
     summary: "Software and automation that runs your operations.",
+    scope: "AI automation, integrations, internal tools and business systems.",
     description:
       "We build the tools behind your business: internal software, dashboards, integrations between the apps you already use, and automations that take repetitive work off your team. Where it saves time, we add AI workflows and agents, such as reading incoming documents or drafting first replies for your team to check.",
     deliverables: [
@@ -104,6 +109,7 @@ export const capabilities: Capability[] = [
     name: "Media",
     serviceName: "Photography, video and motion",
     summary: "Photography, video and motion for brands and campaigns.",
+    scope: "Photography, video, motion and creative content.",
     description:
       "We produce the visual content your brand and product need: photography, video production and editing, and motion design. Each piece is shot and cut for where it will run, from a website hero to a campaign ad or a product walkthrough, and follows your visual rules.",
     deliverables: [
@@ -128,6 +134,7 @@ export const capabilities: Capability[] = [
     name: "Growth",
     serviceName: "Marketing, SEO and analytics",
     summary: "Marketing that brings the right people in and helps them act.",
+    scope: "Campaigns, digital growth, optimisation and ongoing creative support.",
     description:
       "We plan how you reach your audience and make it easier for them to act: marketing strategy, campaign creative, landing pages, SEO foundations and analytics. Then we look at what visitors actually do and improve the pages and messages that aren’t working.",
     deliverables: [
@@ -153,6 +160,9 @@ export const capabilityHref = (id: CapabilityId) => `/services#${id}`;
 export function getCapability(id: CapabilityId): Capability {
   return capabilities.find((capability) => capability.id === id)!;
 }
+
+/** A capability's name, for tags and labels: "Brand", "Media". */
+export const capabilityName = (id: CapabilityId) => getCapability(id).name;
 
 /** The published ranges a capability covers, folded into one. */
 export function capabilityPrice(capability: Capability): PriceRange | null {

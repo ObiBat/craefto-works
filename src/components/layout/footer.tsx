@@ -28,8 +28,12 @@ export function Footer() {
               >
                 <Logo size="md" inverted />
               </Link>
-              <p className="text-sm text-white/60 leading-relaxed">
-                Craefto Works brings brand, digital products, business systems and creative content together.
+              <p className="font-mono text-xs uppercase tracking-[0.06em] text-white/45">
+                Creative &amp; Technology Studio
+              </p>
+              <p className="mt-3 text-sm text-white/60 leading-relaxed">
+                Brand, product, systems, media and growth under one roof, helping businesses improve how they look, communicate and
+                operate.
               </p>
             </div>
 

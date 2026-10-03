@@ -3,8 +3,9 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "Careers",
+  brand: "Craefto Works",
   description:
-    "Join Craefto, a creative tech studio for designers, engineers and builders who care about craft. Remote first, meaningful projects, real ownership.",
+    "Join Craefto Works, a creative & technology studio in Sydney: designers, developers, strategists, filmmakers, photographers and technologists working as one team. Remote first.",
   path: "/careers",
   image: "route",
 });

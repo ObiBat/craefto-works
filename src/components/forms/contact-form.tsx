@@ -12,6 +12,40 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { RevealText } from "@/components/editorial/reveal-text";
+import { capabilities, type CapabilityId } from "@/content/capabilities";
+import { cn } from "@/lib/utils";
+
+// The first question: which capability the enquiry is about, shown as five
+// equal choices plus "a mix". Each maps to the enquiry values in
+// lib/enquiry.ts that leads and admin read; Product asks one more thing.
+type Choice = CapabilityId | "other";
+const CHOICES = capabilities.map((capability) => ({
+  id: capability.id as Choice,
+  number: capability.number,
+  name: capability.name,
+  scope: capability.scope,
+  types: ENQUIRY_GROUPS.find((group) => group.capability === capability.name)?.types ?? [],
+}));
+const MIX = {
+  id: "other" as Choice,
+  number: "01\u201305",
+  name: "A mix, or not sure yet",
+  scope: "Tell us what you have in mind and we\u2019ll suggest where to start.",
+  types: [ENQUIRY_UNSURE],
+};
+const choiceOf = (value: string | undefined): Choice | null =>
+  [...CHOICES, MIX].find((choice) => choice.types.some((type) => type.value === value))?.id ?? null;
+
+// What to tell us, by choice.
+const PROMPTS: Record<Choice | "none", string> = {
+  brand: "Where is the business today, and what does the brand need to do? A new identity, a refresh or a design system?",
+  product: "What should it do, and who is it for? Links to anything that exists today help.",
+  systems: "Which work takes up your team\u2019s time? The tools you use and the steps involved help.",
+  media: "What is the shoot or the film for, where will it run, and are there dates that matter?",
+  growth: "Who do you want to reach, and what should they do? Any campaigns or numbers so far?",
+  other: "Tell us what you have in mind, your goals and any dates that matter. A few sentences is enough.",
+  none: "Tell us what you have in mind, your goals and any dates that matter. A few sentences is enough.",
+};
 
 // The smallest published project and the span of the monthly plans
 // (lib/pricing.ts), for the budget hint.
@@ -56,7 +90,7 @@ function getComplexityScore(
   if (projectType === "saas") score += 3;
   else if (projectType === "ai") score += 2;
   else if (projectType === "web") score += 1;
-  else if (projectType === "brand") score += 1;
+  else if (projectType === "brand" || projectType === "media" || projectType === "growth") score += 1;
   
   // Budget scoring (higher budget = more complex usually)
   if (budget === "50k+") score += 3;
@@ -81,10 +115,10 @@ const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
   company: z.string().optional(),
-  projectType: z.string().min(1, "Please select a project type"),
+  projectType: z.string().min(1, "Please choose what you need"),
   budget: z.string().min(1, "Please select a budget range"),
   timeline: z.string().min(1, "Please select a timeline"),
-  message: z.string().min(20, "Please tell us more about your project (at least 20 characters)"),
+  message: z.string().min(20, "Please tell us a little more (at least 20 characters)"),
 });
 
 const quickInquirySchema = z.object({
@@ -146,6 +180,13 @@ export function ContactForm() {
   const watchedBudget = useWatch({ control, name: "budget" });
   const watchedTimeline = useWatch({ control, name: "timeline" });
   const watchedMessage = useWatch({ control, name: "message" });
+  const choice = choiceOf(watchedProjectType);
+  const chosen = [...CHOICES, MIX].find((entry) => entry.id === choice);
+  const choose = (next: Choice) => {
+    if (next === choice) return;
+    const entry = [...CHOICES, MIX].find((option) => option.id === next)!;
+    setValue("projectType", entry.types[0].value, { shouldValidate: true, shouldDirty: true });
+  };
 
   const complexity = React.useMemo(() => {
     if (!watchedProjectType || !watchedBudget || !watchedTimeline) return null;
@@ -269,7 +310,7 @@ export function ContactForm() {
           </div>
           <h3 className="text-xl font-semibold"><RevealText text={"Message sent"} /></h3>
           <p className="text-[hsl(var(--color-foreground-muted))]">
-            Thanks for reaching out. We&apos;ll be in touch within 24 hours.
+            Thanks for getting in touch. We&apos;ll reply within one to two days.
           </p>
           <Button
             variant="secondary"
@@ -289,7 +330,7 @@ export function ContactForm() {
   return (
     <div className="space-y-6">
       {/* Mode Toggle */}
-      <div className="flex items-center justify-between p-4 rounded-xl bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))]">
+      <div className="flex items-center justify-between p-3 rounded-2xl bg-[hsl(var(--color-background-subtle))]">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -300,7 +341,7 @@ export function ContactForm() {
                 : "text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))]"
             }`}
           >
-            Full inquiry
+            Full enquiry
           </button>
           <button
             type="button"
@@ -369,7 +410,7 @@ export function ContactForm() {
             </label>
             <Textarea
               id="quick-message"
-              placeholder="Brief description of what you're looking for..."
+              placeholder="A line or two is enough: a brand, a shoot, a website, an app, an automation or a campaign."
               rows={4}
               error={!!quickForm.formState.errors.message}
               {...quickForm.register("message")}
@@ -407,6 +448,83 @@ export function ContactForm() {
               <p className="text-sm">{submitError}</p>
             </div>
           )}
+
+    {/* What do you need? Five capabilities, equally, and "a mix". */}
+    <fieldset className="space-y-3">
+      <legend className="text-sm font-medium text-[hsl(var(--color-foreground))]">
+        What do you need? <span className="text-[hsl(var(--color-error))]">*</span>
+      </legend>
+      <p className="text-sm text-[hsl(var(--color-foreground-muted))]">
+        Choose the closest. If it&apos;s a mix, pick the main one and tell us the rest below.
+      </p>
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3">
+        {[...CHOICES, MIX].map((option) => {
+          const selected = choice === option.id;
+          return (
+            <label key={option.id} className="group relative block cursor-pointer">
+              <input
+                type="radio"
+                name="capability"
+                value={option.id}
+                checked={selected}
+                onChange={() => choose(option.id)}
+                className="peer sr-only"
+              />
+              <span
+                className={cn(
+                  "flex h-full flex-col gap-1.5 rounded-2xl p-3.5 sm:p-4 transition-colors duration-300 peer-focus-visible:ring-2 peer-focus-visible:ring-[hsl(var(--color-accent))] peer-focus-visible:ring-offset-2",
+                  selected
+                    ? "bg-[hsl(var(--color-accent-subtle))]"
+                    : "bg-[hsl(var(--color-background-subtle))] group-hover:bg-[hsl(var(--color-accent-subtle)/0.6)]",
+                )}
+              >
+                <span className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-xs tabular-nums text-[hsl(var(--color-accent))]">{option.number}</span>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "grid h-5 w-5 place-items-center rounded-full transition-colors duration-300",
+                      selected ? "bg-[hsl(var(--color-accent))] text-white" : "bg-[hsl(var(--color-background))] text-transparent",
+                    )}
+                  >
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                </span>
+                <span className={cn("font-[family-name:var(--font-heading)] text-lg font-semibold tracking-tight", selected && "text-[hsl(var(--color-accent))]")}>
+                  {option.name}
+                </span>
+                <span className="hidden text-sm leading-snug text-[hsl(var(--color-foreground-muted))] sm:block">{option.scope}</span>
+              </span>
+            </label>
+          );
+        })}
+      </div>
+      {chosen && chosen.types.length > 1 && (
+        <div role="radiogroup" aria-label={`Which kind of ${chosen.name.toLowerCase()} work?`} className="flex flex-wrap gap-2 pt-1">
+          {chosen.types.map((type) => (
+            <label key={type.value} className="cursor-pointer">
+              <input
+                type="radio"
+                name="projectTypeDetail"
+                value={type.value}
+                checked={watchedProjectType === type.value}
+                onChange={() => setValue("projectType", type.value, { shouldValidate: true, shouldDirty: true })}
+                className="peer sr-only"
+              />
+              <span className="inline-flex rounded-full bg-[hsl(var(--color-background-subtle))] px-4 py-2 text-sm font-medium text-[hsl(var(--color-foreground-muted))] transition-colors duration-300 peer-checked:bg-[hsl(var(--color-accent))] peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-[hsl(var(--color-accent))] peer-focus-visible:ring-offset-2">
+                {type.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
+      <input type="hidden" {...register("projectType")} />
+      {errors.projectType && (
+        <p className="text-sm text-[hsl(var(--color-error))]">{errors.projectType.message}</p>
+      )}
+    </fieldset>
 
     {/* Name & Email */}
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -467,39 +585,8 @@ export function ContactForm() {
       />
     </div>
 
-    {/* Project Type, Budget, Timeline */}
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      <div className="space-y-2">
-        <label
-          htmlFor="projectType"
-          className="text-sm font-medium text-[hsl(var(--color-foreground))]"
-        >
-          Project type <span className="text-[hsl(var(--color-error))]">*</span>
-        </label>
-        <Select
-          id="projectType"
-          error={!!errors.projectType}
-          {...register("projectType")}
-        >
-          <option value="">Select one</option>
-          {ENQUIRY_GROUPS.map((group) => (
-            <optgroup key={group.capability} label={group.capability}>
-              {group.types.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-          <option value={ENQUIRY_UNSURE.value}>{ENQUIRY_UNSURE.label}</option>
-        </Select>
-        {errors.projectType && (
-          <p className="text-sm text-[hsl(var(--color-error))]">
-            {errors.projectType.message}
-          </p>
-        )}
-      </div>
-
+    {/* Budget and timeline */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <div className="space-y-2">
         <label
           htmlFor="budget"
@@ -565,12 +652,12 @@ export function ContactForm() {
         htmlFor="message"
         className="text-sm font-medium text-[hsl(var(--color-foreground))]"
       >
-        What are you trying to build?{" "}
+        Tell us about it{" "}
         <span className="text-[hsl(var(--color-error))]">*</span>
       </label>
       <Textarea
         id="message"
-        placeholder="Tell us about your project, goals, and any relevant context..."
+        placeholder={PROMPTS[choice ?? "none"]}
         rows={5}
         error={!!errors.message}
         {...register("message")}
@@ -608,7 +695,7 @@ export function ContactForm() {
                 </>
               }
             >
-              Send inquiry
+              Send enquiry
               <svg
                 className="w-4 h-4"
                 fill="none"
