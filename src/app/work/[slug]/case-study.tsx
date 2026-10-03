@@ -509,7 +509,12 @@ export function CaseStudyView({
             <Section spacing="sm">
               <Container>
                 <AnimatedSection>
-                  <StaggeredGrid className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                  <StaggeredGrid
+                    className={cn(
+                      "grid grid-cols-2 gap-4 sm:gap-6",
+                      project.metrics.length === 3 ? "md:grid-cols-3" : project.metrics.length === 2 ? "md:grid-cols-2" : "md:grid-cols-4",
+                    )}
+                  >
                     {project.metrics.map((metric) => (
                       <StaggeredItem key={metric.label}>
                         <div className="p-6 sm:p-8 rounded-xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))] text-center">
@@ -528,8 +533,8 @@ export function CaseStudyView({
             </Section>
           )}
 
-          {/* Testimonial - hidden for GlobFam */}
-          {project.testimonial && project.slug !== "globfam" && (
+          {/* Testimonial: only once the client has confirmed the quote. */}
+          {project.testimonial?.confirmed && (
             <Section spacing="md">
               <Container size="md">
                 <AnimatedSection variant="scaleIn">
