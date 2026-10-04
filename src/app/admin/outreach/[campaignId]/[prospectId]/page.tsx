@@ -302,6 +302,11 @@ function ProspectPage() {
                     <IconCheckCircle size={18} /> {busy === "approve" ? "Approving..." : "Approve"}
                   </button>
                 )}
+                {p.status === "approved" && p.contact.kind === "form" && (
+                  <p className="w-full text-sm text-[hsl(var(--color-foreground-muted))]">
+                    Contact form: the sender only emails addresses, so send this one yourself through their form (the link above), then mark it sent.
+                  </p>
+                )}
                 {queued && (
                   <p className="w-full text-sm text-[hsl(var(--color-foreground-muted))]">
                     Queued: the sender emails it from obi@craefto.com in their working hours, after checking the address is still published. Back to draft stops it.

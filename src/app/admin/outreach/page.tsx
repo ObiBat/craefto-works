@@ -119,6 +119,9 @@ function OutreachQueue() {
                   {p.subject && <p className="mt-1 truncate text-sm text-[hsl(var(--color-foreground))]">{p.subject}</p>}
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[hsl(var(--color-foreground-subtle))]">
                     {campaign === "all" && data.campaigns.length > 1 && <span>{names.get(p.campaignId)}</span>}
+                    {p.status === "approved" && p.contact.kind === "form" && (
+                      <span className="font-medium text-[hsl(var(--color-foreground-muted))]">Contact form: send by hand</span>
+                    )}
                     {mode === "live" && p.status === "approved" && p.contact.kind === "email" && (
                       <span className="font-medium text-[hsl(var(--color-accent))]">Queued: sends in their working hours</span>
                     )}
