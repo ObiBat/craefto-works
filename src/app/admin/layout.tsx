@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: "/admin/projects", label: "Projects", icon: "folder" },
   { href: "/admin/finances", label: "Finances", icon: "dollar" },
   { href: "/admin/leads", label: "Leads", icon: "target" },
+  { href: "/admin/outreach", label: "Outreach", icon: "mail" },
   { href: "/admin/applications", label: "Applications", icon: "inbox" },
   { href: "/admin/proposals", label: "Proposals", icon: "file" },
 ];

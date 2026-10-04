@@ -630,6 +630,7 @@ const NAV_ICON_MAP: Record<string, React.FC<IconProps>> = {
   folder: IconFolder,
   dollar: IconDollar,
   target: IconTarget,
+  mail: IconMail,
   inbox: IconInbox,
   file: IconFileText,
   card: IconCreditCard,
