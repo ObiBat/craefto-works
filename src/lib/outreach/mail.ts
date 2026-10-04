@@ -9,7 +9,8 @@ import MailComposer from "nodemailer/lib/mail-composer";
 // looking for replies all go through the Mailer interface, so the sender can
 // be tested without a mailbox.
 
-export const SENDER = { name: "Obi Batbileg", address: process.env.OUTREACH_MAILBOX_USER || "obi@craefto.com" };
+/** The name inboxes show: the business (the signature inside still names Obi). */
+export const SENDER = { name: "Craefto Works", address: process.env.OUTREACH_MAILBOX_USER || "obi@craefto.com" };
 const HOST = process.env.OUTREACH_MAIL_HOST || "mail.spacemail.com";
 
 export interface OutgoingEmail {
