@@ -2,6 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { createServerClient } from "@/lib/supabase";
 import { checkEvidence } from "./evidence";
+import { logoAttachment, renderEmailHtml } from "./email-html";
 import { compose, mailboxConfigured, SENDER, spacemail, type Mailer, type SendResult } from "./mail";
 import { optoutConfigured, unsubscribeHeaders } from "./optout";
 import { applyAction, approvalCheck, followUpCheck, FOLLOW_UP_TEMPLATE, OutreachError } from "./rules";
@@ -285,6 +286,8 @@ async function deliver(
       to,
       subject: message.subject,
       text: message.text,
+      html: renderEmailHtml(message.text, message.subject),
+      attachments: [logoAttachment()],
       inReplyTo: message.inReplyTo,
       references: message.inReplyTo ? [message.inReplyTo] : undefined,
       headers: { ...unsubscribeHeaders(p.campaignId, p.id, test, SENDER.address), ...(test ? { "X-Craefto-Test": "yes" } : {}) },

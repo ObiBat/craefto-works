@@ -21,6 +21,10 @@ export interface OutgoingEmail {
   inReplyTo?: string;
   references?: string[];
   headers?: Record<string, string>;
+  /** The HTML version mail apps show (lib/outreach/email-html.ts); the text stays the approved words. */
+  html?: string;
+  /** Inline images the HTML refers to by cid:. */
+  attachments?: { filename: string; content: Buffer; contentType: string; cid: string; contentDisposition: "inline" }[];
 }
 
 export type SendResult =
@@ -37,13 +41,15 @@ export interface Mailer {
   messagesFrom(address: string, domain: string, since: Date): Promise<number>;
 }
 
-/** The RFC 5322 message, plain text only: no HTML, no tracking. */
+/** The RFC 5322 message: the plain text, plus an HTML version when given. No tracking. */
 export function compose(email: OutgoingEmail): Promise<Buffer> {
   const composer = new MailComposer({
     from: SENDER,
     to: email.to,
     subject: email.subject,
     text: email.text,
+    html: email.html,
+    attachments: email.attachments,
     messageId: email.messageId,
     inReplyTo: email.inReplyTo,
     references: email.references,
