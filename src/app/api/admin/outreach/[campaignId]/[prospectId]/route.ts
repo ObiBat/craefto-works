@@ -3,6 +3,7 @@ import { z } from "zod";
 import { fail, handle, ids, ok, prioritySchema } from "@/lib/outreach/http";
 import { applyEdit } from "@/lib/outreach/rules";
 import { checkProspect, getProspect, updateProspect } from "@/lib/outreach/store";
+import { listMessages } from "@/lib/outreach/sender";
 
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ campaignId: string; prospectId: string }> };
@@ -13,7 +14,8 @@ export const GET = (request: NextRequest, { params }: Context) =>
     const { campaignId, prospectId } = await ids(params);
     const prospect = await getProspect(campaignId, prospectId);
     if (!prospect) return fail("No such prospect", 404);
-    return ok({ prospect, check: await checkProspect(prospect) });
+    const [check, messages] = await Promise.all([checkProspect(prospect), listMessages({ campaignId, prospectId })]);
+    return ok({ prospect, check, messages });
   });
 
 const Patch = z.object({

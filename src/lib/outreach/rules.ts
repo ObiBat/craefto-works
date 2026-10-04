@@ -20,9 +20,11 @@ export const FOLLOW_UP_TEMPLATE = `Hi again,
 
 Just bringing my note below back to the top of your inbox in case it got buried. If a one-page list of fixes for your site would help, reply and I'll send it over.
 
-Obi
+Obi Batbileg
+Founder, Craefto Works
+craefto.com · ABN 81 278 859 855
 
-If you'd rather not hear from me, reply "no thanks" and I won't write again.`;
+If you'd rather not hear from me, just reply "no thanks" and I won't write again.`;
 
 export const ACTION_LABEL: Record<StatusAction, string> = {
   approve: "Email approved",
@@ -81,8 +83,17 @@ export const hasPlaceholders = (...texts: string[]) => texts.some((text) => PLAC
 
 /** The opt-out line the Spam Act requires (s18). */
 const OPT_OUT = /no thanks|unsubscribe/i;
-/** Who it's from, which the Spam Act requires (s17). */
-const SENDER = /craefto/i;
+
+/**
+ * What every email must say about who it's from (Spam Act s17, and the plan:
+ * "names Craefto Works, ABN and website") and how to opt out (s18).
+ */
+export function messageProblems(body: string): string[] {
+  const problems: string[] = [];
+  if (!OPT_OUT.test(body)) problems.push('Keep the line that lets them opt out (reply "no thanks")');
+  if (!/craefto works/i.test(body) || !/\bABN\b/.test(body) || !/craefto\.com/i.test(body)) problems.push("Sign it with Craefto Works, the ABN and craefto.com, so they know who it's from");
+  return problems;
+}
 const ADDRESS = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 /** Shared mailbox names, as the command centre's research records them (systems.ts). */
@@ -150,8 +161,7 @@ export function approvalCheck(p: Prospect, suppressed?: { value: string; reason:
   if (!subject || !body) blocks.push("Write the email before approving it");
   else {
     if (hasPlaceholders(subject, body)) blocks.push("Fill in the [bracketed] parts before approving");
-    if (!OPT_OUT.test(body)) blocks.push('Keep the line that lets them opt out (reply "no thanks")');
-    if (!SENDER.test(body)) blocks.push("Sign it from Craefto Works, so they know who it's from");
+    blocks.push(...messageProblems(body));
   }
 
   const { kind, value, source } = p.contact;
@@ -167,6 +177,22 @@ export function approvalCheck(p: Prospect, suppressed?: { value: string; reason:
   }
   warnings.push(...(p.flags ?? []));
   return { blocks, warnings };
+}
+
+/** What has to be true before the follow-up goes out: the same rules, on the follow-up's own text. */
+export function followUpCheck(p: Prospect, suppressed?: { value: string; reason: string } | null): ApprovalCheck {
+  const blocks: string[] = [];
+  const body = p.followUp?.body.trim() ?? "";
+  if (!body) blocks.push("There's no follow-up written");
+  else {
+    if (hasPlaceholders(body)) blocks.push("Fill in the [bracketed] parts of the follow-up");
+    blocks.push(...messageProblems(body).map((problem) => `Follow-up: ${problem.charAt(0).toLowerCase()}${problem.slice(1)}`));
+  }
+  if (p.followUp?.sentAt) blocks.push(`The follow-up already went, on ${p.followUp.sentAt}`);
+  if (p.status !== "sent") blocks.push("Follow-ups only go to prospects who haven't replied");
+  if (p.contact.kind !== "email" || !ADDRESS.test(p.contact.value.trim())) blocks.push("There's no address to email");
+  if (suppressed) blocks.push(`${suppressed.value} is on the do-not-email list (${REASON[suppressed.reason] ?? suppressed.reason})`);
+  return { blocks, warnings: [] };
 }
 
 function clearApproval(p: Prospect) {

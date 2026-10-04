@@ -6,12 +6,13 @@ import { useParams, useSearchParams } from "next/navigation";
 import { AdminLoader } from "@/components/admin/AdminLoader";
 import { DetailSection, EmptyState } from "@/components/admin/ui";
 import { IconAlertCircle, IconAlertTriangle, IconCheckCircle, IconChevronLeft, IconChevronRight, IconExternal, IconX } from "@/components/admin/icons";
-import { EDITABLE, type ApprovalCheck, type Priority, type Prospect, type ProspectSummary, type StatusAction } from "@/lib/outreach/types";
+import { EDITABLE, type ApprovalCheck, type OutreachMessage, type Priority, type Prospect, type ProspectSummary, type SendingMode, type StatusAction } from "@/lib/outreach/types";
 import { api, byPriority, formatDay, formatWhen, hostOf, PriorityBadge, StatusPill, tabFor } from "../../shared";
 
 interface Loaded {
   prospect: Prospect;
   check: ApprovalCheck;
+  messages?: OutreachMessage[];
 }
 
 const button =
@@ -65,6 +66,7 @@ function ProspectPage() {
   const [editing, setEditing] = React.useState(false);
   const [draft, setDraft] = React.useState({ subject: "", body: "" });
   const [notes, setNotes] = React.useState("");
+  const [mode, setMode] = React.useState<SendingMode>("off");
 
   const load = React.useCallback(async () => {
     const loaded = await api<Loaded>(base);
@@ -79,8 +81,11 @@ function ProspectPage() {
     setMessage(null);
     setEditing(false);
     load().catch((error: Error) => setMissing(error.message));
-    api<{ prospects: ProspectSummary[] }>("/api/admin/outreach?view=summary")
-      .then(({ prospects }) => setQueue(prospects.filter((p) => tab.statuses.includes(p.status)).sort(byPriority)))
+    api<{ prospects: ProspectSummary[]; sending?: { mode: SendingMode } }>("/api/admin/outreach?view=summary")
+      .then(({ prospects, sending }) => {
+        setQueue(prospects.filter((p) => tab.statuses.includes(p.status)).sort(byPriority));
+        setMode(sending?.mode ?? "off");
+      })
       .catch(() => setQueue([]));
   }, [load, tab]);
 
@@ -145,6 +150,10 @@ function ProspectPage() {
     );
     if (saved) setEditing(false);
   };
+
+  // Live sending emails approved addresses itself: no Open in Mail, so nothing goes twice.
+  const queued = mode === "live" && p.status === "approved" && p.contact.kind === "email";
+  const suppressed = check.blocks.some((block) => block.includes("do-not-email list"));
 
   const mailto =
     p.contact.kind === "email" && p.email
@@ -293,12 +302,17 @@ function ProspectPage() {
                     <IconCheckCircle size={18} /> {busy === "approve" ? "Approving..." : "Approve"}
                   </button>
                 )}
-                {p.status === "approved" && mailto && (
+                {queued && (
+                  <p className="w-full text-sm text-[hsl(var(--color-foreground-muted))]">
+                    Queued: the sender emails it from obi@craefto.com in their working hours, after checking the address is still published. Back to draft stops it.
+                  </p>
+                )}
+                {p.status === "approved" && mailto && !queued && (
                   <a href={mailto} className={primary}>
                     Open in Mail
                   </a>
                 )}
-                {p.status === "approved" && (
+                {p.status === "approved" && !queued && (
                   <button type="button" className={secondary} disabled={busy !== null} onClick={() => void act("sent")}>
                     Mark sent today
                   </button>
@@ -336,6 +350,27 @@ function ProspectPage() {
             )}
           </DetailSection>
 
+          {!!data.messages?.length && (
+            <DetailSection title="Emails sent">
+              <ul className="space-y-3">
+                {data.messages.map((sent) => (
+                  <li key={sent.id} className="text-sm">
+                    <p className="text-[hsl(var(--color-foreground))]">
+                      {sent.mode === "test" ? "Test copy" : sent.kind === "follow-up" ? "Follow-up" : "First email"} to {sent.to}
+                      <span className={`ml-2 text-xs font-medium ${sent.status === "sent" ? "text-[hsl(var(--color-success))]" : sent.status === "sending" ? "text-[hsl(var(--color-warning))]" : "text-[hsl(var(--color-error))]"}`}>{sent.status}</span>
+                    </p>
+                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">
+                      {formatWhen(sent.sentAt ?? sent.createdAt)}
+                      {sent.savedToSent ? " · copy in Sent" : ""}
+                      {sent.evidence?.manual ? " · address confirmed by hand" : sent.evidence?.ok ? " · address confirmed on its page" : ""}
+                      {sent.error ? ` · ${sent.error}` : ""}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </DetailSection>
+          )}
+
           {p.followUp && (
             <DetailSection title="Follow-up">
               <p className="mb-3 text-sm text-[hsl(var(--color-foreground-muted))]">
@@ -347,6 +382,47 @@ function ProspectPage() {
         </div>
 
         <div className="space-y-6 lg:col-span-2">
+          {p.contact.kind === "email" && (
+            <DetailSection title="Published address">
+              <p className="text-sm text-[hsl(var(--color-foreground))]">
+                {!p.evidence
+                  ? "Checked just before sending: the address must still be on the page it was published on, with no notice refusing unsolicited email."
+                  : p.evidence.manual
+                    ? `Confirmed by hand ${formatWhen(p.evidence.manual.at)}: good for 30 days of sending.`
+                    : p.evidence.ok
+                      ? `On the page when checked ${formatWhen(p.evidence.checkedAt)}.`
+                      : `Couldn't confirm it ${formatWhen(p.evidence.checkedAt)}: ${p.evidence.error ?? p.evidence.notice ?? "unknown"}.`}
+              </p>
+              {p.evidence?.notice && <p className="mt-2 rounded-lg bg-[hsl(var(--color-warning-subtle))] px-3 py-2 text-xs text-[hsl(var(--color-foreground))]">“{p.evidence.notice}”</p>}
+              {p.evidence?.otherAddresses?.length ? <p className="mt-2 text-xs text-[hsl(var(--color-foreground-muted))]">The page shows: {p.evidence.otherAddresses.join(", ")}</p> : null}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" className={secondary} disabled={busy !== null} onClick={() => void run("evidence", () => api<Loaded>(`${base}/evidence`, { action: "check" }), "Checked again.").then(() => void load())}>
+                  {busy === "evidence" ? "Checking..." : "Check again"}
+                </button>
+                {!p.evidence?.ok && (
+                  <button type="button" className={secondary} disabled={busy !== null} onClick={() => void run("confirm", () => api<Loaded>(`${base}/evidence`, { action: "confirm" }), "Confirmed: it can send for the next 30 days.").then(() => void load())}>
+                    I&apos;ve checked it&apos;s published
+                  </button>
+                )}
+                {!suppressed && (
+                  <button
+                    type="button"
+                    className={`${secondary} text-[hsl(var(--color-error))]`}
+                    disabled={busy !== null}
+                    onClick={() =>
+                      void run("suppress", async () => {
+                        await api("/api/admin/outreach/suppressions", { value: p.contact.value, note: `Added from ${p.company}'s page` });
+                        return api<Loaded>(base);
+                      }, `${p.contact.value} won't be emailed again.`)
+                    }
+                  >
+                    Don&apos;t email them
+                  </button>
+                )}
+              </div>
+            </DetailSection>
+          )}
+
           {(p.whyFit || p.findings.length > 0) && (
             <DetailSection title="Research">
               {p.whyFit && <p className="mb-4 text-sm leading-relaxed text-[hsl(var(--color-foreground))]">{p.whyFit}</p>}

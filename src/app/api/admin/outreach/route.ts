@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { handle, ok } from "@/lib/outreach/http";
 import { listCampaigns, listSummaries } from "@/lib/outreach/store";
+import { getSettings } from "@/lib/outreach/sender";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
  */
 export const GET = (request: NextRequest) =>
   handle(request, async () => {
-    if (request.nextUrl.searchParams.get("view") === "summary") return ok(await listSummaries());
-    return ok({ campaigns: await listCampaigns() });
+    const [data, settings] = await Promise.all([request.nextUrl.searchParams.get("view") === "summary" ? listSummaries() : listCampaigns().then((campaigns) => ({ campaigns })), getSettings()]);
+    // The command centre hides "Open in Mail" for what the sender will send itself.
+    return ok({ ...data, sending: { mode: settings.mode } });
   });

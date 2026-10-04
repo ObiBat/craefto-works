@@ -65,6 +65,25 @@ export interface Contact {
   source?: string;
 }
 
+/** The published-address check made before sending (lib/outreach/evidence.ts). */
+export interface Evidence {
+  url: string | null;
+  checkedAt: string;
+  /** The address is on the page and no notice refuses unsolicited email. */
+  ok: boolean;
+  addressFound: boolean;
+  /** The sentence refusing unsolicited email, when one is found. */
+  notice: string | null;
+  /** sha256 of the page's text, so what was seen can be shown later. */
+  pageHash: string | null;
+  /** Addresses at the same domain the page does show, to fix a stale one. */
+  otherAddresses?: string[];
+  status: number | null;
+  error?: string;
+  /** Confirmed by hand instead (the page blocks automated checks). */
+  manual?: { by: string; at: string };
+}
+
 export interface Prospect extends Research {
   id: string;
   campaignId: string;
@@ -84,6 +103,8 @@ export interface Prospect extends Research {
   flags?: string[];
   notes?: string;
   timeline: { at: string; event: string }[];
+  /** The latest published-address check, or a confirmation by hand. */
+  evidence?: Evidence;
   updatedAt: string;
 }
 
@@ -132,3 +153,38 @@ export const STATUS_LABEL: Record<ProspectStatus, string> = {
 
 /** The statuses whose email can still be edited. */
 export const EDITABLE: ProspectStatus[] = ["researched", "drafted", "approved"];
+
+export type SendingMode = "off" | "test" | "live";
+
+export interface SendingSettings {
+  mode: SendingMode;
+  dailyCap: number;
+  testRecipients: string[];
+  windowStart: string;
+  windowEnd: string;
+  followUps: boolean;
+  nextSendAt: string | null;
+  pausedReason: string | null;
+  updatedAt: string;
+  updatedBy: string | null;
+}
+
+/** One email the sender sent (or tried to), as kept on record. */
+export interface OutreachMessage {
+  id: string;
+  campaignId: string;
+  prospectId: string;
+  kind: "initial" | "follow-up";
+  mode: "test" | "live";
+  status: "sending" | "sent" | "failed" | "bounced";
+  messageId: string;
+  to: string;
+  subject: string;
+  body: string;
+  evidence: Evidence | null;
+  error: string | null;
+  savedToSent: boolean;
+  createdAt: string;
+  sentAt: string | null;
+}
+

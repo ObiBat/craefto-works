@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AdminLoader } from "@/components/admin/AdminLoader";
 import { EmptyState, FilterBar, FilterChip, PageHeader, SearchInput } from "@/components/admin/ui";
 import { IconAlertTriangle } from "@/components/admin/icons";
-import type { ProspectSummary } from "@/lib/outreach/types";
+import type { ProspectSummary, SendingMode } from "@/lib/outreach/types";
+import { SendingPanel } from "./sending-panel";
 import { api, byPriority, PriorityBadge, StatusPill, TABS, tabFor } from "./shared";
 
 interface Summary {
@@ -31,6 +32,7 @@ function OutreachQueue() {
   const [data, setData] = React.useState<Summary | null>(null);
   const [error, setError] = React.useState("");
   const [search, setSearch] = React.useState("");
+  const [mode, setMode] = React.useState<SendingMode>("off");
 
   React.useEffect(() => {
     api<Summary>("/api/admin/outreach?view=summary")
@@ -66,6 +68,8 @@ function OutreachQueue() {
         title="Outreach"
         subtitle={`${count(["drafted"])} to approve · ${count(["approved"])} approved · ${count(["sent", "replied", "meeting"])} in conversation`}
       />
+
+      <SendingPanel onModeChange={setMode} />
 
       <div className="space-y-3">
         <FilterBar>
@@ -115,6 +119,9 @@ function OutreachQueue() {
                   {p.subject && <p className="mt-1 truncate text-sm text-[hsl(var(--color-foreground))]">{p.subject}</p>}
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[hsl(var(--color-foreground-subtle))]">
                     {campaign === "all" && data.campaigns.length > 1 && <span>{names.get(p.campaignId)}</span>}
+                    {mode === "live" && p.status === "approved" && p.contact.kind === "email" && (
+                      <span className="font-medium text-[hsl(var(--color-accent))]">Queued: sends in their working hours</span>
+                    )}
                     {p.flags.length > 0 && (
                       <span className="inline-flex items-center gap-1 font-medium text-[hsl(var(--color-warning))]">
                         <IconAlertTriangle size={13} /> Read first

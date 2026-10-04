@@ -13,6 +13,9 @@ test.describe("admin API access", () => {
     "/api/admin/outreach?view=summary",
     "/api/admin/outreach/outreach-1",
     "/api/admin/outreach/outreach-1/a-prospect",
+    "/api/admin/outreach/settings",
+    "/api/admin/outreach/messages",
+    "/api/admin/outreach/suppressions",
     "/api/analytics/feedback",
     "/api/analytics/ab-test",
     "/api/analytics/article",
@@ -33,6 +36,9 @@ test.describe("admin API access", () => {
       ["/api/admin/outreach/outreach-1/a-prospect/status", "post", { action: "approve" }],
       ["/api/admin/outreach/outreach-1/a-prospect/research", "post", { research: {}, event: "x" }],
       ["/api/admin/outreach/outreach-1/a-prospect", "put", { notes: "x" }],
+      ["/api/admin/outreach/settings", "put", { mode: "live" }],
+      ["/api/admin/outreach/suppressions", "post", { value: "a@example.com" }],
+      ["/api/admin/outreach/outreach-1/a-prospect/evidence", "post", { action: "confirm" }],
     ];
     for (const [path, method, data] of writes) {
       expect((await request[method](path, { data })).status(), path).toBe(401);

@@ -1,7 +1,7 @@
 import "server-only";
 import { createServerClient } from "@/lib/supabase";
 import { approvalCheck, applyBulk, hashOf, OutreachError, suppressionKeys, sydneyDate, type BulkOptions } from "./rules";
-import type { Actor, ApprovalCheck, BulkAction, Campaign, Contact, FollowUp, Priority, Prospect, ProspectStatus, ProspectSummary, Research } from "./types";
+import type { Actor, ApprovalCheck, BulkAction, Campaign, Contact, Evidence, FollowUp, Priority, Prospect, ProspectStatus, ProspectSummary, Research } from "./types";
 
 // Outreach in Supabase (migration 022). Reads return the command centre's
 // shapes; every change goes through updateProspect, which applies one of the
@@ -42,6 +42,7 @@ interface ProspectRow {
   follow_up: FollowUp | null;
   flags: string[];
   notes: string | null;
+  evidence: Evidence | null;
   created_at: string;
   updated_at: string;
 }
@@ -99,6 +100,7 @@ function toProspect(row: ProspectRow, events: EventRow[]): Prospect {
     flags: row.flags ?? [],
     ...(row.notes !== null ? { notes: row.notes } : {}),
     timeline: events.map((event) => ({ at: iso(event.at), event: event.event })),
+    ...(row.evidence ? { evidence: row.evidence } : {}),
     // Kept exactly as stored: it's the version a save checks against.
     updatedAt: row.updated_at,
   };
@@ -129,6 +131,7 @@ function columnsOf(p: Prospect) {
     follow_up: p.followUp ?? null,
     flags: p.flags ?? [],
     notes: p.notes ?? null,
+    evidence: p.evidence ?? null,
   };
 }
 
@@ -270,6 +273,11 @@ async function suppressions(db: Db, values: string[]) {
 }
 
 const coveredBy = (p: Prospect, list: Map<string, Suppression>) => suppressionKeys(p).map((value) => list.get(value)).find(Boolean) ?? null;
+
+/** The do-not-email entry covering this prospect's address or domain, if any. */
+export async function suppressedBy(p: Prospect) {
+  return coveredBy(p, await suppressions(createServerClient(), suppressionKeys(p)));
+}
 
 /** The approval check for a prospect, with the do-not-email list consulted. */
 export async function checkProspect(p: Prospect): Promise<ApprovalCheck> {
