@@ -33,12 +33,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update stage' }, { status: 500 });
     }
 
-    // Log activity
-    await supabase.from('lead_activities').insert({
+    // The type and title the lead_activities table requires (its type check and NOT NULL title).
+    const { error: logError } = await supabase.from('lead_activities').insert({
       lead_id: id,
-      type: 'stage_change',
-      description: `Moved to ${stage?.name || 'new stage'}`,
+      type: 'stage_changed',
+      title: `Moved to ${stage?.name || 'a new stage'}`,
+      actor_type: 'admin',
     });
+    if (logError) console.error('Error logging stage change:', logError);
 
     return NextResponse.json({ success: true });
   } catch (error) {

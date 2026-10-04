@@ -46,6 +46,40 @@ export const ENQUIRY_UNSURE = { value: "other", label: "Not sure yet" };
 
 const ENQUIRY_TYPES = ENQUIRY_GROUPS.flatMap((group) => group.types);
 
+/** Every value a lead's service_interest can hold. */
+export const ENQUIRY_VALUES: string[] = [...ENQUIRY_TYPES.map((type) => type.value), ENQUIRY_UNSURE.value];
+
+/** The form's budget bands and timelines, as stored on leads (budget_range, timeline). */
+export const BUDGETS = [
+  { value: "under-3k", label: "Under A$3k" },
+  { value: "3-5k", label: "A$3k – A$5k" },
+  { value: "5-10k", label: "A$5k – A$10k" },
+  { value: "10-25k", label: "A$10k – A$25k" },
+  { value: "25-50k", label: "A$25k – A$50k" },
+  { value: "50k+", label: "A$50k+" },
+  { value: "monthly", label: "Monthly plan" },
+  { value: "discuss", label: "Let's discuss" },
+];
+
+export const TIMELINES = [
+  { value: "asap", label: "ASAP" },
+  { value: "1-3months", label: "1-3 months" },
+  { value: "3-6months", label: "3-6 months" },
+  { value: "flexible", label: "Flexible" },
+];
+
+/** The label for a stored value, for alerts and admin. */
+export function enquiryLabel(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return (
+    ENQUIRY_TYPES.find((type) => type.value === value)?.label ??
+    (value === ENQUIRY_UNSURE.value ? ENQUIRY_UNSURE.label : null) ??
+    BUDGETS.find((band) => band.value === value)?.label ??
+    TIMELINES.find((timeline) => timeline.value === value)?.label ??
+    value
+  );
+}
+
 /**
  * /contact?service=… to a project type: capability ids and the older service
  * keys. "product" covers both a website and an app, so it preselects nothing.

@@ -1,12 +1,13 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { accountForBooking, cancelBooking, recordBooking, type CalBooking } from "@/lib/portal/meetings";
+import { accountForBooking, cancelBooking, recordBooking } from "@/lib/portal/meetings";
+import { recordDiscoveryCall, type DiscoveryBooking } from "@/lib/discovery-calls";
 
 /**
- * Cal.com's webhook (Settings > Developer > Webhooks, with the secret in
- * CAL_WEBHOOK_SECRET): keeps clients' calls in the portal in step with
- * bookings, reschedules and cancellations. Bookings by anyone who isn't a
- * client (discovery calls from the website) are ignored.
+ * Cal.com's webhook (set up by scripts/cal-setup.mjs, signed with
+ * CAL_WEBHOOK_SECRET). Clients' calls keep the portal in step with bookings,
+ * reschedules and cancellations; everyone else's are Discovery Calls, which
+ * reach the sales pipeline (lib/discovery-calls.ts).
  */
 export async function POST(request: NextRequest) {
   const secret = process.env.CAL_WEBHOOK_SECRET;
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  let event: { triggerEvent?: string; payload?: CalBooking };
+  let event: { triggerEvent?: string; payload?: DiscoveryBooking };
   try {
     event = JSON.parse(raw);
   } catch {
@@ -32,15 +33,20 @@ export async function POST(request: NextRequest) {
       case "BOOKING_CREATED":
       case "BOOKING_RESCHEDULED": {
         const account = await accountForBooking(booking);
-        if (!account) break;
+        if (!account) {
+          await recordDiscoveryCall(booking, event.triggerEvent);
+          break;
+        }
         // A reschedule is a new booking replacing the old one.
         if (booking.rescheduleUid) await cancelBooking(booking.rescheduleUid);
         await recordBooking(account, booking);
         break;
       }
-      case "BOOKING_CANCELLED":
+      case "BOOKING_CANCELLED": {
         await cancelBooking(booking.uid);
+        if (!(await accountForBooking(booking))) await recordDiscoveryCall(booking, "BOOKING_CANCELLED");
         break;
+      }
     }
   } catch (error) {
     console.error(`Cal.com webhook ${event.triggerEvent} failed:`, error);

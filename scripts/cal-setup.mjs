@@ -10,9 +10,12 @@
  *   on the default availability, hidden from the public cal.com/craefto page
  *   so prospects still only see the Discovery Call. The portal embeds it
  *   (CAL_BOOKING_LINK, src/lib/portal/meetings.ts).
- * - A webhook on that event only, to www.craefto.com/api/cal/webhook, for
+ * - A webhook on that event and on the public Discovery Call
+ *   (craefto/discovery-call), to www.craefto.com/api/cal/webhook, for
  *   bookings, reschedules and cancellations, signed with CAL_WEBHOOK_SECRET
- *   (the same value must be set where the site runs).
+ *   (the same value must be set where the site runs). Clients' calls go to
+ *   the portal; Discovery Calls go to Leads (src/lib/discovery-calls.ts). The
+ *   Discovery Call event itself is left as it is.
  *
  * Reads CAL_API_KEY and CAL_WEBHOOK_SECRET from the environment or
  * .env.local. Prints IDs only, never keys or secrets.
@@ -20,6 +23,7 @@
 import { readFileSync } from "node:fs";
 
 const SLUG = "client-call";
+const DISCOVERY_SLUG = "discovery-call";
 const WEBHOOK_URL = "https://www.craefto.com/api/cal/webhook";
 const TRIGGERS = ["BOOKING_CREATED", "BOOKING_RESCHEDULED", "BOOKING_CANCELLED"];
 const EVENT = {
@@ -77,13 +81,18 @@ if (event) {
 }
 console.log(`  ${event.lengthInMinutes} min, ${event.locations?.map((location) => location.integration ?? location.type).join(", ")}, ${event.hidden ? "hidden from" : "shown on"} the public page`);
 
-// ── The webhook ───────────────────────────────────────────────────────────
+// ── The webhooks ──────────────────────────────────────────────────────────
 
-const hooks = await api("GET", `/event-types/${event.id}/webhooks`);
-const existing = (Array.isArray(hooks) ? hooks : []).find((hook) => hook.subscriberUrl === WEBHOOK_URL);
 const settings = { subscriberUrl: WEBHOOK_URL, triggers: TRIGGERS, secret, version: "2021-10-20" };
-const hook = existing
-  ? await api("PATCH", `/event-types/${event.id}/webhooks/${existing.id}`, { ...settings, ...(active === undefined ? {} : { active }) })
-  : await api("POST", `/event-types/${event.id}/webhooks`, { ...settings, active: active ?? false });
-console.log(`Webhook: ${existing ? "updated" : "created"} (${hook.id}), ${hook.active ? "ON" : "off"}, ${WEBHOOK_URL}`);
-if (!hook.active) console.log("  Switch it on once the site is live: node scripts/cal-setup.mjs --activate");
+const discovery = types.find((type) => type.slug === DISCOVERY_SLUG);
+if (!discovery) console.log(`No ${me.username}/${DISCOVERY_SLUG} event found: its bookings won't reach Leads.`);
+
+for (const target of [event, discovery].filter(Boolean)) {
+  const hooks = await api("GET", `/event-types/${target.id}/webhooks`);
+  const existing = (Array.isArray(hooks) ? hooks : []).find((hook) => hook.subscriberUrl === WEBHOOK_URL);
+  const hook = existing
+    ? await api("PATCH", `/event-types/${target.id}/webhooks/${existing.id}`, { ...settings, ...(active === undefined ? {} : { active }) })
+    : await api("POST", `/event-types/${target.id}/webhooks`, { ...settings, active: active ?? false });
+  console.log(`Webhook on ${target.slug}: ${existing ? "updated" : "created"} (${hook.id}), ${hook.active ? "ON" : "off"}, ${WEBHOOK_URL}`);
+  if (!hook.active) console.log("  Switch it on once the site is live: node scripts/cal-setup.mjs --activate");
+}

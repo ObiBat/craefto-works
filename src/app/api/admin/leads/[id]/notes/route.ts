@@ -15,11 +15,13 @@ export async function POST(
 
     const supabase = createServerClient();
 
-    // Add activity
+    // The type and title the lead_activities table requires (its type check and NOT NULL title).
     const { error } = await supabase.from('lead_activities').insert({
       lead_id: id,
-      type: 'note',
+      type: 'note_added',
+      title: 'Note added',
       description: note.trim(),
+      actor_type: 'admin',
     });
 
     if (error) {
