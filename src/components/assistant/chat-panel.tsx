@@ -6,10 +6,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import type { AssistantTools } from "@/lib/assistant/agent";
+import { pauseSmoothScroll } from "@/lib/smooth-scroll";
 import { BUDGETS, ENQUIRY_GROUPS, ENQUIRY_UNSURE, TIMELINES } from "@/lib/enquiry";
 import { BookCall } from "@/components/book-call";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { firstStop, shownUpTo } from "./reveal";
 import { RichText } from "./rich-text";
 
 // The Ask Craefto panel (loaded only when someone opens it). The browser
@@ -134,7 +136,7 @@ function Chips({ options, onPick, label }: { options: string[]; onPick: (text: s
           type="button"
           onClick={() => onPick(option)}
           style={{ animationDelay: `${120 + index * 60}ms` }}
-          className="ask-craefto-chip min-h-10 rounded-full bg-[hsl(var(--color-background-muted))] px-4 py-2 text-left text-sm transition-[background-color,scale] duration-150 hover:bg-[hsl(var(--color-accent-subtle))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-accent))] active:scale-[0.97]"
+          className="ask-craefto-chip min-h-11 rounded-full sm:min-h-10 bg-[hsl(var(--color-background-muted))] px-4 py-2 text-left text-sm transition-[background-color,scale] duration-150 hover:bg-[hsl(var(--color-accent-subtle))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-accent))] active:scale-[0.97]"
         >
           {option}
         </button>
@@ -245,6 +247,58 @@ function ToolPart({ part, busy, respond }: { part: Part; busy: boolean; respond:
   return null;
 }
 
+// ── Answers flowing in ────────────────────────────────────────────────────
+
+const stillMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/**
+ * An answer's text as it streams. The price check releases whole sentences,
+ * which would land in bursts; this lets them flow in a word at a time, at a
+ * steady 200 or so characters a second and faster when the answer has run
+ * ahead, so it never lags far behind. A finished answer (a reload, an older
+ * message) shows whole, as does everything with reduced motion.
+ */
+function FlowingText({ text, live, flowKey, onFlow }: { text: string; live: boolean; flowKey: string; onFlow: (key: string, flowing: boolean) => void }) {
+  // Mid-answer it opens on its first word, taking the thinking line's place without a blank moment.
+  const [shown, setShown] = useState(() => (live && !stillMotion() ? firstStop(text) : text.length));
+  // How far the reveal has got, in characters (fractional), kept across runs: each new sentence restarts the loop from here.
+  const position = useRef(shown);
+
+  useEffect(() => {
+    if (position.current >= text.length) return;
+    let last = 0;
+    let frame = 0;
+    const tick = (now: number) => {
+      const elapsed = last ? Math.min(64, now - last) : 16;
+      last = now;
+      const behind = text.length - position.current;
+      position.current = Math.min(text.length, position.current + Math.max(0.2 * elapsed, behind * (1 - Math.exp(-elapsed / 300))));
+      const stop = shownUpTo(text, position.current);
+      setShown((current) => Math.max(current, stop));
+      if (position.current < text.length) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [text]);
+
+  // The panel holds what follows (cards, replies) until the text has finished flowing.
+  const flowing = shown < text.length;
+  useEffect(() => onFlow(flowKey, flowing), [flowKey, flowing, onFlow]);
+  useEffect(() => () => onFlow(flowKey, false), [flowKey, onFlow]);
+
+  return <RichText text={text.slice(0, shown)} />;
+}
+
+/** Whether an answer has anything to show yet: words, or a card. */
+const showsSomething = (message: ChatMessage) =>
+  message.parts.some(
+    (part) =>
+      (part.type === "text" && part.text.trim().length > 0) ||
+      part.type === "tool-fileEnquiry" ||
+      part.type === "tool-talkToPerson" ||
+      (part.type === "tool-showBooking" && part.state === "output-available"),
+  );
+
 /** The replies the latest answer suggests. */
 function suggestionsOf(message: ChatMessage | undefined): string[] {
   if (message?.role !== "assistant") return [];
@@ -313,11 +367,81 @@ export default function ChatPanel({ state, onClose, onClosed }: { state: "open" 
     focusInside(panelRef.current, inputRef.current);
   }, [open]);
 
-  // Follow the answer as it arrives, unless the visitor has scrolled up to read.
+  // Follow the conversation's end as it grows, gliding rather than jumping,
+  // unless the visitor has scrolled up to read. Only their own scrolling
+  // (wheel, touch, keys, the scrollbar) decides that, never the glide's.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const userScrolled = useRef(0);
+  const markUserScroll = () => {
+    userScrolled.current = performance.now();
+  };
   useEffect(() => {
     const log = logRef.current;
-    if (log && pinned.current) log.scrollTop = log.scrollHeight;
-  }, [messages, status]);
+    const content = contentRef.current;
+    if (!log || !content) return;
+    let frame = 0;
+    const glide = () => {
+      if (frame || !pinned.current) return;
+      let last = 0;
+      // Eases to the end in about a quarter of a second, whatever the screen's frame rate.
+      const step = (now: number) => {
+        frame = 0;
+        const elapsed = last ? Math.min(64, now - last) : 16;
+        last = now;
+        const gap = log.scrollHeight - log.clientHeight - log.scrollTop;
+        if (!pinned.current || gap <= 1) return;
+        log.scrollTop += stillMotion() || gap < 2 ? gap : Math.max(1, gap * (1 - Math.exp(-elapsed / 90)));
+        frame = requestAnimationFrame(step);
+      };
+      frame = requestAnimationFrame(step);
+    };
+    // The conversation growing, or the panel shrinking (a growing message box, a phone's keyboard).
+    const observer = new ResizeObserver(glide);
+    observer.observe(content);
+    observer.observe(log);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  // Phones: the sheet fills just what's visible above the keyboard (the
+  // visual viewport), so nothing slides about or shows through when it
+  // opens, and the page behind holds still, as it does under the menu.
+  useEffect(() => {
+    if (!open || !window.matchMedia("(max-width: 639px)").matches) return;
+    const panel = panelRef.current;
+    const viewport = window.visualViewport;
+    const html = document.documentElement;
+    document.body.style.overflow = "hidden";
+    html.classList.add("ask-craefto-open");
+    pauseSmoothScroll(true);
+    const fit = () => {
+      if (!panel || !viewport) return;
+      panel.style.setProperty("--viewport-height", `${viewport.height}px`);
+      panel.style.setProperty("--viewport-top", `${viewport.offsetTop}px`);
+      panel.dataset.keyboard = window.innerHeight - viewport.height > 120 ? "open" : "closed";
+    };
+    fit();
+    viewport?.addEventListener("resize", fit);
+    viewport?.addEventListener("scroll", fit);
+    return () => {
+      viewport?.removeEventListener("resize", fit);
+      viewport?.removeEventListener("scroll", fit);
+      document.body.style.overflow = "";
+      html.classList.remove("ask-craefto-open");
+      pauseSmoothScroll(false);
+      panel?.style.removeProperty("--viewport-height");
+      panel?.style.removeProperty("--viewport-top");
+      delete panel?.dataset.keyboard;
+    };
+  }, [open]);
+
+  // Which answers are still flowing in (FlowingText): what follows them waits.
+  const [flowingKeys, setFlowingKeys] = useState<string[]>([]);
+  const onFlow = useCallback((key: string, flowing: boolean) => {
+    setFlowingKeys((keys) => (flowing ? (keys.includes(key) ? keys : [...keys, key]) : keys.includes(key) ? keys.filter((entry) => entry !== key) : keys));
+  }, []);
 
   const send = useCallback(
     (text: string) => {
@@ -438,69 +562,88 @@ export default function ChatPanel({ state, onClose, onClosed }: { state: "open" 
         ref={logRef}
         role="log"
         aria-live="polite"
-        aria-busy={busy}
+        aria-busy={busy || flowingKeys.length > 0}
         aria-label="Conversation"
         onScroll={(event) => {
           const log = event.currentTarget;
           const below = log.scrollHeight - log.scrollTop - log.clientHeight;
-          pinned.current = below < 48;
+          if (performance.now() - userScrolled.current < 400) pinned.current = below < 48;
           // Soft edges where the conversation runs on out of view (globals.css).
           log.dataset.above = String(log.scrollTop > 2);
           log.dataset.below = String(below > 2);
         }}
+        onWheel={markUserScroll}
+        onTouchMove={markUserScroll}
+        onKeyDown={markUserScroll}
+        onPointerDown={(event) => {
+          // The scrollbar itself.
+          if (event.target === event.currentTarget) markUserScroll();
+        }}
         // The page's smooth scrolling leaves the conversation to scroll on its own.
         data-lenis-prevent
-        className="ask-craefto-log flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 pb-4 pt-1 text-[15px] leading-relaxed"
+        className="ask-craefto-log flex-1 overflow-y-auto overscroll-contain px-5 pb-4 pt-1 text-[15px] leading-relaxed"
       >
-        <div className="space-y-3">
-          <p>
-            Hi, I&apos;m Craefto&apos;s AI assistant. I can answer questions about our work, prices and process, or pass your project to Obi, who reads every enquiry.
-          </p>
-          {messages.length === 0 && <Chips options={SUGGESTIONS} onPick={pick} label="Ways to start" />}
-        </div>
-
-        {messages.map((message) =>
-          message.role === "user" ? (
-            <div key={message.id} className="ask-craefto-message flex justify-end">
-              <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-[hsl(var(--color-foreground))] px-4 py-2.5 text-[hsl(var(--color-background))]">
-                <span className="sr-only">You: </span>
-                {message.parts.map((part) => (part.type === "text" ? part.text : "")).join("")}
-              </p>
-            </div>
-          ) : (
-            <div key={message.id} className="ask-craefto-message space-y-3">
-              <span className="sr-only">Ask Craefto: </span>
-              {message.parts.map((part, index) =>
-                part.type === "text" ? (
-                  part.text.trim() ? <RichText key={index} text={part.text} /> : null
-                ) : part.type.startsWith("tool-") ? (
-                  <ToolPart key={index} part={part} busy={busy} respond={respond} />
-                ) : null,
-              )}
-            </div>
-          ),
-        )}
-
-        {replies.length > 0 && <Chips options={replies} onPick={pick} label="Suggested replies" />}
-
-        {status === "submitted" && (
-          <p className="ask-craefto-message flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
-            <span className="inline-flex gap-1" aria-hidden="true">
-              <span className="ask-craefto-dot size-1.5 rounded-full bg-current" />
-              <span className="ask-craefto-dot size-1.5 rounded-full bg-current [animation-delay:150ms]" />
-              <span className="ask-craefto-dot size-1.5 rounded-full bg-current [animation-delay:300ms]" />
-            </span>
-            Thinking
-          </p>
-        )}
-        {error && (
-          <div role="alert" className="ask-craefto-message space-y-2 rounded-2xl bg-[hsl(var(--color-error-subtle))] px-4 py-3 text-sm">
-            <p>{errorText(error)}</p>
+        <div ref={contentRef} className="space-y-5">
+          <div className="space-y-3">
+            <p>
+              Hi, I&apos;m Craefto&apos;s AI assistant. I can answer questions about our work, prices and process, or pass your project to Obi, who reads every enquiry.
+            </p>
+            {messages.length === 0 && <Chips options={SUGGESTIONS} onPick={pick} label="Ways to start" />}
           </div>
-        )}
+
+          {messages.map((message, index) => {
+            if (message.role === "user") {
+              return (
+                <div key={message.id} className="ask-craefto-message flex justify-end">
+                  <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-[hsl(var(--color-foreground))] px-4 py-2.5 text-[hsl(var(--color-background))]">
+                    <span className="sr-only">You: </span>
+                    {message.parts.map((part) => (part.type === "text" ? part.text : "")).join("")}
+                  </p>
+                </div>
+              );
+            }
+            const latest = index === messages.length - 1;
+            // Until it has words or a card, the thinking line below stands in for it, in its place.
+            if (latest && busy && !showsSomething(message)) return null;
+            let held = false;
+            return (
+              <div key={message.id} className="ask-craefto-answer space-y-3">
+                <span className="sr-only">Ask Craefto: </span>
+                {message.parts.map((part, partIndex) => {
+                  if (held) return null;
+                  const key = `${message.id}:${partIndex}`;
+                  if (part.type === "text") {
+                    if (!part.text.trim()) return null;
+                    held = flowingKeys.includes(key);
+                    return <FlowingText key={partIndex} text={part.text} live={latest && busy} flowKey={key} onFlow={onFlow} />;
+                  }
+                  return part.type.startsWith("tool-") ? <ToolPart key={partIndex} part={part} busy={busy} respond={respond} /> : null;
+                })}
+              </div>
+            );
+          })}
+
+          {replies.length > 0 && flowingKeys.length === 0 && <Chips options={replies} onPick={pick} label="Suggested replies" />}
+
+          {busy && !(messages.at(-1)?.role === "assistant" && showsSomething(messages.at(-1)!)) && (
+            <p className="ask-craefto-thinking flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
+              <span className="inline-flex gap-1" aria-hidden="true">
+                <span className="ask-craefto-dot size-1.5 rounded-full bg-current" />
+                <span className="ask-craefto-dot size-1.5 rounded-full bg-current [animation-delay:150ms]" />
+                <span className="ask-craefto-dot size-1.5 rounded-full bg-current [animation-delay:300ms]" />
+              </span>
+              Thinking
+            </p>
+          )}
+          {error && (
+            <div role="alert" className="ask-craefto-message space-y-2 rounded-2xl bg-[hsl(var(--color-error-subtle))] px-4 py-3 text-sm">
+              <p>{errorText(error)}</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      <form onSubmit={onSubmit} className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
+      <form onSubmit={onSubmit} className="ask-craefto-compose px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
         <div className="flex items-end gap-2 rounded-3xl bg-[hsl(var(--color-background-muted))] p-1.5 pl-4 focus-within:ring-2 focus-within:ring-[hsl(var(--color-accent))]/40">
           <label htmlFor="ask-craefto-input" className="sr-only">
             Your message
@@ -516,7 +659,8 @@ export default function ChatPanel({ state, onClose, onClosed }: { state: "open" 
             placeholder="Ask about our work, prices or your project"
             // The rounded field shows focus; the global :focus-visible outline would draw a second box inside it.
             style={{ outline: "none" }}
-            className="max-h-[140px] min-h-11 flex-1 resize-none bg-transparent py-2.5 text-[15px] leading-6 text-[hsl(var(--color-foreground))] placeholder:text-[hsl(var(--color-foreground-subtle))] focus:outline-none"
+            // 16px on phones: any smaller and iPhones zoom the page in when the box is tapped.
+            className="max-h-[140px] min-h-11 flex-1 resize-none bg-transparent py-2.5 text-base leading-6 sm:text-[15px] text-[hsl(var(--color-foreground))] placeholder:text-[hsl(var(--color-foreground-subtle))] focus:outline-none"
           />
           {busy ? (
             <button

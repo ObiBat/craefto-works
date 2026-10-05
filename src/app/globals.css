@@ -2666,6 +2666,32 @@ html.intro-delay .hero-in {
 .ask-craefto-message {
   animation: ask-craefto-settle 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
+/* Answers fade in where the thinking line was; their words then flow in (FlowingText). */
+.ask-craefto-answer,
+.ask-craefto-thinking {
+  animation: ask-craefto-fade 280ms ease-out backwards;
+}
+@keyframes ask-craefto-fade {
+  from {
+    opacity: 0;
+  }
+}
+/* Phones: the sheet fits what's visible above the keyboard (set from the
+   visual viewport in chat-panel.tsx), and the page behind holds still. */
+@media (max-width: 639px) {
+  .ask-craefto-panel {
+    top: var(--viewport-top, 0px);
+    bottom: auto;
+    height: var(--viewport-height, 100%);
+  }
+  .ask-craefto-panel[data-keyboard="open"] .ask-craefto-compose {
+    padding-bottom: 0.625rem;
+  }
+}
+html.ask-craefto-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 .ask-craefto-chip {
   animation: ask-craefto-settle 380ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
@@ -2695,6 +2721,8 @@ html.intro-delay .hero-in {
   .ask-craefto-launcher,
   .ask-craefto-panel[data-state],
   .ask-craefto-message,
+  .ask-craefto-answer,
+  .ask-craefto-thinking,
   .ask-craefto-chip,
   .ask-craefto-dot {
     animation: none;
