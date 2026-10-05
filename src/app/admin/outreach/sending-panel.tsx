@@ -12,6 +12,8 @@ interface Status {
   queued: number;
   testsSent: number;
   ready: { mailbox: boolean; optout: boolean };
+  inbox: { readAt: string | null; error: string | null };
+  alerts: "telegram" | "email" | null;
 }
 
 const MODES: { id: SendingMode; label: string }[] = [
@@ -152,6 +154,17 @@ export function SendingPanel({ onModeChange }: { onModeChange?: (mode: SendingMo
 
       {error && <p className="text-sm text-[hsl(var(--color-error))]">{error}</p>}
 
+      {status.inbox.error ? (
+        <p className="flex gap-2 rounded-xl border border-[hsl(var(--color-warning))]/30 bg-[hsl(var(--color-warning-subtle))] px-4 py-3 text-sm text-[hsl(var(--color-foreground))]">
+          <IconAlertTriangle size={18} className="mt-px shrink-0 text-[hsl(var(--color-warning))]" />
+          <span>Replies: the inbox couldn&apos;t be read ({status.inbox.error}). Follow-ups wait until it can.</span>
+        </p>
+      ) : (
+        <p className="text-sm text-[hsl(var(--color-foreground-muted))]">
+          Replies: {status.inbox.readAt ? `inbox read ${formatWhen(status.inbox.readAt)}` : "the inbox hasn't been read yet"} · alerts {status.alerts === "telegram" ? "to Telegram" : status.alerts === "email" ? "by email (Telegram isn't set up)" : "off (no Telegram or email set up)"}
+        </p>
+      )}
+
       {editing ? (
         <form
           className="grid gap-3 sm:grid-cols-2"
@@ -210,7 +223,7 @@ export function SendingPanel({ onModeChange }: { onModeChange?: (mode: SendingMo
                 <span className="tabular-nums text-xs text-[hsl(var(--color-foreground-subtle))]">{formatWhen(message.sentAt ?? message.createdAt)}</span>
                 <Link href={`/admin/outreach/${message.campaignId}/${message.prospectId}`} className="min-w-0 truncate text-[hsl(var(--color-foreground))] hover:underline">
                   {message.mode === "test" ? "Test: " : ""}
-                  {message.kind === "follow-up" ? "Follow-up to " : ""}
+                  {message.kind === "follow-up" ? "Follow-up to " : message.kind === "reply" ? "Answer to " : ""}
                   {message.to}
                 </Link>
                 <span className={`text-xs font-medium ${STATUS_TONE[message.status]}`}>{message.status}</span>

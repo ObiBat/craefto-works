@@ -6,13 +6,14 @@ import { useParams, useSearchParams } from "next/navigation";
 import { AdminLoader } from "@/components/admin/AdminLoader";
 import { DetailSection, EmptyState } from "@/components/admin/ui";
 import { IconAlertCircle, IconAlertTriangle, IconCheckCircle, IconChevronLeft, IconChevronRight, IconExternal, IconX } from "@/components/admin/icons";
-import { EDITABLE, type ApprovalCheck, type OutreachMessage, type Priority, type Prospect, type ProspectSummary, type SendingMode, type StatusAction } from "@/lib/outreach/types";
-import { api, byPriority, formatDay, formatWhen, hostOf, PriorityBadge, StatusPill, tabFor } from "../../shared";
+import { EDITABLE, type ApprovalCheck, type OutreachMessage, type OutreachReply, type Priority, type Prospect, type ProspectSummary, type SendingMode, type StatusAction } from "@/lib/outreach/types";
+import { api, byPriority, formatDay, formatWhen, hostOf, PriorityBadge, ReplyBadge, StatusPill, tabFor } from "../../shared";
 
 interface Loaded {
   prospect: Prospect;
   check: ApprovalCheck;
   messages?: OutreachMessage[];
+  replies?: OutreachReply[];
 }
 
 const button =
@@ -355,13 +356,36 @@ function ProspectPage() {
             )}
           </DetailSection>
 
+          {!!data.replies?.length && (
+            <DetailSection title="Replies">
+              <ul className="space-y-3">
+                {data.replies.map((reply) => (
+                  <li key={reply.id}>
+                    <Link href={`/admin/outreach/replies/${reply.id}`} className="group block text-sm">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <ReplyBadge label={reply.label} />
+                        <span className="font-medium text-[hsl(var(--color-foreground))] group-hover:underline">{reply.fromName ?? reply.fromAddress}</span>
+                        {reply.mode === "test" && <span className="text-xs text-[hsl(var(--color-foreground-subtle))]">Test</span>}
+                      </span>
+                      {reply.summary && <span className="mt-1 block text-[hsl(var(--color-foreground))]">{reply.summary}</span>}
+                      <span className="mt-0.5 block text-xs text-[hsl(var(--color-foreground-subtle))]">
+                        {formatWhen(reply.receivedAt)}
+                        {reply.leadId ? " · handed over" : reply.handledAt ? " · handled" : ""}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </DetailSection>
+          )}
+
           {!!data.messages?.length && (
             <DetailSection title="Emails sent">
               <ul className="space-y-3">
                 {data.messages.map((sent) => (
                   <li key={sent.id} className="text-sm">
                     <p className="text-[hsl(var(--color-foreground))]">
-                      {sent.mode === "test" ? "Test copy" : sent.kind === "follow-up" ? "Follow-up" : "First email"} to {sent.to}
+                      {sent.mode === "test" ? (sent.kind === "reply" ? "Test answer" : "Test copy") : sent.kind === "follow-up" ? "Follow-up" : sent.kind === "reply" ? "Answer" : "First email"} to {sent.to}
                       <span className={`ml-2 text-xs font-medium ${sent.status === "sent" ? "text-[hsl(var(--color-success))]" : sent.status === "sending" ? "text-[hsl(var(--color-warning))]" : "text-[hsl(var(--color-error))]"}`}>{sent.status}</span>
                     </p>
                     <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">

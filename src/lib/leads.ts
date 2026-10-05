@@ -237,6 +237,8 @@ export interface LeadContext {
   /** The alert's eyebrow and subject prefix ("New enquiry"). */
   alert?: string;
   alertRows?: Array<[string, string | null | undefined]>;
+  /** Alert the owner (off when the owner filed it, like an outreach reply handed over from admin). */
+  notify?: boolean;
 }
 
 export async function createLead(input: LeadInput, context: LeadContext): Promise<LeadRow> {
@@ -282,7 +284,7 @@ export async function createLead(input: LeadInput, context: LeadContext): Promis
       const sent = await sendLogged(db, lead.id, "lead-confirmation", { to: lead.email, subject: email.subject, html: email.html });
       if (sent) await logActivity(db, lead.id, { type: "email_sent", title: "Confirmation email sent" });
     }
-    await alertOwner(db, lead, context.alert ?? "New enquiry", context.alertRows);
+    if (context.notify !== false) await alertOwner(db, lead, context.alert ?? "New enquiry", context.alertRows);
   }
 
   return lead;

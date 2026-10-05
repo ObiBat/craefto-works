@@ -4,18 +4,19 @@ import { fail, handle, ids, ok, prioritySchema } from "@/lib/outreach/http";
 import { applyEdit } from "@/lib/outreach/rules";
 import { checkProspect, getProspect, updateProspect } from "@/lib/outreach/store";
 import { listMessages } from "@/lib/outreach/sender";
+import { listReplies } from "@/lib/outreach/conversation";
 
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ campaignId: string; prospectId: string }> };
 
-/** One prospect, with what stands between its draft and approval. */
+/** One prospect, with what stands between its draft and approval, and the emails both ways. */
 export const GET = (request: NextRequest, { params }: Context) =>
   handle(request, async () => {
     const { campaignId, prospectId } = await ids(params);
     const prospect = await getProspect(campaignId, prospectId);
     if (!prospect) return fail("No such prospect", 404);
-    const [check, messages] = await Promise.all([checkProspect(prospect), listMessages({ campaignId, prospectId })]);
-    return ok({ prospect, check, messages });
+    const [check, messages, replies] = await Promise.all([checkProspect(prospect), listMessages({ campaignId, prospectId }), listReplies({ campaignId, prospectId, limit: 50 })]);
+    return ok({ prospect, check, messages, replies });
   });
 
 const Patch = z.object({

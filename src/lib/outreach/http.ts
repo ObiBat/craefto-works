@@ -45,3 +45,10 @@ export async function ids<T extends Record<string, string>>(params: Promise<T>):
   for (const value of Object.values(values)) if (!idSchema.safeParse(value).success) throw new OutreachError("No such prospect", 404);
   return values;
 }
+
+/** A reply's id from the route, checked: only a UUID can be one. */
+export async function replyIdOf(params: Promise<{ replyId: string }>): Promise<string> {
+  const parsed = z.uuid().safeParse((await params).replyId);
+  if (!parsed.success) throw new OutreachError("No such reply", 404);
+  return parsed.data;
+}

@@ -41,7 +41,7 @@ const Prospect = z.object({
 });
 
 const Campaign = z.object({
-  id: idSchema.refine((id) => !["import", "bulk", "settings", "messages", "suppressions"].includes(id), "That name is taken by the API"),
+  id: idSchema.refine((id) => !["import", "bulk", "settings", "messages", "suppressions", "replies", "digest"].includes(id), "That name is taken by the API"),
   name: text(200).min(1),
   description: text(2000),
   createdAt: at,

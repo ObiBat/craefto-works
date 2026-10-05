@@ -1,7 +1,7 @@
 "use client";
 
 import { StatusBadge } from "@/components/admin/ui";
-import { STATUS_LABEL, type Priority, type ProspectStatus } from "@/lib/outreach/types";
+import { REPLY_LABEL, STATUS_LABEL, type Priority, type ProspectStatus, type ReplyLabel } from "@/lib/outreach/types";
 
 // Shared by the outreach queue and prospect pages.
 
@@ -46,6 +46,23 @@ const VARIANT: Record<ProspectStatus, "neutral" | "success" | "warning" | "info"
 
 export function StatusPill({ status }: { status: ProspectStatus }) {
   return <StatusBadge variant={VARIANT[status]}>{STATUS_LABEL[status]}</StatusBadge>;
+}
+
+const REPLY_VARIANT: Record<ReplyLabel, "neutral" | "success" | "warning" | "info" | "accent" | "error"> = {
+  interested: "success",
+  question: "accent",
+  referral: "accent",
+  "not-now": "neutral",
+  "not-interested": "neutral",
+  "opt-out": "error",
+  "out-of-office": "info",
+  "auto-reply": "neutral",
+  bounce: "error",
+  unclear: "warning",
+};
+
+export function ReplyBadge({ label }: { label: ReplyLabel }) {
+  return <StatusBadge variant={REPLY_VARIANT[label]}>{REPLY_LABEL[label]}</StatusBadge>;
 }
 
 export function PriorityBadge({ priority }: { priority: Priority }) {

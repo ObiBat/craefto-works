@@ -2,6 +2,7 @@ import "server-only";
 import { createServerClient } from "@/lib/supabase";
 import type { CalBooking } from "@/lib/portal/meetings";
 import { alertOwner, createLead, leadInputSchema, logActivity, type Activity, type LeadRow } from "@/lib/leads";
+import { outreachMeetingBooked } from "@/lib/outreach/conversation";
 
 // Discovery Calls (cal.com/craefto/discovery-call) reach the pipeline here,
 // through Cal.com's webhook (api/cal/webhook). A booking finds its lead by the
@@ -125,4 +126,6 @@ export async function recordDiscoveryCall(booking: DiscoveryBooking, trigger: Bo
     await alertOwner(db, lead, activity.title, [["When", time]]);
   }
   await moveToMeetingBooked(db, lead);
+  // Someone handed over from an outreach reply: their prospect moves on too.
+  await outreachMeetingBooked(lead.id).catch((error) => console.error(`Discovery Call ${booking.uid}: couldn't update the outreach prospect:`, error));
 }

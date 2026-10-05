@@ -1,10 +1,13 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { createServerClient } from "@/lib/supabase";
+import { isEmailEnabled } from "@/lib/resend";
+import { telegramConfigured } from "./alerts";
 import { checkEvidence } from "./evidence";
 import { logoAttachment, renderEmailHtml } from "./email-html";
 import { compose, mailboxConfigured, SENDER, spacemail, type Mailer, type SendResult } from "./mail";
 import { optoutConfigured, unsubscribeHeaders } from "./optout";
+import { inboxReadAt, NOT_ANSWERED } from "./replies";
 import { applyAction, approvalCheck, followUpCheck, FOLLOW_UP_TEMPLATE, OutreachError } from "./rules";
 import { isWorkingTime, localParts, nextGap, zoneFor } from "./schedule";
 import { getProspect, suppressedBy, updateProspect } from "./store";
@@ -20,7 +23,9 @@ import type { Evidence, OutreachMessage, Prospect, SendingMode, SendingSettings 
 // Before every send the approval rules run again, the fingerprint must match
 // what was approved, and the published-address check must pass (or have been
 // confirmed by hand). The message row is written first: a unique index
-// refuses a second live first email or follow-up to the same prospect.
+// refuses a second live first email or follow-up to the same prospect. A
+// follow-up also waits for the inbox to have been read (replies.ts): it never
+// goes to someone who has written back.
 
 type Db = ReturnType<typeof createServerClient>;
 
@@ -87,7 +92,7 @@ export async function updateSettings(patch: SettingsPatch, by: string): Promise<
   return toSettings(data);
 }
 
-interface MessageRow {
+export interface MessageRow {
   id: string;
   campaign_id: string;
   prospect_id: string;
@@ -103,9 +108,10 @@ interface MessageRow {
   saved_to_sent: boolean;
   created_at: string;
   sent_at: string | null;
+  answers_reply: string | null;
 }
 
-const toMessage = (row: MessageRow): OutreachMessage => ({
+export const toMessage = (row: MessageRow): OutreachMessage => ({
   id: row.id,
   campaignId: row.campaign_id,
   prospectId: row.prospect_id,
@@ -121,6 +127,7 @@ const toMessage = (row: MessageRow): OutreachMessage => ({
   savedToSent: row.saved_to_sent,
   createdAt: row.created_at,
   sentAt: row.sent_at,
+  answersReply: row.answers_reply,
 });
 
 export async function listMessages(filter: { campaignId?: string; prospectId?: string; limit?: number } = {}): Promise<OutreachMessage[]> {
@@ -136,19 +143,24 @@ export async function listMessages(filter: { campaignId?: string; prospectId?: s
 export async function sendingStatus() {
   const db = createServerClient();
   const since = new Date(Date.now() - 24 * 3600_000).toISOString();
-  const [settings, recent, queued, testsSent] = await Promise.all([
+  const [settings, recent, queued, testsSent, inbox] = await Promise.all([
     getSettings(db),
-    db.from("outreach_messages").select("mode, status").gte("sent_at", since),
+    db.from("outreach_messages").select("mode, kind, status").gte("sent_at", since),
     db.from("outreach_prospects").select("id", { count: "exact", head: true }).eq("status", "approved").eq("contact_kind", "email"),
     db.from("outreach_messages").select("id", { count: "exact", head: true }).eq("mode", "test").eq("status", "sent"),
+    db.from("outreach_sync").select("synced_at, last_error").eq("mailbox", "INBOX").maybeSingle<{ synced_at: string | null; last_error: string | null }>(),
   ]);
-  const rows = (recent.data ?? []) as { mode: string; status: string }[];
+  const rows = (recent.data ?? []) as { mode: string; kind: string; status: string }[];
   return {
     settings,
-    sentToday: rows.filter((row) => row.mode === settings.mode && ["sent", "bounced"].includes(row.status)).length,
+    sentToday: rows.filter((row) => row.mode === settings.mode && row.kind !== "reply" && ["sent", "bounced"].includes(row.status)).length,
     queued: queued.count ?? 0,
     testsSent: testsSent.count ?? 0,
     ready: { mailbox: mailboxConfigured(), optout: optoutConfigured() },
+    /** Reading replies: when the inbox was last read, and why it couldn't be if it couldn't. */
+    inbox: { readAt: inbox.data?.synced_at ?? null, error: inbox.data?.last_error ?? null },
+    /** Where alerts go: the Telegram bot, email, or nowhere yet. */
+    alerts: telegramConfigured() ? ("telegram" as const) : isEmailEnabled() ? ("email" as const) : null,
   };
 }
 
@@ -165,6 +177,8 @@ export type TickOutcome =
 
 /** A hand confirmation of the published address stays good for 30 days. */
 const MANUAL_DAYS = 30;
+/** A follow-up only goes when the inbox was read this recently (the clock reads it every 3 minutes). */
+const INBOX_FRESH_MINUTES = 10;
 /** After a failed address check, the prospect waits this long before another try. */
 const RECHECK_HOURS = 12;
 
@@ -176,9 +190,10 @@ function recentlyHeld(evidence: Evidence | undefined, now: Date) {
   return !!evidence && !evidence.ok && !manualStillGood(evidence, now) && now.getTime() - new Date(evidence.checkedAt).getTime() < RECHECK_HOURS * 3_600_000;
 }
 
-const quote = (message: { body: string; sentAt: string | null }) => {
-  const when = new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Sydney", weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(new Date(message.sentAt ?? Date.now()));
-  return `On ${when}, ${SENDER.name} <${SENDER.address}> wrote:\n\n${message.body.split("\n").map((line) => (line ? `> ${line}` : ">")).join("\n")}`;
+/** An earlier email quoted under a new one, the way mail apps do it. */
+export const quoteBelow = (who: string, at: string | null, body: string) => {
+  const when = new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Sydney", weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(new Date(at ?? Date.now()));
+  return `On ${when}, ${who} wrote:\n\n${body.split("\n").map((line) => (line ? `> ${line}` : ">")).join("\n")}`;
 };
 
 interface Candidate {
@@ -243,17 +258,29 @@ async function evidenceFor(p: Prospect, deps: SenderDeps, now: Date): Promise<Ev
   return usable;
 }
 
-/** Sends one email: claims the message row, sends the exact bytes, files the copy, records the outcome. */
-async function deliver(
+export interface Delivery {
+  to: string[];
+  subject: string;
+  text: string;
+  inReplyTo?: string;
+  /** The thread so far, oldest first (In-Reply-To alone when left out). */
+  references?: string[];
+  evidence: Evidence | null;
+  /** An answer from admin: the reply of theirs it answers. */
+  answersReply?: string;
+}
+
+/** Sends one email: claims the message row, sends the exact bytes, files the copy, records the outcome. Null when the claim was refused (already sent). */
+export async function deliver(
   db: Db,
-  deps: SenderDeps,
-  settings: SendingSettings,
+  deps: Pick<SenderDeps, "mailer" | "now">,
+  mode: "test" | "live",
   p: Prospect,
-  kind: "initial" | "follow-up",
-  message: { subject: string; text: string; inReplyTo?: string; evidence: Evidence | null },
+  kind: OutreachMessage["kind"],
+  message: Delivery,
 ): Promise<{ result: SendResult; row: MessageRow } | null> {
-  const test = settings.mode === "test";
-  const to = test ? settings.testRecipients : [p.contact.value.trim().toLowerCase()];
+  const test = mode === "test";
+  const to = message.to;
   const messageId = `<${randomUUID()}@craefto.com>`;
   const { data: claimed, error: claimError } = await db
     .from("outreach_messages")
@@ -261,7 +288,7 @@ async function deliver(
       campaign_id: p.campaignId,
       prospect_id: p.id,
       kind,
-      mode: settings.mode,
+      mode,
       status: "sending",
       message_id: messageId,
       in_reply_to: message.inReplyTo ?? null,
@@ -269,8 +296,9 @@ async function deliver(
       to_address: to.join(", "),
       subject: message.subject,
       body: message.text,
-      email_hash: p.emailHash ?? null,
+      email_hash: kind === "reply" ? null : (p.emailHash ?? null),
       evidence: message.evidence,
+      answers_reply: message.answersReply ?? null,
     })
     .select("*")
     .single<MessageRow>();
@@ -289,7 +317,7 @@ async function deliver(
       html: renderEmailHtml(message.text, message.subject),
       attachments: [logoAttachment()],
       inReplyTo: message.inReplyTo,
-      references: message.inReplyTo ? [message.inReplyTo] : undefined,
+      references: message.references ?? (message.inReplyTo ? [message.inReplyTo] : undefined),
       headers: { ...unsubscribeHeaders(p.campaignId, p.id, test, SENDER.address), ...(test ? { "X-Craefto-Test": "yes" } : {}) },
     });
     result = await deps.mailer.send(raw, { from: SENDER.address, to });
@@ -357,7 +385,8 @@ async function sendInitial(db: Db, deps: SenderDeps, settings: SendingSettings, 
   if (!evidence) return { result: "held", prospect, kind: "initial", detail: "The published address couldn't be confirmed" };
 
   const test = settings.mode === "test";
-  const sent = await deliver(db, deps, settings, p, "initial", { subject: test ? `[Test] ${p.email.subject}` : p.email.subject, text: p.email.body, evidence });
+  const to = test ? settings.testRecipients : [p.contact.value.trim().toLowerCase()];
+  const sent = await deliver(db, deps, settings.mode === "live" ? "live" : "test", p, "initial", { to, subject: test ? `[Test] ${p.email.subject}` : p.email.subject, text: p.email.body, evidence });
   if (!sent) return { result: "held", prospect, kind: "initial", detail: "Already being sent" };
   if (!sent.result.ok) return afterFailure(db, settings, p, "initial", sent.result, now);
   if (!test) {
@@ -392,16 +421,22 @@ async function sendFollowUp(db: Db, deps: SenderDeps, settings: SendingSettings,
   if (!test) {
     const check = followUpCheck(p, suppressed);
     if (check.blocks.length) return { result: "held", prospect, kind: "follow-up", detail: check.blocks[0] };
-    // Any message from them since the first email means no follow-up.
-    const domain = p.contact.value.split("@")[1] ?? "";
-    const replies = await deps.mailer.messagesFrom(p.contact.value, domain, new Date(initial.sent_at ?? initial.created_at));
-    if (replies > 0) {
-      await updateProspect(p.campaignId, p.id, "system", (draft) => {
-        applyAction(draft, "replied", { actor: "system", now });
-        return "Their reply is in the inbox, so the follow-up won't go";
-      });
-      return { result: "held", prospect, kind: "follow-up", detail: "They replied" };
+    // A reply could be waiting unread: only follow up on a freshly read inbox.
+    const readAt = await inboxReadAt(db);
+    if (!readAt || now.getTime() - readAt.getTime() > INBOX_FRESH_MINUTES * 60_000) {
+      return { result: "held", prospect, kind: "follow-up", detail: "The inbox hasn't been read in the last few minutes, so a reply could be missed" };
     }
+    // Anything they wrote back since the first email (an out-of-office aside) means no follow-up.
+    const { data: answered, error: answeredError } = await db
+      .from("outreach_replies")
+      .select("label")
+      .eq("campaign_id", p.campaignId)
+      .eq("prospect_id", p.id)
+      .eq("mode", "live")
+      .gte("received_at", initial.sent_at ?? initial.created_at);
+    if (answeredError) throw answeredError;
+    const replied = (answered ?? []).filter((row) => !NOT_ANSWERED.includes(row.label));
+    if (replied.length) return { result: "held", prospect, kind: "follow-up", detail: `They replied (${replied.map((row) => row.label).join(", ")})` };
   } else if (suppressed) {
     return { result: "held", prospect, kind: "follow-up", detail: "On the do-not-email list" };
   }
@@ -409,9 +444,10 @@ async function sendFollowUp(db: Db, deps: SenderDeps, settings: SendingSettings,
   if (!evidence) return { result: "held", prospect, kind: "follow-up", detail: "The published address couldn't be confirmed" };
 
   const subject = /^re:/i.test(initial.subject) ? initial.subject : `Re: ${initial.subject}`;
-  const sent = await deliver(db, deps, settings, p, "follow-up", {
+  const sent = await deliver(db, deps, settings.mode === "live" ? "live" : "test", p, "follow-up", {
+    to: test ? settings.testRecipients : [p.contact.value.trim().toLowerCase()],
     subject,
-    text: `${body}\n\n${quote({ body: initial.body, sentAt: initial.sent_at })}`,
+    text: `${body}\n\n${quoteBelow(`${SENDER.name} <${SENDER.address}>`, initial.sent_at, initial.body)}`,
     inReplyTo: initial.message_id,
     evidence,
   });
@@ -449,11 +485,12 @@ export async function tick(deps: SenderDeps = { mailer: spacemail(), now: () => 
   if (!claimed?.length) return { result: "waiting", detail: settings.nextSendAt ?? undefined };
 
   const since = new Date(now.getTime() - 24 * 3600_000).toISOString();
-  const { count: sentToday } = await db.from("outreach_messages").select("id", { count: "exact", head: true }).eq("mode", settings.mode).in("status", ["sent", "bounced"]).gte("sent_at", since);
+  // Answers to people who wrote back aren't outreach: they don't count.
+  const { count: sentToday } = await db.from("outreach_messages").select("id", { count: "exact", head: true }).eq("mode", settings.mode).neq("kind", "reply").in("status", ["sent", "bounced"]).gte("sent_at", since);
   if ((sentToday ?? 0) >= settings.dailyCap) return { result: "cap-reached", detail: `${sentToday} in the last 24 hours` };
 
   if (settings.mode === "live") {
-    const { data: recent } = await db.from("outreach_messages").select("status").eq("mode", "live").in("status", ["sent", "bounced"]).order("sent_at", { ascending: false }).limit(50);
+    const { data: recent } = await db.from("outreach_messages").select("status").eq("mode", "live").neq("kind", "reply").in("status", ["sent", "bounced"]).order("sent_at", { ascending: false }).limit(50);
     const bounced = (recent ?? []).filter((row) => row.status === "bounced").length;
     if ((recent?.length ?? 0) >= 20 && bounced / recent!.length > 0.03) {
       await pause(db, `${bounced} of the last ${recent!.length} emails bounced, over the 3% limit. Check the addresses before resuming.`);

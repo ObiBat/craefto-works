@@ -169,12 +169,12 @@ export interface SendingSettings {
   updatedBy: string | null;
 }
 
-/** One email the sender sent (or tried to), as kept on record. */
+/** One email the sender sent (or tried to), as kept on record. "reply": an answer sent from admin. */
 export interface OutreachMessage {
   id: string;
   campaignId: string;
   prospectId: string;
-  kind: "initial" | "follow-up";
+  kind: "initial" | "follow-up" | "reply";
   mode: "test" | "live";
   status: "sending" | "sent" | "failed" | "bounced";
   messageId: string;
@@ -186,5 +186,85 @@ export interface OutreachMessage {
   savedToSent: boolean;
   createdAt: string;
   sentAt: string | null;
+  /** The reply of theirs this answers (kind "reply"). */
+  answersReply?: string | null;
+}
+
+export type ReplyLabel = "interested" | "question" | "referral" | "not-now" | "not-interested" | "opt-out" | "out-of-office" | "auto-reply" | "bounce" | "unclear";
+
+export const REPLY_LABELS: ReplyLabel[] = ["interested", "question", "referral", "not-now", "not-interested", "opt-out", "out-of-office", "auto-reply", "bounce", "unclear"];
+
+export const REPLY_LABEL: Record<ReplyLabel, string> = {
+  interested: "Interested",
+  question: "Question",
+  referral: "Referral",
+  "not-now": "Not now",
+  "not-interested": "Not interested",
+  "opt-out": "Opted out",
+  "out-of-office": "Out of office",
+  "auto-reply": "Automatic reply",
+  bounce: "Bounced",
+  unclear: "Needs a look",
+};
+
+/** What each label does by itself (live replies; a test reply changes nothing). */
+export const REPLY_EFFECT: Record<ReplyLabel, string> = {
+  interested: "No follow-up. Ready to hand over to Leads.",
+  question: "No follow-up while you answer.",
+  referral: "Noted. The person they named is never emailed automatically.",
+  "not-now": "Closed for now. Listed in the digest on the day they gave.",
+  "not-interested": "Closed. No more emails.",
+  "opt-out": "On the do-not-email list.",
+  "out-of-office": "Follow-up moved past their return.",
+  "auto-reply": "Nothing changes.",
+  bounce: "On the do-not-email list as a bounce.",
+  unclear: "Follow-up held until you label it.",
+};
+
+/** Labels that alert straight away; the rest wait for the morning digest. */
+export const INSTANT_LABELS: ReplyLabel[] = ["interested", "question", "referral", "unclear"];
+
+/** Someone a reply pointed to. Never emailed automatically: there's no consent for that address. */
+export interface Referral {
+  name: string | null;
+  email: string | null;
+  role: string | null;
+}
+
+/** An email that came back: a reply, an automatic answer or a bounce, as labelled. */
+export interface OutreachReply {
+  id: string;
+  campaignId: string;
+  prospectId: string;
+  mode: "test" | "live";
+  messageId: string;
+  /** The email of ours it answers, when it says so. */
+  answers: string | null;
+  fromAddress: string;
+  fromName: string | null;
+  subject: string | null;
+  /** Their new words, without the quoted thread. */
+  body: string;
+  fullText: string | null;
+  receivedAt: string;
+  mailbox: string;
+  label: ReplyLabel;
+  labelSource: "rule" | "ai" | "manual";
+  aiLabel: ReplyLabel | null;
+  confidence: number | null;
+  quote: string | null;
+  summary: string | null;
+  suggestedReply: string | null;
+  referral: Referral | null;
+  /** Their return (out of office) or when to try again (not now), YYYY-MM-DD. */
+  returnOn: string | null;
+  correctedFrom: ReplyLabel | null;
+  alertedAt: string | null;
+  handledAt: string | null;
+  handledBy: string | null;
+  leadId: string | null;
+  createdAt: string;
+  /** The prospect's company, in lists. */
+  company?: string;
 }
 

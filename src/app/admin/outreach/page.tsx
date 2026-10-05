@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AdminLoader } from "@/components/admin/AdminLoader";
 import { EmptyState, FilterBar, FilterChip, PageHeader, SearchInput } from "@/components/admin/ui";
-import { IconAlertTriangle } from "@/components/admin/icons";
+import { IconAlertTriangle, IconChevronRight, IconMessageSquare } from "@/components/admin/icons";
 import type { ProspectSummary, SendingMode } from "@/lib/outreach/types";
 import { SendingPanel } from "./sending-panel";
 import { api, byPriority, PriorityBadge, StatusPill, TABS, tabFor } from "./shared";
@@ -13,6 +13,7 @@ import { api, byPriority, PriorityBadge, StatusPill, TABS, tabFor } from "./shar
 interface Summary {
   campaigns: { id: string; name: string }[];
   prospects: ProspectSummary[];
+  replies?: { open: number };
 }
 
 const EMPTY: Record<string, string> = {
@@ -68,6 +69,21 @@ function OutreachQueue() {
         title="Outreach"
         subtitle={`${count(["drafted"])} to approve · ${count(["approved"])} approved · ${count(["sent", "replied", "meeting"])} in conversation`}
       />
+
+      <Link
+        href="/admin/outreach/replies"
+        className="flex min-h-14 items-center gap-3 rounded-2xl border border-[hsl(var(--color-border))]/50 bg-[hsl(var(--color-background-subtle))]/50 px-4 py-3 transition-colors hover:bg-[hsl(var(--color-background-muted))]/50 sm:px-5"
+      >
+        <IconMessageSquare size={18} className="shrink-0 text-[hsl(var(--color-foreground-muted))]" />
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium text-[hsl(var(--color-foreground))]">Replies</span>
+          <span className="block text-sm text-[hsl(var(--color-foreground-muted))]">
+            {data.replies?.open ? `${data.replies.open} need${data.replies.open === 1 ? "s" : ""} you` : "Nothing needs you"} · read from the inbox every 3 minutes
+          </span>
+        </span>
+        {!!data.replies?.open && <span className="grid min-w-7 place-items-center rounded-full bg-[hsl(var(--color-accent))] px-2 py-0.5 text-xs font-semibold tabular-nums text-black">{data.replies.open}</span>}
+        <IconChevronRight size={18} className="shrink-0 text-[hsl(var(--color-foreground-subtle))]" />
+      </Link>
 
       <SendingPanel onModeChange={setMode} />
 
