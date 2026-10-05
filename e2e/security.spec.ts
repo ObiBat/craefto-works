@@ -5,9 +5,10 @@ import { test, expect } from "./fixtures";
 // so they are safe to run against production.
 test.describe("admin API access", () => {
   const protectedReads = [
-    "/api/admin/clients",
+    "/api/admin/today",
     "/api/admin/leads",
-    "/api/admin/finances/overview",
+    "/api/admin/leads/00000000-0000-4000-8000-000000000000",
+    "/api/admin/members",
     "/api/admin/applications",
     "/api/admin/outreach",
     "/api/admin/outreach?view=summary",
@@ -20,8 +21,6 @@ test.describe("admin API access", () => {
     "/api/admin/outreach/replies/00000000-0000-4000-8000-000000000000",
     "/api/admin/chats",
     "/api/admin/chats/00000000-0000-4000-8000-000000000000",
-    "/api/analytics/feedback",
-    "/api/analytics/ab-test",
     "/api/analytics/article",
   ];
 
@@ -68,12 +67,12 @@ test.describe("admin API access", () => {
   });
 
   test("forged sessions and wrong passwords are refused", async ({ request }) => {
-    const forged = await request.get("/api/admin/clients", {
+    const forged = await request.get("/api/admin/today", {
       headers: { cookie: "craefto_admin=99999999999.not-a-real-signature" },
     });
     expect(forged.status()).toBe(401);
 
-    const bearer = await request.get("/api/admin/clients", { headers: { authorization: "Bearer guess" } });
+    const bearer = await request.get("/api/admin/today", { headers: { authorization: "Bearer guess" } });
     expect(bearer.status()).toBe(401);
 
     expect((await request.get("/api/admin/auth")).status()).toBe(401);

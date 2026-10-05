@@ -121,66 +121,95 @@ async function updateDailyViews(
   }
 }
 
+interface DailyRow {
+  article_id: string;
+  view_date: string;
+  view_count: number;
+  unique_visitors: number | null;
+  avg_time_on_page: number | null;
+  scroll_depth_avg: number | null;
+}
+
+const dayAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString().split("T")[0];
+
+/**
+ * Reading figures per article over the window, from the daily rows the
+ * journal records (article_views): views, visitors, time on page, scroll
+ * depth, shares and the last week's views, which rank what's trending.
+ */
+async function performance(supabase: ReturnType<typeof createServerClient>, days: number, articleId?: string) {
+  let views = supabase.from("article_views").select("article_id, view_date, view_count, unique_visitors, avg_time_on_page, scroll_depth_avg").gte("view_date", dayAgo(days));
+  let shares = supabase.from("article_events").select("article_id").eq("event_type", "share").gte("created_at", `${dayAgo(days)}T00:00:00Z`);
+  if (articleId) {
+    views = views.eq("article_id", articleId);
+    shares = shares.eq("article_id", articleId);
+  }
+  const [{ data: rows }, { data: shareRows }] = await Promise.all([views, shares]);
+  const daily = (rows ?? []) as DailyRow[];
+  const ids = [...new Set(daily.map((row) => row.article_id))];
+  const { data: articles } = ids.length ? await supabase.from("journal_articles").select("id, title, slug").in("id", ids) : { data: [] };
+  const articleOf = new Map((articles ?? []).map((article) => [article.id, { title: article.title, slug: article.slug }]));
+  const weekAgo = dayAgo(7);
+  const monthAgo = dayAgo(30);
+
+  return ids
+    .filter((id) => articleOf.has(id))
+    .map((id) => {
+      const own = daily.filter((row) => row.article_id === id);
+      const total = own.reduce((sum, row) => sum + row.view_count, 0);
+      const weighted = (pick: (row: DailyRow) => number | null) => {
+        const counted = own.filter((row) => pick(row) != null && row.view_count > 0);
+        const weight = counted.reduce((sum, row) => sum + row.view_count, 0);
+        return weight ? counted.reduce((sum, row) => sum + Number(pick(row)) * row.view_count, 0) / weight : null;
+      };
+      const dates = own.map((row) => row.view_date).sort();
+      const lastWeek = own.filter((row) => row.view_date >= weekAgo).reduce((sum, row) => sum + row.view_count, 0);
+      const averageTime = weighted((row) => row.avg_time_on_page);
+      const averageScroll = weighted((row) => row.scroll_depth_avg);
+      return {
+        id,
+        article_id: id,
+        total_views: total,
+        unique_visitors: own.reduce((sum, row) => sum + (row.unique_visitors ?? 0), 0),
+        avg_time_on_page: averageTime == null ? null : Math.round(averageTime),
+        avg_scroll_depth: averageScroll == null ? null : Math.round(averageScroll),
+        share_count: (shareRows ?? []).filter((row) => row.article_id === id).length,
+        views_last_7_days: lastWeek,
+        views_last_30_days: own.filter((row) => row.view_date >= monthAgo).reduce((sum, row) => sum + row.view_count, 0),
+        trend_score: lastWeek,
+        first_view_at: dates[0] ?? null,
+        last_view_at: dates.at(-1) ?? null,
+        journal_articles: articleOf.get(id)!,
+      };
+    });
+}
+
 /**
  * GET /api/analytics/article - Get article analytics (for admin)
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const articleId = searchParams.get("articleId");
-  const days = parseInt(searchParams.get("days") || "30");
+  const days = Math.min(365, Math.max(1, parseInt(searchParams.get("days") || "30") || 30));
 
   const supabase = createServerClient();
 
   if (articleId) {
-    // Get specific article analytics
-    const [performance, dailyViews, recentEvents] = await Promise.all([
-      supabase
-        .from("article_performance")
-        .select("*")
-        .eq("article_id", articleId)
-        .single(),
-      supabase
-        .from("article_views")
-        .select("*")
-        .eq("article_id", articleId)
-        .gte("view_date", new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split("T")[0])
-        .order("view_date", { ascending: false }),
-      supabase
-        .from("article_events")
-        .select("event_type, created_at, metadata")
-        .eq("article_id", articleId)
-        .order("created_at", { ascending: false })
-        .limit(100),
+    const [figures, dailyViews, recentEvents] = await Promise.all([
+      performance(supabase, days, articleId),
+      supabase.from("article_views").select("*").eq("article_id", articleId).gte("view_date", dayAgo(days)).order("view_date", { ascending: false }),
+      supabase.from("article_events").select("event_type, created_at, metadata").eq("article_id", articleId).order("created_at", { ascending: false }).limit(100),
     ]);
-
     return NextResponse.json({
-      performance: performance.data,
+      performance: figures[0] ?? null,
       dailyViews: dailyViews.data || [],
       recentEvents: recentEvents.data || [],
     });
   }
 
-  // Get overview of all articles
-  const { data: topArticles } = await supabase
-    .from("article_performance")
-    .select(`
-      *,
-      journal_articles(title, slug)
-    `)
-    .order("total_views", { ascending: false })
-    .limit(20);
-
-  const { data: trending } = await supabase
-    .from("article_performance")
-    .select(`
-      *,
-      journal_articles(title, slug)
-    `)
-    .order("trend_score", { ascending: false })
-    .limit(10);
-
+  const figures = await performance(supabase, days);
   return NextResponse.json({
-    topArticles: topArticles || [],
-    trending: trending || [],
+    topArticles: [...figures].sort((a, b) => b.total_views - a.total_views).slice(0, 20),
+    trending: figures.filter((article) => article.views_last_7_days > 0).sort((a, b) => b.trend_score - a.trend_score).slice(0, 10),
   });
 }

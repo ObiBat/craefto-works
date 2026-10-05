@@ -624,6 +624,8 @@ export function IconLinkedIn({ size = 20, className = "" }: IconProps) {
 // ─── Layout helper: resolves nav icon name to component ─
 
 const NAV_ICON_MAP: Record<string, React.FC<IconProps>> = {
+  today: IconActivity,
+  chart: IconChart,
   command: IconCommand,
   briefcase: IconBriefcase,
   users: IconUsers,

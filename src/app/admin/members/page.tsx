@@ -99,7 +99,8 @@ function AddClient({ onClose }: { onClose: () => void }) {
 
 /** Clients: who needs a reply, what's open, and what the plans bring in. */
 export default function MembersPage() {
-  const [adding, setAdding] = React.useState(false);
+  // ?add=1 (the command palette's "Add a client") opens the form straight away.
+  const [adding, setAdding] = React.useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).has("add"));
   const [data, setData] = React.useState<MembersOverview | null>(null);
   const [failed, setFailed] = React.useState(false);
   const [filter, setFilter] = React.useState<Filter>("all");
@@ -112,7 +113,7 @@ export default function MembersPage() {
       .catch(() => setFailed(true));
   }, []);
 
-  if (failed) return <EmptyState title="Members didn't load" description="Refresh the page to try again." />;
+  if (failed) return <EmptyState title="Clients didn't load" description="Refresh the page to try again." />;
   if (!data) return <AdminLoader message="Loading members..." />;
 
   const { members, monthly } = data;
@@ -121,8 +122,8 @@ export default function MembersPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Members"
-        subtitle="Clients on monthly plans or hours: their requests, estimates, time and messages."
+        title="Clients"
+        subtitle="Everyone on a monthly plan or hours: their requests, estimates, time and messages, as they see them in the portal."
         actions={
           !adding && (
             <button type="button" onClick={() => setAdding(true)} className="rounded-xl bg-[hsl(var(--color-accent))] px-4 py-2 text-sm font-medium text-white hover:bg-[hsl(var(--color-accent-hover))]">
@@ -134,7 +135,7 @@ export default function MembersPage() {
       {adding && <AddClient onClose={() => setAdding(false)} />}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Active members" value={members.filter(isActive).length} />
+        <StatCard label="Active clients" value={members.filter(isActive).length} />
         <StatCard label="Monthly revenue" value={formatPrice(monthly)} />
         <StatCard label="Open requests" value={members.reduce((sum, member) => sum + member.open, 0)} />
         <StatCard
@@ -152,13 +153,13 @@ export default function MembersPage() {
             </FilterChip>
           ))}
         </FilterBar>
-        <SearchInput value={query} onChange={setQuery} placeholder="Search name, email or company" label="Search members" className="md:w-72" />
+        <SearchInput value={query} onChange={setQuery} placeholder="Search name, email or company" label="Search clients" className="md:w-72" />
       </div>
 
       {shown.length === 0 ? (
         <EmptyState
           icon={<IconUsers size={48} />}
-          title={members.length ? "No members match" : "No members yet"}
+          title={members.length ? "No clients match" : "No clients yet"}
           description={members.length ? "Try another filter or search." : "Clients appear here once they subscribe to a plan."}
         />
       ) : (

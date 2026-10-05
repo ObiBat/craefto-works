@@ -4,424 +4,350 @@ import * as React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { AdminLoader } from "@/components/admin/AdminLoader";
-import { IconDollar, IconFolder, IconUsers, IconChart, IconPlus, IconClock, IconFileText, IconUserPlus, IconCalendar } from "@/components/admin/icons";
-import { StatCard, EmptyState } from "@/components/admin/ui";
+import {
+  IconAlertTriangle,
+  IconCalendar,
+  IconChevronRight,
+  IconClock,
+  IconMail,
+  IconMessageSquare,
+  IconPhone,
+  IconSend,
+  IconTarget,
+  IconUserPlus,
+  IconUsers,
+} from "@/components/admin/icons";
+import { Card, PageContainer, PageHeader, Section } from "@/components/admin/ui";
+import type { ClientGlance, Need, NeedKind, Today, Upcoming, UpcomingKind } from "@/lib/admin/today";
+import { cn } from "@/lib/utils";
 
-interface OpsStats {
-  monthlyRevenue: number;
-  activeProjectsCount: number;
-  teamUtilization: number;
-  avgMargin: number;
-  recentTimeLogs: Array<{
-    id: string;
-    date: string;
-    hours: number;
-    description: string | null;
-    contractor: { id: string; name: string; avatar_url: string | null } | null;
-    project: { id: string; name: string } | null;
-  }>;
-  upcomingMilestones: Array<{
-    id: string;
-    name: string;
-    due_date: string;
-    status: string;
-    project: { id: string; name: string; client: { name: string } | null } | null;
-  }>;
-  activeProjects: Array<{
-    id: string;
-    name: string;
-    status: string;
-    health: string;
-    progress: number;
-    priority: string;
-    client: { id: string; name: string } | null;
-    assignments: Array<{
-      contractor: { id: string; name: string; avatar_url: string | null } | null;
-    }>;
-  }>;
-}
+const ZONE = "Australia/Sydney";
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+const NEED_STYLE: Record<NeedKind, { icon: React.ReactNode; tone: string; label: string }> = {
+  "client-message": { icon: <IconMessageSquare size={18} />, tone: "bg-[hsl(var(--color-accent-subtle))] text-[hsl(var(--color-accent))]", label: "Client" },
+  estimate: { icon: <IconClock size={18} />, tone: "bg-[hsl(var(--color-warning-subtle))] text-[hsl(35_55%_30%)]", label: "Estimate" },
+  overrun: { icon: <IconAlertTriangle size={18} />, tone: "bg-[hsl(var(--color-error-subtle))] text-[hsl(var(--color-error))]", label: "Over estimate" },
+  reply: { icon: <IconMail size={18} />, tone: "bg-[hsl(var(--color-accent-subtle))] text-[hsl(var(--color-accent))]", label: "Outreach reply" },
+  enquiry: { icon: <IconTarget size={18} />, tone: "bg-[hsl(var(--color-success-subtle))] text-[hsl(var(--color-success))]", label: "Enquiry" },
+  handoff: { icon: <IconUsers size={18} />, tone: "bg-[hsl(var(--color-secondary-subtle))] text-[hsl(var(--color-foreground-muted))]", label: "Ask Craefto" },
+  application: { icon: <IconUserPlus size={18} />, tone: "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))]", label: "Application" },
+  drafts: { icon: <IconSend size={18} />, tone: "bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground-muted))]", label: "Outreach" },
+};
 
-function formatDate(dateString: string) {
-  const date = new Date(dateString + "T00:00:00");
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / 86400000);
+const UPCOMING_STYLE: Record<UpcomingKind, { icon: React.ReactNode; label: string }> = {
+  "client-call": { icon: <IconPhone size={16} />, label: "Client call" },
+  "discovery-call": { icon: <IconPhone size={16} />, label: "Discovery Call" },
+  target: { icon: <IconCalendar size={16} />, label: "Delivery date" },
+  "needed-by": { icon: <IconCalendar size={16} />, label: "Needed by" },
+};
 
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString("en-AU", { month: "short", day: "numeric" });
-}
+const MODE_LABEL = { off: "Sender off", test: "Test mode", live: "Live" } as const;
 
-function formatDueDate(dateString: string) {
-  const date = new Date(dateString + "T00:00:00");
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const diffMs = date.getTime() - now.getTime();
-  const diffDays = Math.round(diffMs / 86400000);
+const fadeUp = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const } },
+};
 
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Tomorrow";
-  if (diffDays < 7) return `In ${diffDays}d`;
-  return date.toLocaleDateString("en-AU", { month: "short", day: "numeric" });
-}
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
 
-function getGreeting() {
-  const hour = new Date().getHours();
+function greeting(now: Date) {
+  const hour = Number(new Intl.DateTimeFormat("en-AU", { timeZone: ZONE, hour: "numeric", hourCycle: "h23" }).format(now));
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   return "Good evening";
 }
 
-function getFormattedDate() {
-  return new Date().toLocaleDateString("en-AU", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+const longDate = (now: Date) => new Intl.DateTimeFormat("en-AU", { timeZone: ZONE, weekday: "long", day: "numeric", month: "long" }).format(now);
+
+const sydneyDay = (date: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+
+/** "Just now", "40 min ago", "3 h ago", "Yesterday", "2 Oct" */
+function ago(iso: string, now: Date) {
+  const minutes = Math.round((now.getTime() - new Date(iso).getTime()) / 60_000);
+  if (minutes < 2) return "Just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 24 * 60 && sydneyDay(new Date(iso)) === sydneyDay(now)) return `${Math.round(minutes / 60)} h ago`;
+  const yesterday = new Date(now.getTime() - 86_400_000);
+  if (sydneyDay(new Date(iso)) === sydneyDay(yesterday)) return "Yesterday";
+  return new Intl.DateTimeFormat("en-AU", { timeZone: ZONE, day: "numeric", month: "short" }).format(new Date(iso));
 }
 
-function Initials({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-  const sizeClasses = size === "sm" ? "w-7 h-7 text-[10px]" : "w-9 h-9 text-xs";
+function dayHeading(day: string, now: Date) {
+  if (day === sydneyDay(now)) return "Today";
+  if (day === sydneyDay(new Date(now.getTime() + 86_400_000))) return "Tomorrow";
+  return new Date(`${day}T12:00:00Z`).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "short", timeZone: "UTC" });
+}
+
+const time = (iso: string) => new Intl.DateTimeFormat("en-AU", { timeZone: ZONE, hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+
+const hours = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(value < 10 ? 2 : 1).replace(/0$/, ""));
+
+const count = (value: number) => new Intl.NumberFormat("en-AU").format(value);
+
+function change(now: number, before: number) {
+  if (before === 0) return now > 0 ? "New this week" : "No visits yet";
+  const percent = Math.round(((now - before) / before) * 100);
+  if (percent === 0) return "Same as last week";
+  return `${percent > 0 ? "+" : ""}${percent}% on last week`;
+}
+
+function Figure({ label, value, note, href }: { label: string; value: string; note: string; href: string }) {
   return (
-    <div
-      className={`${sizeClasses} rounded-full bg-[hsl(var(--color-accent))]/20 text-[hsl(var(--color-accent))] flex items-center justify-center font-medium shrink-0 ring-2 ring-[hsl(var(--color-background-subtle))]`}
+    <Link
+      href={href}
+      className="group block rounded-2xl border border-[hsl(var(--color-border))]/50 bg-[hsl(var(--color-background-subtle))]/50 p-4 transition-all duration-200 hover:border-[hsl(var(--color-border-strong))]/60 hover:bg-[hsl(var(--color-background-subtle))]/80 sm:p-5"
     >
-      {initials}
-    </div>
+      <p className="text-xs text-[hsl(var(--color-foreground-muted))]">{label}</p>
+      <p className="mt-2 font-mono text-2xl font-semibold tracking-tight tabular-nums text-[hsl(var(--color-foreground))] sm:text-3xl">{value}</p>
+      <p className="mt-1 text-xs text-[hsl(var(--color-foreground-subtle))] transition-colors group-hover:text-[hsl(var(--color-foreground-muted))]">{note}</p>
+    </Link>
   );
 }
 
-const HEALTH_COLORS: Record<string, string> = {
-  on_track: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  at_risk: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-  delayed: "bg-red-500/15 text-red-400 border-red-500/20",
-  blocked: "bg-red-500/15 text-red-300 border-red-500/20",
-};
+function NeedRow({ need, now }: { need: Need; now: Date }) {
+  const style = NEED_STYLE[need.kind];
+  return (
+    <li>
+      <Link href={need.href} className="group flex items-start gap-4 rounded-xl px-3 py-3.5 transition-colors hover:bg-[hsl(var(--color-background-muted))]/40 md:px-4">
+        <span className={cn("mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl", style.tone)} aria-hidden="true">
+          {style.icon}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+            <span className="font-medium text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))]">{need.title}</span>
+            <span className="order-last text-xs text-[hsl(var(--color-foreground-subtle))] sm:order-none sm:shrink-0">
+              {style.label}
+              {need.at && ` · ${ago(need.at, now)}`}
+            </span>
+          </span>
+          {need.detail && <span className="mt-0.5 block text-sm leading-relaxed text-[hsl(var(--color-foreground-muted))]">{need.detail}</span>}
+        </span>
+        <IconChevronRight size={16} className="mt-2.5 shrink-0 text-[hsl(var(--color-foreground-subtle))] transition-transform group-hover:translate-x-0.5" />
+      </Link>
+    </li>
+  );
+}
 
-const HEALTH_LABELS: Record<string, string> = {
-  on_track: "On Track",
-  at_risk: "At Risk",
-  delayed: "Delayed",
-  blocked: "Blocked",
-};
+function UpcomingList({ items, now }: { items: Upcoming[]; now: Date }) {
+  const days = new Map<string, Upcoming[]>();
+  for (const item of items) {
+    const day = item.allDay ? item.at : sydneyDay(new Date(item.at));
+    days.set(day, [...(days.get(day) ?? []), item]);
+  }
+  return (
+    <ol className="space-y-5">
+      {[...days].map(([day, list]) => (
+        <li key={day}>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-[hsl(var(--color-foreground-subtle))]">{dayHeading(day, now)}</p>
+          <ul className="space-y-1">
+            {list.map((item) => (
+              <li key={item.id}>
+                <Link href={item.href} className="group flex items-start gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-[hsl(var(--color-background-muted))]/40">
+                  <span className="mt-0.5 text-[hsl(var(--color-foreground-subtle))]" aria-hidden="true">
+                    {UPCOMING_STYLE[item.kind].icon}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))]">
+                      {!item.allDay && <span className="tabular-nums">{time(item.at)} · </span>}
+                      {item.title}
+                    </span>
+                    <span className="block text-xs text-[hsl(var(--color-foreground-muted))]">
+                      {UPCOMING_STYLE[item.kind].label} · {item.detail}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ol>
+  );
+}
 
-const staggerContainer = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
+function ClientCard({ client }: { client: ClientGlance }) {
+  const allowance = client.allowance;
+  const usedShare = allowance ? Math.min(100, (client.used / allowance) * 100) : 0;
+  const committedShare = allowance ? Math.min(100 - usedShare, (client.committed / allowance) * 100) : 0;
+  const over = allowance != null && client.used > allowance;
+  return (
+    <Link
+      href={client.href}
+      className="group block rounded-2xl border border-[hsl(var(--color-border))]/50 bg-[hsl(var(--color-background-subtle))]/50 p-5 transition-all duration-200 hover:border-[hsl(var(--color-border-strong))]/60 hover:bg-[hsl(var(--color-background-subtle))]/80"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))]">{client.name}</p>
+          <p className="truncate text-xs text-[hsl(var(--color-foreground-subtle))]">{client.allowanceLabel ?? "Plan"}</p>
+        </div>
+        <IconChevronRight size={16} className="mt-1 shrink-0 text-[hsl(var(--color-foreground-subtle))] transition-transform group-hover:translate-x-0.5" />
+      </div>
+      {allowance != null ? (
+        <>
+          <p className="mt-4 text-sm">
+            <span className={cn("font-mono font-semibold tabular-nums", over && "text-[hsl(var(--color-error))]")}>{hours(client.used)} h</span>
+            <span className="text-[hsl(var(--color-foreground-muted))]"> used of {hours(allowance)} h</span>
+          </p>
+          <div className="mt-2 flex h-2 overflow-hidden rounded-full bg-[hsl(var(--color-background-muted))]" aria-hidden="true">
+            <div className={cn("h-full", over ? "bg-[hsl(var(--color-error))]" : "bg-[hsl(var(--color-accent))]")} style={{ width: `${usedShare}%` }} />
+            <div className="h-full bg-[hsl(var(--color-accent))]/30" style={{ width: `${committedShare}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-[hsl(var(--color-foreground-subtle))]">
+            {client.committed > 0 ? `Up to ${hours(client.committed)} h approved still to do` : "Nothing approved waiting"}
+          </p>
+        </>
+      ) : (
+        <p className="mt-4 text-sm text-[hsl(var(--color-foreground-muted))]">No monthly hours set</p>
+      )}
+      <p className="mt-3 text-xs text-[hsl(var(--color-foreground-muted))]">
+        {client.open} open request{client.open === 1 ? "" : "s"}
+        {client.waitingOnThem > 0 && ` · ${client.waitingOnThem} waiting on them`}
+      </p>
+    </Link>
+  );
+}
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const } },
-};
+/** Today: what needs Obi across every system, what's coming up, and how the month is going. */
+export default function TodayPage() {
+  const [data, setData] = React.useState<Today | null>(null);
+  const [error, setError] = React.useState("");
+  const [now, setNow] = React.useState<Date | null>(null);
 
-export default function CommandCenter() {
-  const [stats, setStats] = React.useState<OpsStats | null>(null);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    async function fetchStats() {
-      try {
-        const res = await fetch("/api/admin/ops/stats");
-        if (res.ok) {
-          const data = await res.json();
-          setStats(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch ops stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchStats();
+  const load = React.useCallback(() => {
+    return fetch("/api/admin/today", { cache: "no-store" })
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error ?? `Request failed (${res.status})`);
+        setData(body);
+        setNow(new Date());
+        setError("");
+      })
+      .catch((reason: Error) => setError(reason.message));
   }, []);
 
-  if (loading) {
-    return <AdminLoader message="Loading command center..." />;
+  React.useEffect(() => {
+    void load();
+    // Coming back to the tab brings it up to date.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [load]);
+
+  if (!data || !now) {
+    if (error) {
+      return (
+        <PageContainer>
+          <PageHeader title="Today" />
+          <p className="text-sm text-[hsl(var(--color-error))]">Today didn&apos;t load: {error}</p>
+        </PageContainer>
+      );
+    }
+    return <AdminLoader message="Getting today ready..." />;
   }
 
+  const needs = data.outreach.inboxError
+    ? [
+        ...data.needs,
+        {
+          id: "inbox",
+          kind: "drafts" as const,
+          title: "The outreach inbox couldn't be read",
+          detail: data.outreach.inboxError,
+          href: "/admin/outreach",
+          at: data.outreach.inboxReadAt,
+        },
+      ]
+    : data.needs;
+  const calls = data.upcoming.filter((item) => !item.allDay).length;
+  const summary = [
+    needs.length === 0 ? "Nothing needs you right now" : `${needs.length} thing${needs.length === 1 ? "" : "s"} need${needs.length === 1 ? "s" : ""} you`,
+    calls > 0 ? `${calls} call${calls === 1 ? "" : "s"} in the next fortnight` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <motion.div
-      className="space-y-8"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="show"
-    >
-      {/* Header with Greeting */}
-      <motion.div variants={fadeUp}>
-        <h1 className="font-[family-name:var(--font-heading)] text-3xl font-semibold tracking-tight mb-1">
-          {getGreeting()}
-        </h1>
-        <p className="text-[hsl(var(--color-foreground-muted))]">
-          {getFormattedDate()}
-        </p>
-      </motion.div>
+    <motion.div variants={stagger} initial="hidden" animate="show">
+      <PageContainer>
+        <motion.div variants={fadeUp}>
+          <PageHeader eyebrow={longDate(now)} title={`${greeting(now)}, Obi`} subtitle={summary} />
+        </motion.div>
 
-      {/* Stats Grid */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-        variants={staggerContainer}
-      >
-        <motion.div variants={fadeUp}>
-          <StatCard
-            label="Monthly Revenue"
-            value={formatCurrency(stats?.monthlyRevenue || 0)}
-            icon={<IconDollar size={20} />}
+        <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          <Figure label="Visits this week" value={count(data.numbers.visits)} note={`${count(data.numbers.views)} page views · ${change(data.numbers.views, data.numbers.viewsBefore)}`} href="/admin/analytics" />
+          <Figure label="Enquiries, last 30 days" value={count(data.numbers.enquiries)} note="From the site, Ask Craefto, calls and outreach" href="/admin/leads" />
+          <Figure
+            label="Ask Craefto this week"
+            value={count(data.numbers.chats)}
+            note={data.numbers.unanswered > 0 ? `${data.numbers.unanswered} question${data.numbers.unanswered === 1 ? "" : "s"} it couldn't answer` : "Every question answered"}
+            href="/admin/chats"
+          />
+          <Figure
+            label={`Outreach · ${MODE_LABEL[data.outreach.mode]}`}
+            value={count(data.outreach.sentToday)}
+            note={`Sent in the last day · ${data.outreach.queued} approved, waiting`}
+            href="/admin/outreach"
           />
         </motion.div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <motion.div variants={fadeUp} className="lg:col-span-2">
+            <Card padding="none">
+              <div className="flex items-baseline justify-between gap-4 px-5 pb-2 pt-5 md:px-6">
+                <h2 className="font-[family-name:var(--font-heading)] text-xl font-semibold tracking-tight">Needs you</h2>
+                {needs.length > 0 && <span className="font-mono text-sm tabular-nums text-[hsl(var(--color-foreground-subtle))]">{needs.length}</span>}
+              </div>
+              {needs.length > 0 ? (
+                <ul className="px-2 pb-3 md:px-2">
+                  {needs.map((need) => (
+                    <NeedRow key={need.id} need={need} now={now} />
+                  ))}
+                </ul>
+              ) : (
+                <div className="px-5 pb-8 pt-2 md:px-6">
+                  <p className="text-[hsl(var(--color-foreground-muted))]">All clear. New enquiries, client messages, estimates to confirm and outreach replies show up here.</p>
+                </div>
+              )}
+            </Card>
+          </motion.div>
+
+          <motion.div variants={fadeUp}>
+            <Card>
+              <h2 className="font-[family-name:var(--font-heading)] text-xl font-semibold tracking-tight">Coming up</h2>
+              <p className="mb-4 mt-0.5 text-xs text-[hsl(var(--color-foreground-subtle))]">The next fortnight, in Sydney time</p>
+              {data.upcoming.length > 0 ? (
+                <UpcomingList items={data.upcoming} now={now} />
+              ) : (
+                <p className="text-sm text-[hsl(var(--color-foreground-muted))]">No calls or delivery dates yet. Discovery Calls, client calls and approved delivery dates appear here.</p>
+              )}
+            </Card>
+          </motion.div>
+        </div>
+
         <motion.div variants={fadeUp}>
-          <StatCard
-            label="Active Projects"
-            value={stats?.activeProjectsCount || 0}
-            icon={<IconFolder size={20} />}
-          />
-        </motion.div>
-        <motion.div variants={fadeUp}>
-          <StatCard
-            label="Team Utilization"
-            value={`${stats?.teamUtilization || 0}%`}
-            icon={<IconUsers size={20} />}
-            accent={
-              (stats?.teamUtilization || 0) > 85
-                ? "warning"
-                : (stats?.teamUtilization || 0) > 60
-                ? "success"
-                : undefined
+          <Section
+            title="Clients this month"
+            description="Hours used, approved work still to do, and what's open"
+            actions={
+              <Link href="/admin/members" className="text-sm font-medium text-[hsl(var(--color-accent))] hover:underline">
+                All clients
+              </Link>
             }
-          />
-        </motion.div>
-        <motion.div variants={fadeUp}>
-          <StatCard
-            label="Avg Margin"
-            value={`${stats?.avgMargin || 0}%`}
-            icon={<IconChart size={20} />}
-          />
-        </motion.div>
-      </motion.div>
-
-      {/* Active Projects + Recent Time Logs */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Active Projects */}
-        <motion.div
-          className="lg:col-span-3 bg-[hsl(var(--color-background-subtle))]/50 backdrop-blur-sm border border-[hsl(var(--color-border))]/50 rounded-2xl"
-          variants={fadeUp}
-        >
-          <div className="p-6 border-b border-[hsl(var(--color-border))]/30 flex items-center justify-between">
-            <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold">Active Projects</h2>
-            <Link
-              href="/admin/projects"
-              className="text-xs text-[hsl(var(--color-accent))] hover:underline"
-            >
-              View all &rarr;
-            </Link>
-          </div>
-          <div className="divide-y divide-[hsl(var(--color-border))]/30">
-            {stats?.activeProjects && stats.activeProjects.length > 0 ? (
-              stats.activeProjects.map((project) => (
-                <Link
-                  key={project.id}
-                  href={`/admin/projects/${project.id}`}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-[hsl(var(--color-background-muted))]/30 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-sm text-[hsl(var(--color-foreground))] truncate">
-                        {project.name}
-                      </p>
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
-                          HEALTH_COLORS[project.health] || HEALTH_COLORS.on_track
-                        }`}
-                      >
-                        {HEALTH_LABELS[project.health] || project.health}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">
-                      {project.client?.name || "No client"}
-                    </p>
-                    {/* Progress bar */}
-                    <div className="mt-2 h-2 bg-[hsl(var(--color-background-muted))]/50 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[hsl(var(--color-accent))] rounded-full transition-all duration-500"
-                        style={{ width: `${project.progress || 0}%` }}
-                      />
-                    </div>
-                  </div>
-                  {/* Team avatars */}
-                  <div className="flex -space-x-2 shrink-0">
-                    {project.assignments?.slice(0, 3).map((a, i) =>
-                      a.contractor ? (
-                        <Initials key={i} name={a.contractor.name} />
-                      ) : null
-                    )}
-                    {(project.assignments?.length || 0) > 3 && (
-                      <div className="w-7 h-7 rounded-full bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] text-[10px] flex items-center justify-center text-[hsl(var(--color-foreground-muted))] ring-2 ring-[hsl(var(--color-background-subtle))]">
-                        +{project.assignments.length - 3}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              ))
+          >
+            {data.clients.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {data.clients.map((client) => (
+                  <ClientCard key={client.id} client={client} />
+                ))}
+              </div>
             ) : (
-              <EmptyState
-                icon={<IconFolder size={48} />}
-                title="No active projects"
-                description="Create a project to get started"
-                action={
-                  <Link
-                    href="/admin/projects"
-                    className="px-5 py-2.5 bg-[hsl(var(--color-accent))] hover:bg-[hsl(var(--color-accent-hover))] text-white rounded-xl text-sm font-medium transition-colors"
-                  >
-                    New Project
-                  </Link>
-                }
-              />
+              <p className="text-sm text-[hsl(var(--color-foreground-muted))]">No clients with hours or a running plan yet.</p>
             )}
-          </div>
+          </Section>
         </motion.div>
-
-        {/* Recent Time Logs */}
-        <motion.div
-          className="lg:col-span-2 bg-[hsl(var(--color-background-subtle))]/50 backdrop-blur-sm border border-[hsl(var(--color-border))]/50 rounded-2xl"
-          variants={fadeUp}
-        >
-          <div className="p-6 border-b border-[hsl(var(--color-border))]/30">
-            <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold">Recent Time Logs</h2>
-          </div>
-          <div className="divide-y divide-[hsl(var(--color-border))]/30">
-            {stats?.recentTimeLogs && stats.recentTimeLogs.length > 0 ? (
-              stats.recentTimeLogs.map((log) => (
-                <div key={log.id} className="px-6 py-3.5 flex items-center gap-3 hover:bg-[hsl(var(--color-background-muted))]/30 transition-colors">
-                  {log.contractor && <Initials name={log.contractor.name} />}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[hsl(var(--color-foreground))] truncate">
-                      {log.contractor?.name || "Unknown"}
-                    </p>
-                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))] truncate">
-                      {log.project?.name || "No project"}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-mono font-medium tabular-nums text-[hsl(var(--color-foreground))]">
-                      {Number(log.hours).toFixed(1)}h
-                    </p>
-                    <p className="text-[10px] text-[hsl(var(--color-foreground-subtle))]">
-                      {formatDate(log.date)}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyState
-                icon={<IconClock size={48} />}
-                title="No time logs yet"
-                description="Time entries will appear here"
-              />
-            )}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Upcoming Deadlines + Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Upcoming Deadlines */}
-        <motion.div
-          className="lg:col-span-3 bg-[hsl(var(--color-background-subtle))]/50 backdrop-blur-sm border border-[hsl(var(--color-border))]/50 rounded-2xl"
-          variants={fadeUp}
-        >
-          <div className="p-6 border-b border-[hsl(var(--color-border))]/30">
-            <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold">Upcoming Deadlines</h2>
-            <p className="text-xs text-[hsl(var(--color-foreground-subtle))] mt-0.5">
-              Next 14 days
-            </p>
-          </div>
-          <div className="divide-y divide-[hsl(var(--color-border))]/30">
-            {stats?.upcomingMilestones && stats.upcomingMilestones.length > 0 ? (
-              stats.upcomingMilestones.map((milestone) => (
-                <div key={milestone.id} className="px-6 py-4 flex items-center gap-4 hover:bg-[hsl(var(--color-background-muted))]/30 transition-colors">
-                  <div
-                    className={`w-2 h-2 rounded-full shrink-0 ${
-                      milestone.status === "in_progress"
-                        ? "bg-[hsl(var(--color-accent))] animate-pulse"
-                        : "bg-[hsl(var(--color-foreground-subtle))]"
-                    }`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[hsl(var(--color-foreground))] truncate">
-                      {milestone.name}
-                    </p>
-                    <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">
-                      {milestone.project?.name}
-                      {milestone.project?.client?.name && ` \u00b7 ${milestone.project.client.name}`}
-                    </p>
-                  </div>
-                  <span className="text-xs font-medium text-[hsl(var(--color-foreground-muted))] shrink-0">
-                    {formatDueDate(milestone.due_date)}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <EmptyState
-                icon={<IconCalendar size={48} />}
-                title="No upcoming deadlines"
-                description="All clear for the next 14 days"
-              />
-            )}
-          </div>
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div className="lg:col-span-2 space-y-4" variants={fadeUp}>
-          <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold">Quick Actions</h2>
-          <div className="flex flex-wrap gap-2.5">
-            <Link
-              href="/admin/projects"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[hsl(var(--color-accent))]/10 text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-accent))]/20 transition-all duration-200 border border-[hsl(var(--color-accent))]/20 hover:border-[hsl(var(--color-accent))]/40"
-            >
-              <IconPlus size={16} className="text-[hsl(var(--color-accent))]" />
-              <span className="text-sm font-medium">New Project</span>
-            </Link>
-            <Link
-              href="/admin/team"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[hsl(var(--color-background-subtle))]/50 text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))]/80 transition-all duration-200 border border-[hsl(var(--color-border))]/50 hover:border-[hsl(var(--color-border-strong))]/60"
-            >
-              <IconClock size={16} className="text-[hsl(var(--color-foreground-muted))]" />
-              <span className="text-sm font-medium">Add Time</span>
-            </Link>
-            <Link
-              href="/admin/finances"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[hsl(var(--color-background-subtle))]/50 text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))]/80 transition-all duration-200 border border-[hsl(var(--color-border))]/50 hover:border-[hsl(var(--color-border-strong))]/60"
-            >
-              <IconFileText size={16} className="text-[hsl(var(--color-foreground-muted))]" />
-              <span className="text-sm font-medium">Create Invoice</span>
-            </Link>
-            <Link
-              href="/admin/team"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[hsl(var(--color-background-subtle))]/50 text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-subtle))]/80 transition-all duration-200 border border-[hsl(var(--color-border))]/50 hover:border-[hsl(var(--color-border-strong))]/60"
-            >
-              <IconUserPlus size={16} className="text-[hsl(var(--color-foreground-muted))]" />
-              <span className="text-sm font-medium">Add Team Member</span>
-            </Link>
-          </div>
-        </motion.div>
-      </div>
+      </PageContainer>
     </motion.div>
   );
 }
-

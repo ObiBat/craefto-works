@@ -82,6 +82,7 @@ export function Section({ title, description, actions, children, id, className }
 
 interface CardProps {
   children: React.ReactNode;
+  id?: string;
   className?: string;
   padding?: "default" | "compact" | "hero" | "none";
 }
@@ -93,9 +94,10 @@ const CARD_PADDING = {
   none: "",
 } as const;
 
-export function Card({ children, className, padding = "default" }: CardProps) {
+export function Card({ children, id, className, padding = "default" }: CardProps) {
   return (
     <div
+      id={id}
       className={cn(
         "bg-[hsl(var(--color-background-subtle))]/50 backdrop-blur-sm border border-[hsl(var(--color-border))]/50 rounded-2xl",
         CARD_PADDING[padding],

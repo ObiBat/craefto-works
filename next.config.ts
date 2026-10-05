@@ -38,8 +38,6 @@ const nextConfig: NextConfig = {
   },
   // Let phones on the local network use the dev server (hostnames, not URLs).
   allowedDevOrigins: ["192.168.1.*"],
-  // Required for @sparticuz/chromium to resolve its binary correctly on Vercel
-  serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
   async redirects() {
     return [
       // The client portal has been retired; its subdomain sends people to the

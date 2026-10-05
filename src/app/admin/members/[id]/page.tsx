@@ -409,7 +409,7 @@ function RequestCard({
   }
 
   return (
-    <Card className="space-y-5">
+    <Card id={`request-${request.id}`} className="scroll-mt-24 space-y-5">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="flex min-w-0 gap-3">
           {queued && (
@@ -592,6 +592,13 @@ export default function MemberPage() {
   }, [id]);
   React.useEffect(load, [load]);
 
+  // Today links straight to a request (#request-…): bring it into view once the page has loaded.
+  const loaded = member !== null;
+  React.useEffect(() => {
+    if (!loaded || !window.location.hash.startsWith("#request-")) return;
+    document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: "start" });
+  }, [loaded]);
+
   const addMessage = React.useCallback(
     (message: ClientMessage, request: ClientRequest | null, files: ClientFile[]) => {
       setMember((current) => current && { ...current, messages: [...current.messages, message], files: [...current.files, ...files] });
@@ -600,8 +607,8 @@ export default function MemberPage() {
     [load]
   );
 
-  if (missing) return <EmptyState title="Member not found" description="They may have been removed." />;
-  if (!member) return <AdminLoader message="Loading member..." />;
+  if (missing) return <EmptyState title="Client not found" description="They may have been removed." />;
+  if (!member) return <AdminLoader message="Loading client..." />;
 
   const { account, subscriptions, requests, messages, files, upcomingCalls, stripeUrl, entries } = member;
   const client = account.name || account.email;
@@ -630,12 +637,12 @@ export default function MemberPage() {
       <PageHeader
         breadcrumb={
           <Link href="/admin/members" className="inline-flex items-center gap-1.5 text-sm text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))]">
-            <IconArrowLeft size={16} /> Members
+            <IconArrowLeft size={16} /> Clients
           </Link>
         }
         eyebrow={account.company ?? undefined}
         title={client}
-        subtitle={`${account.email} · member since ${shortDate(account.created_at)}${account.time_zone !== "Australia/Sydney" ? ` · ${account.time_zone}` : ""}`}
+        subtitle={`${account.email} · client since ${shortDate(account.created_at)}${account.time_zone !== "Australia/Sydney" ? ` · ${account.time_zone}` : ""}`}
         actions={
           <>
             <InviteButton memberId={account.id} email={account.email} />

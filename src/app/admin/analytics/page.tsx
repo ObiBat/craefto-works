@@ -3,29 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
-import { Button } from "@/components/ui/button";
-import {
-  PageContainer,
-  PageHeader,
-  Section,
-  Card,
-  StatCard,
-  EmptyState,
-  FilterBar,
-  FilterChip,
-} from "@/components/admin/ui";
-import {
-  IconFileText,
-  IconChart,
-  IconMonitor,
-  IconEye,
-  IconUsers,
-  IconUserPlus,
-  IconStar,
-  IconTrendingUp,
-  IconArrowDown,
-  IconTarget,
-} from "@/components/admin/icons";
+import { PageContainer, PageHeader, Card, StatCard, FilterBar, FilterChip } from "@/components/admin/ui";
+import { IconFileText, IconMail, IconMessageSquare, IconEye, IconUsers, IconUserPlus, IconStar, IconTrendingUp } from "@/components/admin/icons";
 
 interface AnalyticsData {
   summary: {
@@ -50,28 +29,6 @@ interface AnalyticsData {
   }>;
 }
 
-interface FunnelData {
-  funnel: Array<{
-    stage: string;
-    count: number;
-    conversionRate: number;
-  }>;
-  overallConversion: string;
-}
-
-interface Goal {
-  id: string;
-  name: string;
-  goal_type: string;
-  target_value: number;
-  current_value: number;
-  period: string;
-  status: string;
-  progress: number;
-  daysRemaining: number | null;
-  isOnTrack: boolean;
-}
-
 interface SourceData {
   totalLeads: number;
   sources: Array<{
@@ -94,32 +51,22 @@ const QUICK_LINK_CARD =
 
 export default function AnalyticsPage() {
   const [data, setData] = React.useState<AnalyticsData | null>(null);
-  const [funnelData, setFunnelData] = React.useState<FunnelData | null>(null);
-  const [goals, setGoals] = React.useState<Goal[]>([]);
   const [sourceData, setSourceData] = React.useState<SourceData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [days, setDays] = React.useState(30);
-  const [activeSection, setActiveSection] = React.useState<"overview" | "funnel" | "sources" | "goals">("overview");
+  const [activeSection, setActiveSection] = React.useState<"overview" | "sources">("overview");
 
   React.useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
-        const [analyticsRes, funnelRes, goalsRes, sourcesRes] = await Promise.all([
+        const [analyticsRes, sourcesRes] = await Promise.all([
           fetch(`/api/admin/analytics?days=${days}`),
-          fetch(`/api/admin/analytics/funnel?days=${days}`),
-          fetch("/api/admin/analytics/goals"),
           fetch(`/api/admin/analytics/sources?days=${days}`),
         ]);
 
         if (analyticsRes.ok) {
           setData(await analyticsRes.json());
-        }
-        if (funnelRes.ok) {
-          setFunnelData(await funnelRes.json());
-        }
-        if (goalsRes.ok) {
-          setGoals(await goalsRes.json());
         }
         if (sourcesRes.ok) {
           setSourceData(await sourcesRes.json());
@@ -141,7 +88,7 @@ export default function AnalyticsPage() {
     <PageContainer>
       <PageHeader
         title="Analytics"
-        subtitle="Website traffic and performance metrics"
+        subtitle="Visits to the site, where they came from, and which turned into enquiries"
         actions={
           <FilterBar>
             {[7, 30, 90].map((d) => (
@@ -162,37 +109,37 @@ export default function AnalyticsPage() {
             </div>
             <div className="min-w-0">
               <h3 className="text-base font-semibold text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors">
-                Content Performance
+                Journal reading
               </h3>
-              <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">Article views, engagement, trending</p>
+              <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">Article views, reading time and scroll depth</p>
             </div>
           </div>
         </Link>
 
-        <Link href="/admin/analytics/ab-testing" className={QUICK_LINK_CARD}>
+        <Link href="/admin/subscribers" className={QUICK_LINK_CARD}>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-xl shrink-0">
-              <IconChart size={20} className="text-blue-600" />
+            <div className="p-2 bg-[hsl(var(--color-accent))]/10 rounded-xl shrink-0">
+              <IconMail size={20} className="text-[hsl(var(--color-accent))]" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-base font-semibold text-[hsl(var(--color-foreground))] group-hover:text-blue-600 transition-colors">
-                A/B Testing
+              <h3 className="text-base font-semibold text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors">
+                Journal subscribers
               </h3>
-              <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">Test titles, CTAs, optimize CTR</p>
+              <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">Who gets new articles by email</p>
             </div>
           </div>
         </Link>
 
-        <Link href="/admin/analytics/feedback" className={QUICK_LINK_CARD}>
+        <Link href="/admin/chats" className={QUICK_LINK_CARD}>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/10 rounded-xl shrink-0">
-              <IconMonitor size={20} className="text-purple-600" />
+            <div className="p-2 bg-[hsl(var(--color-accent))]/10 rounded-xl shrink-0">
+              <IconMessageSquare size={20} className="text-[hsl(var(--color-accent))]" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-base font-semibold text-[hsl(var(--color-foreground))] group-hover:text-purple-600 transition-colors">
-                Agent Feedback
+              <h3 className="text-base font-semibold text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))] transition-colors">
+                Ask Craefto
               </h3>
-              <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">AI agent performance tracking</p>
+              <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">What visitors ask, and what it couldn&apos;t answer</p>
             </div>
           </div>
         </Link>
@@ -201,7 +148,7 @@ export default function AnalyticsPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4">
         <StatCard label="Page Views" value={data?.summary.totalViews || 0} icon={<IconEye size={20} />} />
-        <StatCard label="Unique Visitors" value={data?.summary.uniqueVisitors || 0} icon={<IconUsers size={20} />} />
+        <StatCard label="Visits (one a day per visitor)" value={data?.summary.uniqueVisitors || 0} icon={<IconUsers size={20} />} />
         <StatCard label="Leads Generated" value={data?.summary.totalLeads || 0} icon={<IconUserPlus size={20} />} />
         <StatCard label="Avg Lead Score" value={data?.summary.avgLeadScore || 0} icon={<IconStar size={20} />} />
         <StatCard
@@ -215,9 +162,7 @@ export default function AnalyticsPage() {
       <div className="flex gap-6 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 border-b border-[hsl(var(--color-border))]/30 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {[
           { id: "overview", label: "Overview" },
-          { id: "funnel", label: "Conversion Funnel" },
           { id: "sources", label: "Lead Sources" },
-          { id: "goals", label: "Goals" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -285,62 +230,6 @@ export default function AnalyticsPage() {
                 <div className="px-6 py-8 text-center text-sm text-[hsl(var(--color-foreground-subtle))]">No data yet</div>
               )}
             </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Conversion Funnel Section */}
-      {activeSection === "funnel" && (
-        <div className="space-y-6">
-          <Card>
-            <div className="mb-6">
-              <h2 className={CARD_TITLE}>Conversion Funnel</h2>
-              <p className="text-sm text-[hsl(var(--color-foreground-subtle))] mt-0.5">
-                Overall conversion: {funnelData?.overallConversion || "0"}%
-              </p>
-            </div>
-
-            {funnelData?.funnel && funnelData.funnel.length > 0 ? (
-              <div className="space-y-4">
-                {funnelData.funnel.map((stage, index) => {
-                  const maxCount = funnelData.funnel[0].count || 1;
-                  const width = Math.max(10, (stage.count / maxCount) * 100);
-
-                  return (
-                    <div key={stage.stage} className="space-y-2">
-                      <div className="flex justify-between items-center gap-4">
-                        <span className="text-sm font-medium text-[hsl(var(--color-foreground))] min-w-0">
-                          {index + 1}. {stage.stage}
-                        </span>
-                        <div className="flex items-center gap-4 shrink-0">
-                          <span className="text-sm tabular-nums text-[hsl(var(--color-foreground-muted))]">
-                            {stage.count.toLocaleString()}
-                          </span>
-                          <span className="text-xs tabular-nums text-[hsl(var(--color-foreground-subtle))] w-12 text-right">
-                            {stage.conversionRate}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="h-8 bg-[hsl(var(--color-background-muted))] rounded-lg overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-[hsl(var(--color-accent))] to-[hsl(var(--color-accent-hover))] rounded-lg transition-all duration-500"
-                          style={{ width: `${width}%` }}
-                        />
-                      </div>
-                      {index < funnelData.funnel.length - 1 && (
-                        <div className="flex justify-center">
-                          <IconArrowDown size={16} className="text-[hsl(var(--color-foreground-subtle))]" />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="py-12 text-center text-sm text-[hsl(var(--color-foreground-subtle))]">
-                No funnel data yet
-              </div>
-            )}
           </Card>
         </div>
       )}
@@ -429,76 +318,6 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* Goals Section */}
-      {activeSection === "goals" && (
-        <Section
-          title="Goals"
-          actions={
-            <Button variant="accent" size="sm">
-              + New Goal
-            </Button>
-          }
-        >
-          {goals.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {goals.map((goal) => (
-                <Card key={goal.id}>
-                  <div className="flex justify-between items-start gap-3 mb-4">
-                    <div className="min-w-0">
-                      <h3 className="text-base font-semibold text-[hsl(var(--color-foreground))]">{goal.name}</h3>
-                      <p className="text-xs text-[hsl(var(--color-foreground-subtle))] capitalize">
-                        {goal.goal_type.replace("_", " ")} • {goal.period}
-                      </p>
-                    </div>
-                    <span className={`shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium border ${
-                      goal.isOnTrack
-                        ? "bg-green-500/15 text-green-600 border-green-500/20"
-                        : "bg-yellow-500/15 text-yellow-600 border-yellow-500/20"
-                    }`}>
-                      {goal.isOnTrack ? "On Track" : "Behind"}
-                    </span>
-                  </div>
-
-                  <div className="mb-4">
-                    <div className="flex justify-between items-baseline gap-3 mb-2">
-                      <span className="text-2xl font-semibold tabular-nums text-[hsl(var(--color-foreground))]">
-                        {goal.current_value.toLocaleString()}
-                      </span>
-                      <span className="text-sm tabular-nums text-[hsl(var(--color-foreground-subtle))]">
-                        / {goal.target_value.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="h-3 bg-[hsl(var(--color-background-muted))] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          goal.progress >= 100 ? "bg-green-600" :
-                          goal.progress >= 75 ? "bg-[hsl(var(--color-accent))]" :
-                          goal.progress >= 50 ? "bg-yellow-600" :
-                          "bg-red-600"
-                        }`}
-                        style={{ width: `${Math.min(100, goal.progress)}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap justify-between items-center gap-2 text-xs text-[hsl(var(--color-foreground-subtle))]">
-                    <span>{goal.progress}% complete</span>
-                    {goal.daysRemaining !== null && (
-                      <span>{goal.daysRemaining} days remaining</span>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon={<IconTarget size={48} />}
-              title="No goals set yet"
-              description="Set goals to track your progress on leads, page views, and conversions"
-            />
-          )}
-        </Section>
-      )}
     </PageContainer>
   );
 }

@@ -5,26 +5,34 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { CommandPalette } from "@/components/admin/CommandPalette";
 import { NavIcon, IconMenu, IconX, IconLogout } from "@/components/admin/icons";
+import type { TodayCounts } from "@/lib/admin/today";
 import styles from "./layout.module.css";
 
-const NAV_ITEMS = [
-  { href: "/admin", label: "Command Center", icon: "command" },
-  { href: "/admin/clients", label: "Clients", icon: "briefcase" },
-  { href: "/admin/members", label: "Members", icon: "card" },
-  { href: "/admin/team", label: "Team", icon: "users" },
-  { href: "/admin/projects", label: "Projects", icon: "folder" },
-  { href: "/admin/finances", label: "Finances", icon: "dollar" },
-  { href: "/admin/leads", label: "Leads", icon: "target" },
-  { href: "/admin/outreach", label: "Outreach", icon: "mail" },
-  { href: "/admin/chats", label: "Chats", icon: "chat" },
-  { href: "/admin/applications", label: "Applications", icon: "inbox" },
-  { href: "/admin/proposals", label: "Proposals", icon: "file" },
+type Badge = keyof TodayCounts;
+
+const NAV_GROUPS: Array<{ label: string | null; items: Array<{ href: string; label: string; icon: string; badge?: Badge }> }> = [
+  { label: null, items: [{ href: "/admin", label: "Today", icon: "today" }] },
+  {
+    label: "Win work",
+    items: [
+      { href: "/admin/leads", label: "Leads", icon: "target", badge: "leads" },
+      { href: "/admin/outreach", label: "Outreach", icon: "mail", badge: "outreach" },
+      { href: "/admin/chats", label: "Ask Craefto", icon: "chat", badge: "chats" },
+    ],
+  },
+  {
+    label: "Do the work",
+    items: [{ href: "/admin/members", label: "Clients", icon: "briefcase", badge: "clients" }],
+  },
+  {
+    label: "Studio",
+    items: [
+      { href: "/admin/applications", label: "Applications", icon: "inbox", badge: "applications" },
+      { href: "/admin/journal", label: "Journal", icon: "file" },
+      { href: "/admin/analytics", label: "Analytics", icon: "chart" },
+    ],
+  },
 ];
-
-// Legacy routes stay accessible by URL but are intentionally not in the sidebar:
-// /admin/documents, /admin/subscribers, /admin/journal, /admin/pipeline,
-// /admin/analytics, /admin/intelligence, /admin/client-hub
-
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -34,6 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [counts, setCounts] = React.useState<TodayCounts | null>(null);
 
   // The session is an httpOnly cookie the server checks on every admin API
   // call (src/proxy.ts); ask the server whether it's still valid.
@@ -63,6 +72,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   React.useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  // The sidebar's badges, refreshed as Obi moves around (handling something on a page clears it here).
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+    let current = true;
+    fetch("/api/admin/today?view=counts", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (current && data?.counts) setCounts(data.counts);
+      })
+      .catch(() => {});
+    return () => {
+      current = false;
+    };
+  }, [isAuthenticated, pathname]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,31 +214,44 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/admin" && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group ${
-                  isActive
-                    ? "bg-[hsl(var(--color-accent))]/10 text-[hsl(var(--color-foreground))]"
-                    : "text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-muted))]/50"
-                }`}
-              >
-                {/* Active indicator bar */}
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[hsl(var(--color-accent))]" />
-                )}
-                <NavIcon icon={item.icon} />
-                <span className="text-sm font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
+        <nav aria-label="Admin" className="flex-1 px-3 py-2 overflow-y-auto">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label ?? "home"} className={group.label ? "space-y-0.5 pt-5" : "space-y-0.5"}>
+              {group.label && (
+                <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[hsl(var(--color-foreground-subtle))]">{group.label}</p>
+              )}
+              {group.items.map((item) => {
+                const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+                const badge = item.badge && counts ? counts[item.badge] : 0;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group ${
+                      isActive
+                        ? "bg-[hsl(var(--color-accent))]/10 text-[hsl(var(--color-foreground))]"
+                        : "text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-background-muted))]/50"
+                    }`}
+                  >
+                    {/* Active indicator bar */}
+                    {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[hsl(var(--color-accent))]" />}
+                    <NavIcon icon={item.icon} />
+                    <span className="text-sm font-medium">{item.label}</span>
+                    {badge > 0 && (
+                      <span
+                        className="ml-auto min-w-5 rounded-full bg-[hsl(var(--color-accent))] px-1.5 py-0.5 text-center font-mono text-[11px] font-medium leading-none tabular-nums text-white"
+                        aria-label={`${badge} need${badge === 1 ? "s" : ""} you`}
+                      >
+                        {badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Footer */}

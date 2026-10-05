@@ -77,11 +77,11 @@ export default function ContentAnalyticsPage() {
   const [loading, setLoading] = React.useState(true);
   const [timeRange, setTimeRange] = React.useState<"7" | "30" | "90">("30");
 
-  // Fetch overview data
+  // Fetch overview data for the chosen window
   React.useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch("/api/analytics/article");
+        const res = await fetch(`/api/analytics/article?days=${timeRange}`);
         if (res.ok) {
           const data = await res.json();
           setTopArticles(data.topArticles || []);
@@ -94,7 +94,7 @@ export default function ContentAnalyticsPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [timeRange]);
 
   // Fetch article details when selected
   React.useEffect(() => {
@@ -122,12 +122,8 @@ export default function ContentAnalyticsPage() {
   // Calculate totals
   const totalViews = topArticles.reduce((sum, a) => sum + a.total_views, 0);
   const totalVisitors = topArticles.reduce((sum, a) => sum + a.unique_visitors, 0);
-  const avgTimeOnPage = topArticles.length
-    ? Math.round(
-        topArticles.reduce((sum, a) => sum + (a.avg_time_on_page || 0), 0) /
-          topArticles.filter((a) => a.avg_time_on_page).length
-      )
-    : 0;
+  const timed = topArticles.filter((a) => a.avg_time_on_page);
+  const avgTimeOnPage = timed.length ? Math.round(timed.reduce((sum, a) => sum + (a.avg_time_on_page || 0), 0) / timed.length) : 0;
 
   if (loading) {
     return <AdminLoader message="Loading content analytics..." />;
@@ -136,14 +132,14 @@ export default function ContentAnalyticsPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Content Performance"
+        title="Journal reading"
         breadcrumb={
           <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
             <Link href="/admin/analytics" className="inline-flex items-center hover:text-[hsl(var(--color-foreground))] transition-colors">
               Analytics
             </Link>
             <span>/</span>
-            <span className="text-[hsl(var(--color-foreground))]">Content Performance</span>
+            <span className="text-[hsl(var(--color-foreground))]">Journal reading</span>
           </nav>
         }
       />
@@ -227,9 +223,6 @@ export default function ContentAnalyticsPage() {
                       {formatNumber(article.views_last_7_days)} views this week
                     </p>
                   </div>
-                  <span className="shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium tabular-nums text-[hsl(var(--color-accent))] bg-[hsl(var(--color-accent))]/10">
-                    Score: {article.trend_score.toFixed(0)}
-                  </span>
                 </button>
               ))
             )}

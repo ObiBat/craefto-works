@@ -29,44 +29,12 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Stakeholder Portal
+## Admin and the client portal
 
-The Stakeholder Portal is a client-facing project dashboard served at `project-portal.craefto.com`. It gives stakeholders real-time visibility into project progress, status updates, task tracking, and team activity — all within the same Next.js codebase using subdomain-based routing via middleware.
+- **Admin** (`/admin`, signed in with the admin password): **Today** gathers what needs attention across everything (client messages and estimates to confirm, new leads, outreach replies, Ask Craefto hand-offs, applications), what's coming up, and each client's hours this month. Then **Leads**, **Outreach**, **Ask Craefto** chats, **Clients** (the portal accounts), **Applications**, **Journal** and **Analytics**.
+- **Client portal** (`/portal`): clients send requests, get Ask Craefto's initial estimate, approve the confirmed one, and follow their queue, hours, calendar and calls. Its tables are the `client_*` ones (see `supabase/migrations/028_client_workflow.sql`).
 
-### Subdomain Setup
-
-1. **DNS**: Add a CNAME record for `project-portal.craefto.com` pointing to `cname.vercel-dns.com`
-2. **Vercel**: Add `project-portal.craefto.com` as a domain alias in the Vercel project settings
-
-The middleware detects the subdomain and rewrites requests to the internal `/portal` routes. Both `project-portal.craefto.com/` and `craefto.com/portal` serve the same pages.
-
-### Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | No | Supabase project URL. If missing, runs in demo mode. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No | Supabase anonymous key. If missing, runs in demo mode. |
-| `SUPABASE_SERVICE_ROLE_KEY` | No | Service role key for server-side operations. |
-
-### Running the Migration
-
-Apply the portal database schema via the Supabase MCP or dashboard:
-
-```sql
--- Tables: portal_users, portal_projects, portal_tasks, portal_updates, portal_team_members, portal_timeline_events
--- See supabase/migrations/ for the full schema
-```
-
-### Seeding Demo Data
-
-The portal includes built-in mock data that activates automatically when Supabase env vars are not set (demo mode). This includes 5 projects, 4 users, 10 tasks, and 6 updates. No separate seed script is needed for local development.
-
-### Demo Credentials
-
-- **Email:** `demo@craefto.com`
-- **Password:** `demo123456`
-
-These work in demo mode (no Supabase env vars configured).
+The April operations tools (proposals and documents, projects, finances, team), the old stakeholder portal and the journal's content agents were removed in October 2026 (`supabase/migrations/029_admin_cleanup.sql`).
 
 ## Deploy on Vercel
 

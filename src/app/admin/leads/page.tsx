@@ -3,239 +3,249 @@
 import * as React from "react";
 import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
-import { PageHeader, SearchInput, FilterBar, FilterChip } from "@/components/admin/ui";
+import { IconChevronRight, IconTarget } from "@/components/admin/icons";
+import {
+  EmptyState,
+  FilterBar,
+  FilterChip,
+  PageContainer,
+  PageHeader,
+  SearchInput,
+} from "@/components/admin/ui";
+import { LEAD_SOURCES, enquiryLabel } from "@/lib/enquiry";
+import { StageDot, StageSelect, saveStage, when, type Stage } from "./shared";
 
 interface Lead {
   id: string;
   name: string;
   email: string;
   company: string | null;
+  source: string | null;
   service_interest: string | null;
   budget_range: string | null;
   timeline: string | null;
   score: number;
   created_at: string;
-  stage: { id: string; name: string; color: string } | null;
+  stage: Stage | null;
 }
 
-interface PipelineStage {
-  id: string;
-  name: string;
-  color: string;
-  position: number;
-}
+type Filter = "open" | "all" | string;
 
-function getStageColor(color: string | null) {
-  const colors: Record<string, string> = {
-    blue: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    cyan: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-    yellow: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    purple: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-    orange: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-    green: "bg-green-500/20 text-green-400 border-green-500/30",
-    red: "bg-red-500/20 text-red-400 border-red-500/30",
-  };
-  return colors[color || "blue"] || colors.blue;
-}
-
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatBudget(budget: string | null) {
-  const budgets: Record<string, string> = {
-    "3-5k": "A$3k – A$5k",
-    "5-10k": "A$5k – A$10k",
-    "10-25k": "A$10k – A$25k",
-    "25-50k": "A$25k – A$50k",
-    "50k+": "A$50k+",
-    "discuss": "To discuss",
-  };
-  return budgets[budget || ""] || budget || "—";
-}
-
-function formatService(service: string | null) {
-  const services: Record<string, string> = {
-    brand: "Brand Identity",
-    web: "Web Design & Dev",
-    saas: "SaaS / Product",
-    ai: "AI / Automation",
-    other: "Not sure yet",
-  };
-  return services[service || ""] || service || "—";
-}
+/** Won and Lost are settled; everything before them is still open. */
+const isSettled = (lead: Lead) =>
+  lead.stage?.slug === "won" || lead.stage?.slug === "lost";
 
 export default function LeadsPage() {
-  const [leads, setLeads] = React.useState<Lead[]>([]);
-  const [stages, setStages] = React.useState<PipelineStage[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [filter, setFilter] = React.useState<string>("all");
+  const [leads, setLeads] = React.useState<Lead[] | null>(null);
+  const [stages, setStages] = React.useState<Stage[]>([]);
+  const [failed, setFailed] = React.useState(false);
+  const [filter, setFilter] = React.useState<Filter>("open");
+  const [source, setSource] = React.useState<string>("all");
   const [search, setSearch] = React.useState("");
 
   React.useEffect(() => {
-    async function fetchData() {
-      try {
-        const [leadsRes, stagesRes] = await Promise.all([
-          fetch("/api/admin/leads"),
-          fetch("/api/admin/stages"),
+    Promise.all([
+      fetch("/api/admin/leads", { cache: "no-store" }),
+      fetch("/api/admin/stages", { cache: "no-store" }),
+    ])
+      .then(async ([leadsRes, stagesRes]) => {
+        if (!leadsRes.ok || !stagesRes.ok) throw new Error("Leads didn't load");
+        const [leadsData, stagesData] = await Promise.all([
+          leadsRes.json(),
+          stagesRes.json(),
         ]);
-
-        if (leadsRes.ok) {
-          const data = await leadsRes.json();
-          setLeads(data.leads || []);
-        }
-        if (stagesRes.ok) {
-          const data = await stagesRes.json();
-          setStages(data.stages || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
+        setLeads(leadsData.leads ?? []);
+        setStages(stagesData.stages ?? []);
+      })
+      .catch(() => setFailed(true));
   }, []);
 
-  const filteredLeads = React.useMemo(() => {
-    return leads.filter((lead) => {
-      const matchesFilter = filter === "all" || lead.stage?.id === filter;
-      const matchesSearch =
-        search === "" ||
-        lead.name.toLowerCase().includes(search.toLowerCase()) ||
-        lead.email.toLowerCase().includes(search.toLowerCase()) ||
-        (lead.company && lead.company.toLowerCase().includes(search.toLowerCase()));
-      return matchesFilter && matchesSearch;
+  const shown = React.useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return (leads ?? []).filter((lead) => {
+      if (filter === "open" && isSettled(lead)) return false;
+      if (filter !== "open" && filter !== "all" && lead.stage?.id !== filter)
+        return false;
+      if (source !== "all" && lead.source !== source) return false;
+      return (
+        !query ||
+        [lead.name, lead.email, lead.company]
+          .join(" ")
+          .toLowerCase()
+          .includes(query)
+      );
     });
-  }, [leads, filter, search]);
+  }, [leads, filter, source, search]);
 
-  const handleStageChange = async (leadId: string, newStageId: string) => {
-    try {
-      const res = await fetch(`/api/admin/leads/${leadId}/stage`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stageId: newStageId }),
-      });
-
-      if (res.ok) {
-        setLeads((prev) =>
-          prev.map((lead) =>
-            lead.id === leadId
-              ? { ...lead, stage: stages.find((s) => s.id === newStageId) || lead.stage }
-              : lead
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Failed to update stage:", error);
-    }
-  };
-
-  if (loading) {
-    return <AdminLoader message="Loading leads..." />;
+  async function moveLead(leadId: string, stageId: string) {
+    const stage = stages.find((entry) => entry.id === stageId) ?? null;
+    const before = leads;
+    setLeads(
+      (current) =>
+        current?.map((lead) =>
+          lead.id === leadId ? { ...lead, stage } : lead,
+        ) ?? null,
+    );
+    if (!(await saveStage(leadId, stageId))) setLeads(before);
   }
 
+  if (failed)
+    return (
+      <EmptyState
+        title="Leads didn't load"
+        description="Refresh the page to try again."
+      />
+    );
+  if (!leads) return <AdminLoader message="Loading leads..." />;
+
+  const open = leads.filter((lead) => !isSettled(lead)).length;
+  const sources = [
+    ...new Set(
+      leads
+        .map((lead) => lead.source)
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ];
+  const countIn = (stageId: string) =>
+    leads.filter((lead) => lead.stage?.id === stageId).length;
+
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader
         title="Leads"
-        subtitle={`${leads.length} total leads`}
+        subtitle={`Enquiries from the website form, Ask Craefto, Cal.com bookings and outreach replies. ${open} open of ${leads.length}.`}
       />
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search leads..."
-        />
-
-        <FilterBar>
-          <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
-            All
-          </FilterChip>
-          {stages.map((stage) => (
-            <FilterChip
-              key={stage.id}
-              active={filter === stage.id}
-              onClick={() => setFilter(stage.id)}
-              className={filter === stage.id ? getStageColor(stage.color) : undefined}
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search name, email or company"
+            label="Search leads"
+            className="md:w-72"
+          />
+          {sources.length > 1 && (
+            <select
+              aria-label="Where they came from"
+              value={source}
+              onChange={(event) => setSource(event.target.value)}
+              className="rounded-xl border border-[hsl(var(--color-border))] bg-[hsl(var(--color-background-muted))] px-3 py-2.5 text-sm text-[hsl(var(--color-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))]/40"
             >
-              {stage.name}
-            </FilterChip>
-          ))}
+              <option value="all">From anywhere</option>
+              {sources.map((value) => (
+                <option key={value} value={value}>
+                  {LEAD_SOURCES[value] ?? value}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+        <FilterBar>
+          <FilterChip
+            active={filter === "open"}
+            onClick={() => setFilter("open")}
+          >
+            Open{" "}
+            <span className="ml-1 font-mono text-xs opacity-70">{open}</span>
+          </FilterChip>
+          <FilterChip
+            active={filter === "all"}
+            onClick={() => setFilter("all")}
+          >
+            All{" "}
+            <span className="ml-1 font-mono text-xs opacity-70">
+              {leads.length}
+            </span>
+          </FilterChip>
+          {/* A chip for each stage that has leads in it. */}
+          {stages
+            .filter((stage) => countIn(stage.id) > 0 || filter === stage.id)
+            .map((stage) => (
+              <FilterChip
+                key={stage.id}
+                active={filter === stage.id}
+                onClick={() => setFilter(stage.id)}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <StageDot color={stage.color} />
+                  {stage.name}
+                  <span className="font-mono text-xs opacity-70">
+                    {countIn(stage.id)}
+                  </span>
+                </span>
+              </FilterChip>
+            ))}
         </FilterBar>
       </div>
 
-      {/* Leads Table */}
-      <div className="bg-[hsl(var(--color-background-muted))] border border-[hsl(var(--color-border))] rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px]">
-            <thead>
-              <tr className="border-b border-[hsl(var(--color-border))]">
-                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Lead</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Service</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Budget</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Score</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Stage</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-[hsl(var(--color-foreground-muted))]">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[hsl(var(--color-border))]">
-              {filteredLeads.length > 0 ? (
-                filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-[hsl(var(--color-background-subtle))] transition-colors">
-                    <td className="px-6 py-4">
-                      <Link href={`/admin/leads/${lead.id}`} className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-[hsl(var(--color-accent))]/20 flex items-center justify-center text-[hsl(var(--color-accent))] font-medium text-sm">
-                          {lead.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-medium text-[hsl(var(--color-foreground))] hover:text-[hsl(var(--color-accent))] transition-colors">{lead.name}</p>
-                          <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">{lead.company || lead.email}</p>
-                        </div>
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{formatService(lead.service_interest)}</td>
-                    <td className="px-6 py-4 text-[hsl(var(--color-foreground-muted))]">{formatBudget(lead.budget_range)}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[hsl(var(--color-background-subtle))] flex items-center justify-center text-sm font-medium">
-                          {lead.score}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <select
-                        value={lead.stage?.id || ""}
-                        onChange={(e) => handleStageChange(lead.id, e.target.value)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-medium border cursor-pointer focus:outline-none ${getStageColor(lead.stage?.color || null)}`}
-                      >
-                        {stages.map((stage) => (
-                          <option key={stage.id} value={stage.id} className="bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))]">
-                            {stage.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 text-[hsl(var(--color-foreground-subtle))] text-sm">{formatDate(lead.created_at)}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-[hsl(var(--color-foreground-subtle))]">
-                    {search || filter !== "all" ? "No leads match your filters" : "No leads yet"}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+      {shown.length === 0 ? (
+        <EmptyState
+          icon={<IconTarget size={40} />}
+          title={leads.length ? "No leads match" : "No leads yet"}
+          description={
+            leads.length
+              ? "Try another stage or clear the search."
+              : "Enquiries from the website form, Ask Craefto, Cal.com bookings and outreach replies land here, and on Today."
+          }
+        />
+      ) : (
+        <ul className="divide-y divide-[hsl(var(--color-border))]/50 overflow-hidden rounded-2xl border border-[hsl(var(--color-border))]/50 bg-[hsl(var(--color-background-subtle))]/50">
+          {shown.map((lead) => (
+            <li
+              key={lead.id}
+              className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-[hsl(var(--color-background-muted))]/30 md:flex-row md:items-center md:gap-6 md:px-5"
+            >
+              <Link
+                href={`/admin/leads/${lead.id}`}
+                className="group flex min-w-0 flex-1 items-center gap-4"
+              >
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[hsl(var(--color-accent-subtle))] font-medium text-[hsl(var(--color-accent))]">
+                  {lead.name.charAt(0).toUpperCase()}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate font-medium text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))]">
+                    {lead.name}
+                    {lead.company && (
+                      <span className="font-normal text-[hsl(var(--color-foreground-muted))]">
+                        {" "}
+                        · {lead.company}
+                      </span>
+                    )}
+                  </span>
+                  <span className="block truncate text-sm text-[hsl(var(--color-foreground-subtle))]">
+                    {[
+                      LEAD_SOURCES[lead.source ?? ""] ?? "Enquiry",
+                      enquiryLabel(lead.service_interest),
+                      enquiryLabel(lead.budget_range),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                </span>
+              </Link>
+              <div className="flex items-center justify-between gap-4 pl-14 md:pl-0">
+                <span className="text-sm tabular-nums text-[hsl(var(--color-foreground-subtle))]">
+                  {when(lead.created_at)}
+                </span>
+                <StageSelect
+                  stages={stages}
+                  value={lead.stage?.id ?? null}
+                  onChange={(stageId) => moveLead(lead.id, stageId)}
+                  label={`Stage for ${lead.name}`}
+                />
+                <Link
+                  href={`/admin/leads/${lead.id}`}
+                  aria-label={`Open ${lead.name}`}
+                  className="hidden text-[hsl(var(--color-foreground-subtle))] hover:text-[hsl(var(--color-foreground))] md:block"
+                >
+                  <IconChevronRight size={16} />
+                </Link>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </PageContainer>
   );
 }

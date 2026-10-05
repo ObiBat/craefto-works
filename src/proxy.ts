@@ -50,8 +50,6 @@ async function refreshPortalSession(request: NextRequest) {
 export const config = {
   matcher: [
     "/api/admin/:path*",
-    "/api/analytics/ab-test",
-    "/api/analytics/feedback",
     "/api/analytics/article",
     "/portal",
     "/portal/:path*",

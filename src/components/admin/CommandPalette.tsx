@@ -3,6 +3,20 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  IconActivity,
+  IconBriefcase,
+  IconChart,
+  IconEdit,
+  IconExternal,
+  IconFileText,
+  IconInbox,
+  IconMail,
+  IconMessageSquare,
+  IconTarget,
+  IconUserPlus,
+  IconUsers,
+} from "./icons";
 
 interface CommandItem {
   id: string;
@@ -20,132 +34,25 @@ export function CommandPalette() {
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  const commands: CommandItem[] = React.useMemo(
-    () => [
-      // Navigation
-      {
-        id: "dashboard",
-        label: "Go to Dashboard",
-        shortcut: "G D",
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
-          </svg>
-        ),
-        action: () => router.push("/admin"),
-        category: "Navigation",
-      },
-      {
-        id: "leads",
-        label: "Go to Leads",
-        shortcut: "G L",
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1z" />
-          </svg>
-        ),
-        action: () => router.push("/admin/leads"),
-        category: "Navigation",
-      },
-      {
-        id: "pipeline",
-        label: "Go to Content Pipeline",
-        shortcut: "G P",
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547" />
-          </svg>
-        ),
-        action: () => router.push("/admin/pipeline"),
-        category: "Navigation",
-      },
-      {
-        id: "journal",
-        label: "Go to Journal",
-        shortcut: "G J",
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        ),
-        action: () => router.push("/admin/journal"),
-        category: "Navigation",
-      },
-      {
-        id: "analytics",
-        label: "Go to Analytics",
-        shortcut: "G A",
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z" />
-          </svg>
-        ),
-        action: () => router.push("/admin/analytics"),
-        category: "Navigation",
-      },
-      {
-        id: "subscribers",
-        label: "Go to Subscribers",
-        shortcut: "G S",
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        ),
-        action: () => router.push("/admin/subscribers"),
-        category: "Navigation",
-      },
-      {
-        id: "documents",
-        label: "Go to Documents",
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        ),
-        action: () => router.push("/admin/documents"),
-        category: "Navigation",
-      },
-      // Actions
-      {
-        id: "new-scan",
-        label: "Run Content Scan",
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-          </svg>
-        ),
-        action: () => {
-          router.push("/admin/pipeline");
-          // Trigger scan after navigation
-        },
-        category: "Actions",
-      },
-      {
-        id: "new-article",
-        label: "Create New Article",
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-        ),
-        action: () => router.push("/admin/journal?action=new"),
-        category: "Actions",
-      },
-      {
-        id: "view-site",
-        label: "View Public Site",
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-        ),
-        action: () => window.open("/", "_blank"),
-        category: "Actions",
-      },
-    ],
-    [router]
-  );
+  const commands: CommandItem[] = React.useMemo(() => {
+    const go = (id: string, label: string, href: string, icon: React.ReactNode): CommandItem => ({ id, label, icon, action: () => router.push(href), category: "Go to" });
+    return [
+      go("today", "Today", "/admin", <IconActivity size={16} />),
+      go("leads", "Leads", "/admin/leads", <IconTarget size={16} />),
+      go("outreach", "Outreach", "/admin/outreach", <IconMail size={16} />),
+      go("replies", "Outreach replies", "/admin/outreach/replies", <IconMail size={16} />),
+      go("chats", "Ask Craefto chats", "/admin/chats", <IconMessageSquare size={16} />),
+      go("clients", "Clients", "/admin/members", <IconBriefcase size={16} />),
+      go("applications", "Applications", "/admin/applications", <IconInbox size={16} />),
+      go("journal", "Journal", "/admin/journal", <IconFileText size={16} />),
+      go("subscribers", "Journal subscribers", "/admin/subscribers", <IconUsers size={16} />),
+      go("analytics", "Analytics", "/admin/analytics", <IconChart size={16} />),
+      { id: "new-client", label: "Add a client", icon: <IconUserPlus size={16} />, action: () => router.push("/admin/members?add=1"), category: "Do" },
+      { id: "new-article", label: "Write a journal article", icon: <IconEdit size={16} />, action: () => router.push("/admin/journal/new"), category: "Do" },
+      { id: "view-site", label: "Open the site", icon: <IconExternal size={16} />, action: () => window.open("/", "_blank"), category: "Do" },
+      { id: "view-portal", label: "Open the client portal", icon: <IconExternal size={16} />, action: () => window.open("/portal", "_blank"), category: "Do" },
+    ];
+  }, [router]);
 
   const filteredCommands = React.useMemo(() => {
     if (!search) return commands;

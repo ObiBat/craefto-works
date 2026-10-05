@@ -68,6 +68,14 @@ export const TIMELINES = [
   { value: "flexible", label: "Flexible" },
 ];
 
+/** Where a lead came from (leads.source), as admin shows it. */
+export const LEAD_SOURCES: Record<string, string> = {
+  website: "Website form",
+  chat: "Ask Craefto",
+  cal: "Booked a call",
+  outreach: "Outreach reply",
+};
+
 /** The label for a stored value, for alerts and admin. */
 export function enquiryLabel(value: string | null | undefined): string | null {
   if (!value) return null;
