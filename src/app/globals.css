@@ -2782,3 +2782,68 @@ html.ask-craefto-open {
     animation: none;
   }
 }
+
+/* Client portal (components/portal). The hours bar and progress bars grow in
+   from the left, an estimate's range in the hours bar is a lighter sage
+   stripe, the current step shimmers gently, Ask Craefto's messages sit on a
+   faint sage wash, and work in progress has a live dot. */
+.portal-meter-fill {
+  transform-origin: left center;
+  animation: portal-grow 900ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@keyframes portal-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+.portal-meter-range {
+  background-color: hsl(var(--color-accent) / 0.35);
+  background-image: repeating-linear-gradient(-45deg, transparent 0 4px, hsl(var(--color-background) / 0.5) 4px 7px);
+}
+.portal-step-current {
+  background: linear-gradient(90deg, hsl(var(--color-accent)) 0%, hsl(var(--color-accent) / 0.3) 100%);
+  background-size: 200% 100%;
+  animation: portal-step 2.4s ease-in-out infinite;
+}
+@keyframes portal-step {
+  0%,
+  100% {
+    background-position: 0% 0;
+  }
+  50% {
+    background-position: 100% 0;
+  }
+}
+.portal-assistant {
+  background: linear-gradient(135deg, hsl(var(--color-accent-subtle)) 0%, hsl(var(--color-background-subtle)) 100%);
+}
+.portal-live-dot {
+  position: relative;
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 999px;
+  background: hsl(var(--color-accent));
+}
+.portal-live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: portal-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes portal-ping {
+  75%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-meter-fill,
+  .portal-step-current,
+  .portal-live-dot::after {
+    animation: none;
+  }
+}

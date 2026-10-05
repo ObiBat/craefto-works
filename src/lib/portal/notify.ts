@@ -3,7 +3,8 @@ import { EMAIL_FROM, isEmailEnabled, resend } from "@/lib/resend";
 import { formatPrice, planById } from "@/lib/pricing";
 import * as emails from "@/emails/portal";
 import { formatBytes } from "./file-rules";
-import { REQUEST_STATUSES, type ClientAccount, type ClientFile, type ClientMessage, type ClientRequest, type ClientSubscription } from "./types";
+import { alertOwnerTelegram, telegramConfigured, telegramHtml } from "@/lib/telegram";
+import { REQUEST_STATUSES, estimateLabel, type ClientAccount, type ClientFile, type ClientMessage, type ClientRequest, type ClientSubscription } from "./types";
 
 // Portal email: to clients from hello@, with replies going to Craefto's inbox,
 // and every alert to that inbox. `origin` is the site the request came in on,
@@ -53,7 +54,7 @@ export const sendWelcome = (account: ClientAccount, subscription: ClientSubscrip
 export const sendSignInLink = (account: ClientAccount, link: string) =>
   send(account.email, emails.signInEmail({ name: account.name, link }));
 
-export const sendRequestUpdate = (account: ClientAccount, request: ClientRequest, origin: string) =>
+export const sendRequestUpdate = (account: ClientAccount, request: ClientRequest, origin: string, detail?: string) =>
   send(
     account.email,
     emails.requestUpdateEmail({
@@ -61,8 +62,31 @@ export const sendRequestUpdate = (account: ClientAccount, request: ClientRequest
       title: request.title,
       statusLabel: REQUEST_STATUSES[request.status].label,
       link: `${origin}/portal/requests/${request.id}`,
+      detail,
     })
   );
+
+/** "Thursday 15 October" for a yyyy-mm-dd date. */
+const dayLabel = (date: string | null) =>
+  date ? new Date(`${date}T12:00:00Z`).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }) : null;
+
+export const sendEstimateReady = (account: ClientAccount, request: ClientRequest, origin: string) =>
+  send(
+    account.email,
+    emails.estimateEmail({
+      name: account.name,
+      title: request.title,
+      estimate: estimateLabel(request) ?? "an estimate",
+      note: request.estimate_note,
+      targetDate: dayLabel(request.target_date),
+      link: `${origin}/portal/requests/${request.id}`,
+    })
+  );
+
+export const sendInvite = (account: ClientAccount, link: string) =>
+  send(account.email, emails.inviteEmail({ name: account.name, engagement: account.engagement, link }));
+
+export const sendWeekly = (account: ClientAccount, email: emails.Email) => send(account.email, email);
 
 /** Craefto's reply; `statusChanged` when it also moved the request on (one email, not two). */
 export const sendReply = (
@@ -146,6 +170,33 @@ export const alertMessage = (account: ClientAccount, message: ClientMessage, req
     }),
     account.email
   );
+
+/** The client approved an estimate: the request is in their queue. */
+export async function alertApproved(account: ClientAccount, request: ClientRequest, origin: string) {
+  const estimate = estimateLabel(request) ?? "no estimate";
+  const place = request.queue_position ? `#${request.queue_position} in their queue` : "in their queue";
+  if (telegramConfigured()) {
+    await alertOwnerTelegram(
+      [`<b>Approved · ${telegramHtml(who(account))}</b>`, telegramHtml(request.title), `${telegramHtml(estimate)} · ${place}`].join("\n"),
+      [{ text: "Open in admin", url: adminLink(origin, account) }]
+    ).catch((error) => console.error("The approval alert failed:", error));
+  }
+  await send(
+    CRAEFTO_INBOX,
+    emails.alertEmail({
+      eyebrow: "Estimate approved",
+      subject: `${who(account)} approved: ${request.title}`,
+      heading: request.title,
+      rows: [
+        ["From", who(account)],
+        ["Estimate", estimate],
+        ["Queue", place],
+      ],
+      link: adminLink(origin, account),
+    }),
+    account.email
+  );
+}
 
 export type BillingChange = "cancelling" | "resumed" | "ended" | "payment_failed" | "plan_changed";
 

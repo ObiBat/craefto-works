@@ -4,7 +4,7 @@ import { test, expect } from "./fixtures";
 // and expect refusals (no checkout, no email, no writes), so they are safe to
 // run against production.
 test.describe("client portal", () => {
-  for (const path of ["/portal", "/portal/requests", "/portal/requests/new", "/portal/messages", "/portal/calls", "/portal/billing"]) {
+  for (const path of ["/portal", "/portal/requests", "/portal/requests/new", "/portal/calendar", "/portal/messages", "/portal/calls", "/portal/billing"]) {
     test(`${path} asks a visitor to sign in`, async ({ page }) => {
       await page.goto(path);
       await page.waitForURL(/\/portal\/login$/);
@@ -70,6 +70,13 @@ test.describe("client portal", () => {
     expect((await request.post(`/api/admin/members/${nobody}/messages`, { data: { body: "hi" } })).status()).toBe(401);
     expect((await request.post(`/api/admin/members/${nobody}/files`, { data: { files: [] } })).status()).toBe(401);
     expect((await request.get(`/api/admin/members/files/${nobody}`, { maxRedirects: 0 })).status()).toBe(401);
+    // Adding a client, their hours, invites, estimates and time: Craefto's alone.
+    expect((await request.post("/api/admin/members", { data: { email: "someone@example.com", monthly_hours: 10 } })).status()).toBe(401);
+    expect((await request.patch(`/api/admin/members/${nobody}`, { data: { monthly_hours: 400 } })).status()).toBe(401);
+    expect((await request.post(`/api/admin/members/${nobody}/invite`)).status()).toBe(401);
+    expect((await request.patch(`/api/admin/members/${nobody}/requests/${nobody}`, { data: { estimate: { low: 1, high: 2 } } })).status()).toBe(401);
+    expect((await request.post(`/api/admin/members/${nobody}/time`, { data: { minutes: 60 } })).status()).toBe(401);
+    expect((await request.delete(`/api/admin/members/${nobody}/time?entry=${nobody}`)).status()).toBe(401);
   });
 
   test("shared files need the client signed in", async ({ request }) => {

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { allowanceFor, type Allowance } from "./hours";
 import { isLive, type ClientAccount, type ClientSubscription } from "./types";
 
 // The client portal's sessions: Supabase Auth in httpOnly cookies, read and
@@ -42,6 +43,8 @@ export interface Member {
   subscriptions: ClientSubscription[];
   /** The plans running now: usually one, but plans can be combined. */
   plans: ClientSubscription[];
+  /** Their studio time each month (a plan's, or agreed with Craefto directly); null pauses new requests. */
+  allowance: Allowance | null;
   db: SupabaseClient;
 }
 
@@ -60,7 +63,14 @@ export async function currentMember(): Promise<Member | null> {
     .eq("account_id", account.id)
     .order("created_at", { ascending: false });
   const subscriptions = (data ?? []) as ClientSubscription[];
-  return { user, account: account as ClientAccount, subscriptions, plans: subscriptions.filter(isLive), db };
+  return {
+    user,
+    account: account as ClientAccount,
+    subscriptions,
+    plans: subscriptions.filter(isLive),
+    allowance: allowanceFor(account as ClientAccount, subscriptions),
+    db,
+  };
 }
 
 /** For portal pages and actions: the signed-in client, or off to sign in. */

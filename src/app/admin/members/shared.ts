@@ -12,9 +12,12 @@ export function planVariant(subscription: ClientSubscription) {
 
 export const REQUEST_VARIANT: Record<RequestStatus, "neutral" | "accent" | "warning" | "success"> = {
   received: "neutral",
+  estimated: "warning",
+  queued: "neutral",
   in_progress: "accent",
   needs_info: "warning",
   delivered: "success",
+  withdrawn: "neutral",
 };
 
 export const shortDate = (iso: string, withTime = false) =>

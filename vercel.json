@@ -4,6 +4,7 @@
   "crons": [
     { "path": "/api/cron/outreach", "schedule": "*/3 * * * *" },
     { "path": "/api/cron/outreach-digest", "schedule": "30 21,22 * * *" },
-    { "path": "/api/cron/assistant", "schedule": "45 21,22 * * *" }
+    { "path": "/api/cron/assistant", "schedule": "45 21,22 * * *" },
+    { "path": "/api/cron/portal-weekly", "schedule": "0 5,6 * * 5" }
   ]
 }

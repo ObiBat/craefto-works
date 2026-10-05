@@ -58,7 +58,7 @@ test.describe("admin API access", () => {
 
   // The outreach clock sends email and reads the mailbox; the Telegram button files leads. Only signed calls get through.
   test("the outreach clock, digest and Telegram webhook refuse unsigned calls", async ({ request }) => {
-    for (const path of ["/api/cron/outreach", "/api/cron/outreach-digest", "/api/cron/assistant"]) {
+    for (const path of ["/api/cron/outreach", "/api/cron/outreach-digest", "/api/cron/assistant", "/api/cron/portal-weekly"]) {
       expect((await request.get(path)).status(), path).toBe(401);
       expect((await request.get(path, { headers: { authorization: "Bearer guess" } })).status(), `${path} with a guessed secret`).toBe(401);
     }

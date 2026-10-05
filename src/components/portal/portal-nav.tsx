@@ -7,17 +7,18 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/portal", label: "Overview" },
   { href: "/portal/requests", label: "Requests" },
+  { href: "/portal/calendar", label: "Calendar" },
   { href: "/portal/messages", label: "Messages" },
   { href: "/portal/calls", label: "Calls" },
   { href: "/portal/billing", label: "Billing" },
 ];
 
-/** The portal's sections; the current one sits on a soft tint. */
-export function PortalNav() {
+/** The portal's sections; the current one sits on a soft tint. Billing only for clients who pay through Stripe. */
+export function PortalNav({ billing = true }: { billing?: boolean }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Portal" className="-mx-1 flex gap-0.5 overflow-x-auto px-1 sm:gap-1">
-      {LINKS.map(({ href, label }) => {
+      {LINKS.filter(({ href }) => billing || href !== "/portal/billing").map(({ href, label }) => {
         const current = href === "/portal" ? pathname === href : pathname.startsWith(href);
         return (
           <Link

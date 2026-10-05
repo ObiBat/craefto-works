@@ -44,8 +44,8 @@ export function LoginForm({ email }: { email?: string }) {
   );
 }
 
-/** A new request: what's needed, the details, any files, and where updates will go. */
-export function NewRequestForm({ email }: { email: string }) {
+/** A new request: what's needed, the details, when it's needed, any files, and where updates will go. */
+export function NewRequestForm({ email, today }: { email: string; today: string }) {
   const [state, action] = useActionState(createRequest, {});
   const attachments = useAttachments(prepare);
   const { over, dropProps } = useFileDrop(attachments.add);
@@ -66,6 +66,15 @@ export function NewRequestForm({ email }: { email: string }) {
           Goals, links, dates and examples you like. The more we know, the sooner we can start.
         </p>
         <Textarea id="details" name="details" rows={8} maxLength={10000} defaultValue={state.values?.details} aria-describedby="details-hint" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label htmlFor="needed_by" className={label}>
+          Needed by <span className="font-normal text-[hsl(var(--color-foreground-subtle))]">(optional)</span>
+        </label>
+        <p id="needed-by-hint" className={hint}>
+          If there&apos;s a date it has to be ready for. Obi plans around it and tells you if it&apos;s tight.
+        </p>
+        <Input id="needed_by" name="needed_by" type="date" min={today} defaultValue={state.values?.needed_by} aria-describedby="needed-by-hint" className="sm:max-w-[14rem]" />
       </div>
       <div className="flex flex-col gap-2">
         <span className={label}>Files</span>

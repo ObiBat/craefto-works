@@ -57,7 +57,7 @@ export default async function PortalLayout({ children }: { children: React.React
           </div>
           {member && (
             <div className="pb-3">
-              <PortalNav />
+              <PortalNav billing={Boolean(member.account.stripe_customer_id || member.subscriptions.length)} />
             </div>
           )}
         </Container>
