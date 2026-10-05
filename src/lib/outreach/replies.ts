@@ -141,6 +141,9 @@ const topic = (subject: string | null) => (subject ?? "").replace(/^\s*((re|aw|f
 
 interface Known {
   byId: Map<string, SentRow>;
+  /** The test addresses (the sender's settings) and their test emails by topic, newest first. */
+  testRecipients: Set<string>;
+  byTestTopic: Map<string, SentRow>;
   /** The addresses we've written to for real, newest email first. */
   byAddress: Map<string, Target>;
   /** Their organisations' own domains: anyone there may answer for them. */
@@ -157,7 +160,7 @@ function addDomain(known: Known, domain: string, target: Target) {
 }
 
 async function loadKnown(db: Db): Promise<Known> {
-  const [messages, prospects] = await Promise.all([
+  const [messages, prospects, settings] = await Promise.all([
     db
       .from("outreach_messages")
       .select("id, campaign_id, prospect_id, kind, mode, status, message_id, to_address, subject, body, sent_at, created_at")
@@ -166,10 +169,18 @@ async function loadKnown(db: Db): Promise<Known> {
       .limit(5000),
     // Sent by hand: marked sent, with no email of the sender's behind it.
     db.from("outreach_prospects").select("campaign_id, id, contact_kind, contact_value, website, email_subject, sent_at").not("sent_at", "is", null).limit(5000),
+    db.from("outreach_settings").select("test_recipients").eq("id", 1).maybeSingle<{ test_recipients: string[] | null }>(),
   ]);
   if (messages.error) throw messages.error;
   if (prospects.error) throw prospects.error;
-  const known: Known = { byId: new Map(), byAddress: new Map(), byDomain: new Map(), since: null };
+  const known: Known = {
+    byId: new Map(),
+    testRecipients: new Set((settings.data?.test_recipients ?? []).map((address) => address.trim().toLowerCase())),
+    byTestTopic: new Map(),
+    byAddress: new Map(),
+    byDomain: new Map(),
+    since: null,
+  };
   const earliest = (at: Date) => {
     if (!known.since || at < known.since) known.since = at;
   };
@@ -177,7 +188,10 @@ async function loadKnown(db: Db): Promise<Known> {
   for (const row of (messages.data ?? []) as SentRow[]) {
     known.byId.set(row.message_id.toLowerCase(), row);
     earliest(new Date(row.sent_at ?? row.created_at));
-    if (row.mode !== "live") continue;
+    if (row.mode !== "live") {
+      if (!known.byTestTopic.has(topic(row.subject))) known.byTestTopic.set(topic(row.subject), row);
+      continue;
+    }
     liveSent.add(`${row.campaign_id}/${row.prospect_id}`);
     const address = row.to_address.trim().toLowerCase();
     if (!known.byAddress.has(address)) known.byAddress.set(address, targetOf(row));
@@ -204,14 +218,18 @@ const wantedBy = (known: Known) => (header: InboxHeader) => {
   if (from === SENDER.address.toLowerCase()) return false;
   if (header.messageId && known.byId.has(header.messageId.toLowerCase())) return false;
   if ([header.inReplyTo, ...header.references].some((id) => id && known.byId.has(id.toLowerCase()))) return true;
-  if (known.byAddress.has(from) || known.byDomain.has(domainOf(from))) return true;
+  if (known.testRecipients.has(from) || known.byAddress.has(from) || known.byDomain.has(domainOf(from))) return true;
   return header.contentType === "multipart/report" || ROBOT.test(from) || BOUNCE_SUBJECT.test(header.subject);
 };
 
 export interface Match {
   target: Target;
-  /** thread: it says which email it answers; report: a bounce naming ours; address/domain: from someone we wrote to, or their organisation. */
-  via: "thread" | "report" | "address" | "domain";
+  /**
+   * thread: it says which email it answers; report: a bounce naming ours;
+   * address/domain: from someone we wrote to, or their organisation;
+   * subject: from a test address, answering a test email by its subject.
+   */
+  via: "thread" | "report" | "address" | "domain" | "subject";
 }
 
 /** Which prospect (and email of ours) it answers, if any. */
@@ -221,6 +239,12 @@ export function matchOf(known: Known, email: IncomingEmail): Match | null {
   for (const id of [email.inReplyTo, ...email.references]) {
     const sent = id ? known.byId.get(id.toLowerCase()) : undefined;
     if (sent) return { target: targetOf(sent), via: "thread" };
+  }
+  // A test address replying in a mail app's conversation may answer the wrong
+  // copy (a sample sent by hand, say): its subject still names the test email.
+  if (known.testRecipients.has(from)) {
+    const sent = known.byTestTopic.get(topic(email.subject));
+    return sent ? { target: targetOf(sent), via: "subject" } : null;
   }
   if (email.report) {
     for (const id of email.mentions) {
