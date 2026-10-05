@@ -5,16 +5,22 @@ import { test, expect } from "./fixtures";
 test.describe("Ask Craefto", () => {
   test("opens from a page, says it's an AI, and closes with Escape", async ({ page }) => {
     await page.goto("/");
-    const launcher = page.getByRole("button", { name: "Ask Craefto" });
+    const launcher = page.getByRole("button", { name: "Ask Craefto", exact: true });
     await launcher.click();
     const dialog = page.getByRole("dialog", { name: "Ask Craefto" });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("AI assistant", { exact: true })).toBeVisible();
     await expect(dialog.getByText(/Obi, who reads every enquiry/)).toBeVisible();
     await expect(page.getByLabel("Your message")).toBeFocused();
+    await expect(dialog.getByRole("group", { name: "Ways to start" }).getByRole("button")).toHaveCount(3);
+    // The button stays under the open panel (which grows over it), out of reach until it closes.
+    const underneath = page.getByRole("button", { name: "Ask Craefto", exact: true, includeHidden: true });
+    await expect(underneath).toHaveAttribute("aria-expanded", "true");
+    await expect(underneath).toHaveAttribute("inert", "");
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
     await expect(launcher).toBeFocused();
+    await expect(launcher).toHaveAttribute("aria-expanded", "false");
   });
 
   test("isn't on the admin pages", async ({ page }) => {

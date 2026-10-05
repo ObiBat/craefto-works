@@ -1,6 +1,6 @@
 import { checkBotId } from "botid/server";
 import type { NextRequest } from "next/server";
-import { ASSISTANT_MODEL, chatHistory, handleAssistant } from "@/lib/assistant/agent";
+import { ASSISTANT_MODEL, REPLIES_MODEL, chatHistory, handleAssistant } from "@/lib/assistant/agent";
 import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ async function isBot() {
 
 /** One turn of Ask Craefto, streamed (lib/assistant/agent.ts). */
 export function POST(request: NextRequest) {
-  return handleAssistant(request, { db: createServerClient(), model: ASSISTANT_MODEL, now: () => new Date(), isBot });
+  return handleAssistant(request, { db: createServerClient(), model: ASSISTANT_MODEL, repliesModel: REPLIES_MODEL, now: () => new Date(), isBot });
 }
 
 /** A chat's transcript so far, for a page that reloads mid-conversation. The id is the browser's own. */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, type InferUITools, type UIDataTypes, type UIMessage } from "ai";
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, type InferUITools, type UIMessage } from "ai";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
@@ -17,7 +17,9 @@ import { RichText } from "./rich-text";
 // the server keeps the transcript (api/assistant). Enquiries are filed only
 // after the visitor confirms the summary card.
 
-type ChatMessage = UIMessage<unknown, UIDataTypes, InferUITools<AssistantTools>>;
+/** The one-tap replies under an answer arrive as a data part (agent.ts withReplies). */
+type ChatData = { replies: { options: string[] } };
+type ChatMessage = UIMessage<unknown, ChatData, InferUITools<AssistantTools>>;
 type Part = ChatMessage["parts"][number];
 
 const STORAGE_KEY = "ask-craefto-chat";
@@ -118,6 +120,25 @@ function Decide({ confirm, onConfirm, onDecline, busy }: { confirm: string; onCo
       <Button type="button" size="sm" variant="secondary" onClick={onDecline} disabled={busy}>
         Change something
       </Button>
+    </div>
+  );
+}
+
+/** One-tap replies: the visitor's likely next message, sent as it is when tapped. They sit on the visitor's side, where the reply will appear. */
+function Chips({ options, onPick, label }: { options: string[]; onPick: (text: string) => void; label: string }) {
+  return (
+    <div role="group" aria-label={label} className="flex flex-wrap justify-end gap-2 pl-6">
+      {options.map((option, index) => (
+        <button
+          key={option}
+          type="button"
+          onClick={() => onPick(option)}
+          style={{ animationDelay: `${120 + index * 60}ms` }}
+          className="ask-craefto-chip min-h-10 rounded-full bg-[hsl(var(--color-background-muted))] px-4 py-2 text-left text-sm transition-[background-color,scale] duration-150 hover:bg-[hsl(var(--color-accent-subtle))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-accent))] active:scale-[0.97]"
+        >
+          {option}
+        </button>
+      ))}
     </div>
   );
 }
@@ -224,7 +245,34 @@ function ToolPart({ part, busy, respond }: { part: Part; busy: boolean; respond:
   return null;
 }
 
-export default function ChatPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+/** The replies the latest answer suggests. */
+function suggestionsOf(message: ChatMessage | undefined): string[] {
+  if (message?.role !== "assistant") return [];
+  // A summary card waits for an answer of its own: no suggestions beside it.
+  if (message.parts.some((part) => "state" in part && part.state === "approval-requested")) return [];
+  const last = message.parts.findLast((part) => part.type === "data-replies");
+  return last?.type === "data-replies" ? last.data.options : [];
+}
+
+/**
+ * Where focus goes inside the open panel: the message box where there's a
+ * mouse, or the panel itself on touch screens, so the keyboard doesn't cover
+ * the conversation and its one-tap replies until the visitor asks for it.
+ */
+function focusInside(panel: HTMLElement | null, input: HTMLTextAreaElement | null) {
+  if (window.matchMedia("(pointer: fine)").matches) input?.focus();
+  else panel?.focus({ preventScroll: true });
+}
+
+export default function ChatPanel({ state, onClose, onClosed }: { state: "open" | "closing" | "closed"; onClose: () => void; onClosed: () => void }) {
+  const open = state !== "closed";
+
+  // Closing ends when the exit animation does (onAnimationEnd below): at once with reduced motion, and a fallback should it never run.
+  useEffect(() => {
+    if (state !== "closing") return;
+    const timer = setTimeout(onClosed, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 500);
+    return () => clearTimeout(timer);
+  }, [state, onClosed]);
   const pathname = usePathname();
   const [chatId] = useState(() => storedChatId() ?? newChatId());
   const [input, setInput] = useState("");
@@ -238,6 +286,8 @@ export default function ChatPanel({ open, onClose }: { open: boolean; onClose: (
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
   });
   const busy = status === "submitted" || status === "streaming";
+  const replies = status === "ready" ? suggestionsOf(messages.at(-1)) : [];
+  const panelRef = useRef<HTMLElement>(null);
 
   // A chat that was going before a reload comes back.
   useEffect(() => {
@@ -254,8 +304,13 @@ export default function ChatPanel({ open, onClose }: { open: boolean; onClose: (
     };
   }, [chatId, setMessages]);
 
+  // Opening lands on the latest message.
   useEffect(() => {
-    if (open) inputRef.current?.focus();
+    if (!open) return;
+    pinned.current = true;
+    const log = logRef.current;
+    if (log) log.scrollTop = log.scrollHeight;
+    focusInside(panelRef.current, inputRef.current);
   }, [open]);
 
   // Follow the answer as it arrives, unless the visitor has scrolled up to read.
@@ -270,8 +325,9 @@ export default function ChatPanel({ open, onClose }: { open: boolean; onClose: (
       if (!trimmed || busy) return;
       clearError();
       pinned.current = true;
-      void sendMessage({ text: trimmed.slice(0, MAX_CHARS) });
+      // The box empties as the message appears in the conversation, never after.
       setInput("");
+      void sendMessage({ text: trimmed.slice(0, MAX_CHARS) });
     },
     [busy, clearError, sendMessage],
   );
@@ -282,13 +338,19 @@ export default function ChatPanel({ open, onClose }: { open: boolean; onClose: (
       pinned.current = true;
       void addToolApprovalResponse({ id: approvalId, approved });
       // The card's buttons go away: keep the keyboard in the panel.
-      inputRef.current?.focus();
+      focusInside(panelRef.current, inputRef.current);
     },
     [addToolApprovalResponse],
   );
 
-  // Escape closes the panel, from anywhere in it, or when focus has fallen back to the page.
-  const panelRef = useRef<HTMLElement>(null);
+  // A tapped reply goes as it is; the replies give way to it, so focus stays in the panel.
+  const pick = useCallback(
+    (text: string) => {
+      send(text);
+      focusInside(panelRef.current, inputRef.current);
+    },
+    [send],
+  );
   useEffect(() => {
     if (!open) return;
     const onKey = (event: globalThis.KeyboardEvent) => {
@@ -300,15 +362,31 @@ export default function ChatPanel({ open, onClose }: { open: boolean; onClose: (
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // Sent while an answer is still finishing (its one-tap replies take a moment): it goes as soon as the answer is done.
+  const sendWhenReady = useRef(false);
+  useEffect(() => {
+    if (status !== "ready" || !sendWhenReady.current) return;
+    const timer = setTimeout(() => {
+      sendWhenReady.current = false;
+      send(inputRef.current?.value ?? "");
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [status, send]);
+
+  const submitTyped = () => {
+    if (busy) sendWhenReady.current = Boolean(input.trim());
+    else send(input);
+  };
+
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    send(input);
+    submitTyped();
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
-      send(input);
+      submitTyped();
     }
   };
 
@@ -327,7 +405,14 @@ export default function ChatPanel({ open, onClose }: { open: boolean; onClose: (
       aria-modal="false"
       aria-labelledby="ask-craefto-title"
       hidden={!open}
-      className="ask-craefto-panel fixed inset-0 z-50 flex flex-col bg-[hsl(var(--color-background))] text-[hsl(var(--color-foreground))] sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[400px] sm:rounded-3xl sm:shadow-2xl sm:shadow-black/15"
+      data-state={state}
+      onAnimationEnd={(event) => {
+        if (state === "closing" && event.target === event.currentTarget) onClosed();
+      }}
+      tabIndex={-1}
+      // Focused itself only on touch screens (focusInside), where a ring round the whole panel would be noise.
+      style={{ outline: "none" }}
+      className="ask-craefto-panel fixed inset-0 z-50 flex flex-col text-[hsl(var(--color-foreground))] sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[400px] sm:rounded-3xl"
     >
       <header className="flex items-start justify-between gap-3 px-5 pb-3 pt-[max(1.25rem,env(safe-area-inset-top))] sm:pt-5">
         <div>
@@ -357,40 +442,33 @@ export default function ChatPanel({ open, onClose }: { open: boolean; onClose: (
         aria-label="Conversation"
         onScroll={(event) => {
           const log = event.currentTarget;
-          pinned.current = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
+          const below = log.scrollHeight - log.scrollTop - log.clientHeight;
+          pinned.current = below < 48;
+          // Soft edges where the conversation runs on out of view (globals.css).
+          log.dataset.above = String(log.scrollTop > 2);
+          log.dataset.below = String(below > 2);
         }}
-        className="flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 pb-4 text-[15px] leading-relaxed"
+        // The page's smooth scrolling leaves the conversation to scroll on its own.
+        data-lenis-prevent
+        className="ask-craefto-log flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 pb-4 pt-1 text-[15px] leading-relaxed"
       >
         <div className="space-y-3">
           <p>
             Hi, I&apos;m Craefto&apos;s AI assistant. I can answer questions about our work, prices and process, or pass your project to Obi, who reads every enquiry.
           </p>
-          {messages.length === 0 && (
-            <div className="flex flex-wrap gap-2">
-              {SUGGESTIONS.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => send(suggestion)}
-                  className="min-h-10 rounded-full bg-[hsl(var(--color-background-muted))] px-4 py-2 text-left text-sm transition-colors hover:bg-[hsl(var(--color-accent-subtle))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-accent))]"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          )}
+          {messages.length === 0 && <Chips options={SUGGESTIONS} onPick={pick} label="Ways to start" />}
         </div>
 
         {messages.map((message) =>
           message.role === "user" ? (
-            <div key={message.id} className="flex justify-end">
+            <div key={message.id} className="ask-craefto-message flex justify-end">
               <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-[hsl(var(--color-foreground))] px-4 py-2.5 text-[hsl(var(--color-background))]">
                 <span className="sr-only">You: </span>
                 {message.parts.map((part) => (part.type === "text" ? part.text : "")).join("")}
               </p>
             </div>
           ) : (
-            <div key={message.id} className="space-y-3">
+            <div key={message.id} className="ask-craefto-message space-y-3">
               <span className="sr-only">Ask Craefto: </span>
               {message.parts.map((part, index) =>
                 part.type === "text" ? (
@@ -403,8 +481,10 @@ export default function ChatPanel({ open, onClose }: { open: boolean; onClose: (
           ),
         )}
 
+        {replies.length > 0 && <Chips options={replies} onPick={pick} label="Suggested replies" />}
+
         {status === "submitted" && (
-          <p className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
+          <p className="ask-craefto-message flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
             <span className="inline-flex gap-1" aria-hidden="true">
               <span className="ask-craefto-dot size-1.5 rounded-full bg-current" />
               <span className="ask-craefto-dot size-1.5 rounded-full bg-current [animation-delay:150ms]" />
@@ -414,7 +494,7 @@ export default function ChatPanel({ open, onClose }: { open: boolean; onClose: (
           </p>
         )}
         {error && (
-          <div role="alert" className="space-y-2 rounded-2xl bg-[hsl(var(--color-error-subtle))] px-4 py-3 text-sm">
+          <div role="alert" className="ask-craefto-message space-y-2 rounded-2xl bg-[hsl(var(--color-error-subtle))] px-4 py-3 text-sm">
             <p>{errorText(error)}</p>
           </div>
         )}

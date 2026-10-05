@@ -94,6 +94,10 @@ export default function ChatPage() {
                     <p key={index} className="rounded-lg bg-[hsl(var(--color-background-muted))] px-3 py-2 text-xs text-[hsl(var(--color-foreground-muted))]">
                       {toolLine(part as Parameters<typeof toolLine>[0])}
                     </p>
+                  ) : part.type === "data-replies" ? (
+                    <p key={index} className="text-xs text-[hsl(var(--color-foreground-muted))]">
+                      One-tap replies offered: {((part as { data?: { options?: string[] } }).data?.options ?? []).join(" · ")}
+                    </p>
                   ) : null,
                 )}
               </div>
