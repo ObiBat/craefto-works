@@ -53,16 +53,43 @@ const sections: SectionData[] = [
     title: "Cookies & Tracking",
     content: [
       {
-        subtitle: "Essential Cookies",
-        text: "These cookies are necessary for the website to function properly. They enable basic features like page navigation and access to secure areas. The website cannot function properly without these cookies.",
+        subtitle: "Cookies",
+        text: "We only use the cookies the site needs to work: sign-in cookies for the client portal and for our own admin area. We don't use advertising or cross-site tracking cookies, which is why there's no cookie banner. To keep Ask Craefto for people rather than bots, Vercel BotID runs an invisible check when you send it a message, which may set a short-lived security cookie.",
       },
       {
-        subtitle: "Analytics Cookies",
-        text: "With your consent, we use analytics cookies to understand how visitors interact with our website. This information helps us improve our site and services. You can manage your cookie preferences at any time through the Cookie Preferences link in our footer.",
+        subtitle: "Analytics",
+        text: "Vercel Web Analytics and Speed Insights count visits and measure page speed without cookies. Our own statistics record which pages are viewed, where visitors arrived from and any campaign tags, with a daily one-way fingerprint of your IP address and browser that can't be reversed. On journal articles, a random identifier in your browser's local storage helps us count returning readers and reading time.",
       },
       {
-        subtitle: "Your Choices",
-        text: "When you first visit our website, you will be presented with a cookie consent banner. You can choose to accept all cookies, reject non-essential cookies, or customize your preferences. You can change your cookie settings at any time.",
+        subtitle: "Booking a call",
+        text: "The Discovery Call calendar is provided by Cal.com. It loads only when you open it, and Cal.com may set its own cookies, under its own privacy policy.",
+      },
+    ],
+  },
+  {
+    id: "assistant",
+    title: "Ask Craefto, our AI Assistant",
+    content: [
+      {
+        subtitle: "What it is",
+        text: "Ask Craefto is an AI assistant on this site. It answers questions from the content of our pages and can pass your enquiry to Obi. It runs on Anthropic's Claude models through Vercel's AI Gateway, so your messages are processed in the United States, by providers that don't keep them after answering (zero data retention) and don't use them to train their models. It can make mistakes: prices, dates and commitments are always confirmed by Obi.",
+      },
+      {
+        subtitle: "What we keep",
+        text: "The conversation, the page you opened it on, your browser type and a daily one-way fingerprint of your IP address, used only to stop abuse. Nothing is sent to Obi until you confirm it: if you send an enquiry or ask for a person, we keep your name, email, any company and project details you give us, and the conversation with your enquiry, just as we do for the contact form. Ticking the journal box adds your email to our mailing list, and you can unsubscribe from any issue.",
+      },
+      {
+        subtitle: "How long we keep it",
+        text: "Conversations that don't become an enquiry are deleted after 90 days. Please don't share passwords, payment details or other sensitive information in the chat.",
+      },
+    ],
+  },
+  {
+    id: "outreach",
+    title: "Emails to Businesses",
+    content: [
+      {
+        text: "We sometimes email businesses about their website, at addresses they publish for business enquiries. For each one we keep the business's name and website, the published address and where it was published, what we noticed on their site, the emails we exchange, and whether they've asked us not to write again. Replies are sorted with the help of AI (the same providers and safeguards as Ask Craefto), and Obi reads every reply that needs an answer. To stop our emails, reply \"no thanks\" or use the link in any email: the address goes on our do-not-email list, which we keep so we never write to it again.",
       },
     ],
   },
@@ -71,7 +98,7 @@ const sections: SectionData[] = [
     title: "Data Sharing & Third Parties",
     content: [
       {
-        text: "We do not sell your personal information. We may share your information with trusted service providers who assist us in operating our website and conducting business, but only to the extent necessary for them to provide their services. These providers are bound by confidentiality agreements.",
+        text: "We do not sell your personal information. We share it only with the service providers that run our business, and only as far as they need it: Vercel (website hosting and the AI Gateway), Supabase (our database, hosted in Sydney), Anthropic (the AI models behind Ask Craefto and reply sorting), Resend (the site's emails), Spaceship (our mailbox), Cal.com (booking calls), Stripe (payments for monthly plans) and Telegram (instant alerts to Obi about new enquiries and replies). Some of these providers store or process information outside Australia, mainly in the United States.",
       },
     ],
   },
@@ -98,7 +125,7 @@ const sections: SectionData[] = [
     title: "Data Retention",
     content: [
       {
-        text: "We retain your personal information only for as long as necessary to fulfill the purposes outlined in this policy, unless a longer retention period is required by law. Project-related communications may be retained for the duration of our business relationship and a reasonable period thereafter.",
+        text: "We retain your personal information only for as long as necessary to fulfill the purposes outlined in this policy, unless a longer retention period is required by law. Project-related communications may be retained for the duration of our business relationship and a reasonable period thereafter. Ask Craefto conversations that don't become an enquiry are deleted after 90 days, and do-not-email records are kept for good, so we can keep honouring them.",
       },
     ],
   },
@@ -145,7 +172,7 @@ export default function PrivacyPage() {
                 </HeroText>
                 <HeroText delay={0.3}>
                   <p className="text-sm text-[hsl(var(--color-foreground-subtle))] mt-6">
-                    Last updated: January 2026
+                    Last updated: October 2026
                   </p>
                 </HeroText>
               </div>

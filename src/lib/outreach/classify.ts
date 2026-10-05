@@ -1,6 +1,7 @@
 import "server-only";
 import { generateText, Output } from "ai";
 import { z } from "zod";
+import { PRIVATE_AI } from "@/lib/ai";
 import { BOOKING_URL } from "@/lib/leads";
 import { siteConfig } from "@/lib/constants";
 import { formatPrice, monthlyPlans, priceRanges, weeksLabel } from "@/lib/pricing";
@@ -172,6 +173,7 @@ export const labelWithAi: LabelFn = async (email, context) => {
     temperature: 0,
     maxRetries: 2,
     timeout: 25_000,
+    providerOptions: PRIVATE_AI,
   });
   return output;
 };
@@ -279,6 +281,7 @@ export const draftWithAi: DraftFn = async (input) => {
       .join("\n"),
     maxRetries: 2,
     timeout: 45_000,
+    providerOptions: PRIVATE_AI,
   });
   return text.trim();
 };

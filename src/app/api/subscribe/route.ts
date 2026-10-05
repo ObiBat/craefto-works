@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase';
-import { resend, EMAIL_FROM, isEmailEnabled } from '@/lib/resend';
-import { SubscriptionWelcomeEmail, getSubscriptionWelcomeSubject } from '@/emails/subscription-welcome';
+import { subscribeToJournal, type SubscribeResult } from '@/lib/subscribers';
 
 // Rate limiting: simple in-memory store (use Redis in production)
 const rateLimitMap = new Map<string, { count: number; timestamp: number }>();
@@ -67,125 +65,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    const supabase = createServerClient();
-
-    // Check if email already exists
-    const { data: existing } = await supabase
-      .from('journal_subscribers')
-      .select('id, status, confirmation_token')
-      .eq('email', email)
-      .single();
-
-    if (existing) {
-      if (existing.status === 'confirmed') {
-        return NextResponse.json({
-          success: true,
-          message: 'You\'re already subscribed!',
-          alreadySubscribed: true,
-        });
-      }
-
-      if (existing.status === 'unsubscribed') {
-        // Re-subscribe: update status to confirmed immediately
-        const { error: updateError } = await supabase
-          .from('journal_subscribers')
-          .update({
-            status: 'confirmed',
-            confirmed_at: new Date().toISOString(),
-            unsubscribed_at: null,
-          })
-          .eq('id', existing.id);
-
-        if (updateError) {
-          console.error('Failed to re-subscribe:', updateError);
-          return NextResponse.json(
-            { error: 'Failed to subscribe. Please try again.' },
-            { status: 500 }
-          );
-        }
-
-        // Send welcome email
-        if (isEmailEnabled()) {
-          await sendWelcomeEmail(email, existing.confirmation_token);
-        }
-
-        return NextResponse.json({
-          success: true,
-          message: 'Welcome back! You\'re now subscribed.',
-        });
-      }
-
-      // Status is pending - confirm them now
-      const { error: updateError } = await supabase
-        .from('journal_subscribers')
-        .update({
-          status: 'confirmed',
-          confirmed_at: new Date().toISOString(),
-        })
-        .eq('id', existing.id);
-
-      if (updateError) {
-        console.error('Failed to confirm subscriber:', updateError);
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'You\'re now subscribed!',
-        alreadySubscribed: true,
-      });
-    }
-
-    // Create new subscriber - confirmed immediately (single opt-in)
-    const confirmationToken = crypto.randomUUID();
-    const { error: insertError } = await supabase
-      .from('journal_subscribers')
-      .insert({
-        email,
-        status: 'confirmed',
-        confirmation_token: confirmationToken,
-        confirmed_at: new Date().toISOString(),
-        source: body.source || 'journal_page',
-      });
-
-    if (insertError) {
-      console.error('Failed to create subscriber:', insertError);
+    const result = await subscribeToJournal(email, body.source || 'journal_page');
+    if (result === 'failed') {
       return NextResponse.json(
         { error: 'Failed to subscribe. Please try again.' },
         { status: 500 }
       );
     }
-
-    // Send welcome email immediately
-    if (isEmailEnabled()) {
-      await sendWelcomeEmail(email, confirmationToken);
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'You\'re now subscribed!',
-    });
+    const replies: Record<Exclude<SubscribeResult, 'failed'>, { message: string; alreadySubscribed?: boolean }> = {
+      already: { message: 'You\'re already subscribed!', alreadySubscribed: true },
+      resubscribed: { message: 'Welcome back! You\'re now subscribed.' },
+      confirmed: { message: 'You\'re now subscribed!', alreadySubscribed: true },
+      subscribed: { message: 'You\'re now subscribed!' },
+    };
+    return NextResponse.json({ success: true, ...replies[result] });
   } catch (error) {
     console.error('Subscription error:', error);
     return NextResponse.json(
       { error: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
-  }
-}
-
-async function sendWelcomeEmail(email: string, token: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.craefto.com';
-  const unsubscribeUrl = `${baseUrl}/api/subscribe/unsubscribe?token=${token}`;
-
-  try {
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to: email,
-      subject: getSubscriptionWelcomeSubject(),
-      html: SubscriptionWelcomeEmail({ unsubscribeUrl }),
-    });
-  } catch (error) {
-    console.error('Failed to send welcome email:', error);
   }
 }
 

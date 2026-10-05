@@ -3,6 +3,7 @@ import { Archivo, DM_Sans, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { BackToTop } from "@/components/ui/back-to-top";
+import { AskCraefto } from "@/components/assistant/ask-craefto";
 import { AnalyticsProvider } from "@/components/analytics/analytics-provider";
 import { editorialBootScript } from "@/components/editorial/boot-script";
 import { SiteClassSync } from "@/components/editorial/site-class-sync";
@@ -227,6 +228,7 @@ export default function RootLayout({
         </a>
         {children}
         <BackToTop />
+        <AskCraefto />
 
         <SiteClassSync />
         <RouteTransitions />

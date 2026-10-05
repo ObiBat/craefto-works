@@ -631,6 +631,7 @@ const NAV_ICON_MAP: Record<string, React.FC<IconProps>> = {
   dollar: IconDollar,
   target: IconTarget,
   mail: IconMail,
+  chat: IconMessageSquare,
   inbox: IconInbox,
   file: IconFileText,
   card: IconCreditCard,

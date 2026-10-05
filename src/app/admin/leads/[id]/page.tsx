@@ -16,6 +16,7 @@ import {
   IconCheck,
   IconAlertTriangle,
   IconLinkedIn,
+  IconMessageSquare,
   IconPhone,
 } from "@/components/admin/icons";
 
@@ -164,6 +165,7 @@ export default function LeadDetailPage() {
   const router = useRouter();
   const [lead, setLead] = React.useState<Lead | null>(null);
   const [activities, setActivities] = React.useState<Activity[]>([]);
+  const [chatId, setChatId] = React.useState<string | null>(null);
   const [stages, setStages] = React.useState<PipelineStage[]>([]);
   const [analysis, setAnalysis] = React.useState<LeadAnalysis | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -184,6 +186,7 @@ export default function LeadDetailPage() {
           const data = await leadRes.json();
           setLead(data.lead);
           setActivities(data.activities || []);
+          setChatId(data.chat?.id ?? null);
         } else if (leadRes.status === 404) {
           router.push("/admin/leads");
         }
@@ -734,6 +737,15 @@ export default function LeadDetailPage() {
                 <IconMail size={20} className="text-[hsl(var(--color-foreground-muted))]" />
                 <span>Send Email</span>
               </a>
+              {chatId && (
+                <Link
+                  href={`/admin/chats/${chatId}`}
+                  className="flex items-center gap-3 px-4 py-3 bg-[hsl(var(--color-background-subtle))] hover:bg-[hsl(var(--color-border))] rounded-xl transition-colors"
+                >
+                  <IconMessageSquare size={20} className="text-[hsl(var(--color-foreground-muted))]" />
+                  <span>Read the Ask Craefto chat</span>
+                </Link>
+              )}
               {lead.phone && (
                 <a
                   href={`tel:${lead.phone}`}

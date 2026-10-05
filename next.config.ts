@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withBotId } from "botid/next/config";
 
 // Content-Security-Policy, in report-only mode: nothing is blocked, and each
 // violation is logged by /api/csp-report (visible in the Vercel runtime
@@ -104,4 +105,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// BotID adds the rewrites its client script needs (src/instrumentation-client.ts).
+export default withBotId(nextConfig);

@@ -1,5 +1,6 @@
 import "server-only";
 import { siteConfig } from "@/lib/constants";
+import { telegram, telegramConfigured, telegramHtml } from "@/lib/telegram";
 import { ADMIN_EMAIL, EMAIL_FROM, isEmailEnabled, resend } from "@/lib/resend";
 import { alertEmail } from "@/emails/portal";
 import { REPLY_LABEL, type OutreachReply } from "./types";
@@ -11,28 +12,12 @@ import { REPLY_LABEL, type OutreachReply } from "./types";
 
 export type Alerter = (reply: OutreachReply, company: string) => Promise<boolean>;
 
-export const telegramConfigured = () => Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
-
-/** Calls the Telegram Bot API; throws with Telegram's own reason when it refuses. */
-export async function telegram<T = unknown>(method: string, body: Record<string, unknown>): Promise<T> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) throw new Error("TELEGRAM_BOT_TOKEN isn't set");
-  const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(10_000),
-  });
-  const data = (await res.json().catch(() => null)) as { ok?: boolean; result?: T; description?: string } | null;
-  if (!res.ok || !data?.ok) throw new Error(`Telegram ${method}: ${data?.description ?? `HTTP ${res.status}`}`);
-  return data.result as T;
-}
+export { telegram, telegramConfigured };
 
 export const threadUrl = (replyId: string) => `${siteConfig.url}/admin/outreach/replies/${replyId}`;
 export const leadUrl = (leadId: string) => `${siteConfig.url}/admin/leads/${leadId}`;
 
-/** Telegram's HTML mode: only these three need escaping. */
-const html = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const html = telegramHtml;
 
 /** Replies worth handing over to Leads from the phone. */
 export const canHandOver = (reply: Pick<OutreachReply, "label" | "leadId">) => !reply.leadId && ["interested", "question", "referral"].includes(reply.label);

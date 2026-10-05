@@ -21,6 +21,8 @@ type ButtonProps = ComponentProps<typeof Button>;
  */
 export function BookCall({
   project,
+  name,
+  email,
   children = "Book a call",
   bookedNote,
   onDark = false,
@@ -29,6 +31,9 @@ export function BookCall({
   className,
 }: {
   project?: string;
+  /** The booker's details, when they're already known (Ask Craefto). */
+  name?: string;
+  email?: string;
   children?: ReactNode;
   /** A line after "You're booked." */
   bookedNote?: string;
@@ -57,7 +62,11 @@ export function BookCall({
     };
   }, []);
 
-  const prefill: Record<string, string> = project ? { [PROJECT_FIELD]: project } : {};
+  const prefill: Record<string, string> = {
+    ...(project ? { [PROJECT_FIELD]: project } : {}),
+    ...(name ? { name } : {}),
+    ...(email ? { email } : {}),
+  };
   const query = new URLSearchParams(prefill).toString();
 
   const open = (event: MouseEvent<HTMLAnchorElement>) => {

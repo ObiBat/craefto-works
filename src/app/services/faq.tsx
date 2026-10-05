@@ -3,11 +3,7 @@
 import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Glide } from "@/components/editorial/glide";
-
-export interface FaqEntry {
-  question: string;
-  answer: string;
-}
+import type { FaqEntry, FaqGroup } from "@/content/faq";
 
 function FaqItem({ faq, index }: { faq: FaqEntry; index: number }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,11 +61,6 @@ function FaqItem({ faq, index }: { faq: FaqEntry; index: number }) {
       </div>
     </div>
   );
-}
-
-export interface FaqGroup {
-  label: string;
-  items: FaqEntry[];
 }
 
 /** Questions in labelled groups, numbered straight through. */
