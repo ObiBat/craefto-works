@@ -1,17 +1,17 @@
 import { test, expect } from "./fixtures";
 
-// The five capabilities (content/capabilities.ts) on /services and wherever
-// the site summarises them.
+// The five services (content/capabilities.ts, "capabilities" in code) on
+// /services and wherever the site summarises them.
 
 const NAMES = ["Brand", "Product", "Systems", "Media", "Growth"];
 
 test.describe("capabilities", () => {
   test("the page sets out the five capabilities, in order, each one reachable", async ({ page }) => {
     await page.goto("/services");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Capabilities");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Services");
 
     const sections = page.locator("main h2[data-section-number]");
-    const overview = page.getByRole("navigation", { name: "Capabilities on this page" }).getByRole("link");
+    const overview = page.getByRole("navigation", { name: "Services on this page" }).getByRole("link");
     await expect(sections).toHaveCount(NAMES.length);
     await expect(overview).toHaveCount(NAMES.length);
     for (const [index, name] of NAMES.entries()) {
@@ -86,13 +86,23 @@ test.describe("capabilities", () => {
 
   test("the navigation, home page and footer use the same five", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator('header a[href="/services"]').first()).toContainText("Capabilities");
+    await expect(page.locator('header a[href="/services"]').first()).toContainText("Services");
 
     const accordion = page.locator("main button[aria-controls]");
     await expect(accordion).toHaveCount(NAMES.length);
     for (const [index, name] of NAMES.entries()) await expect(accordion.nth(index)).toContainText(name);
 
-    const footer = page.getByRole("navigation", { name: "Capabilities", exact: true }).getByRole("link");
+    const footer = page.getByRole("navigation", { name: "Services", exact: true }).getByRole("link");
     await expect(footer).toHaveText(NAMES);
+  });
+
+  test("the home page shows the monthly plans, the same as /services", async ({ page }) => {
+    await page.goto("/");
+    const plans = page.locator("main .plan-card a[href^='/subscribe/']");
+    await expect(plans).toHaveCount(3);
+    const homePlans = await plans.evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+    await page.goto("/services");
+    const servicePlans = await page.locator("main .plan-card a[href^='/subscribe/']").evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+    expect(homePlans).toEqual(servicePlans);
   });
 });

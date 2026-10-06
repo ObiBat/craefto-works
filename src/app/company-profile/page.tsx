@@ -95,7 +95,7 @@ const pages = (() => {
 })();
 
 const sections = [
-  { number: "01", label: "Capabilities", page: pages.capabilities },
+  { number: "01", label: "Services", page: pages.capabilities },
   { number: "02", label: "How we work", page: pages.process },
   { number: "03", label: "Working together", page: pages.together },
   { number: "04", label: "Selected work", page: pages.work },
@@ -297,7 +297,7 @@ function Studio() {
 function CapabilitiesOverview() {
   return (
     <Sheet tone="subtle">
-      <Running number="01" label="Capabilities" />
+      <Running number="01" label="Services" />
       <div className="cp-body">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16mm", alignItems: "end" }}>
           <h2 className="cp-heading cp-title">Five capabilities, one team.</h2>
@@ -343,7 +343,7 @@ function CapabilityPage({ id }: { id: CapabilityId }) {
   const image = capabilityImage[id];
   return (
     <Sheet>
-      <Running number="01" label="Capabilities" />
+      <Running number="01" label="Services" />
       <div className="cp-body">
         <div className="cp-capability">
           <div style={{ display: "flex", flexDirection: "column" }}>

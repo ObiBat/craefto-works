@@ -19,7 +19,7 @@ const Metaballs = dynamic(
 // commitment on /about and in the services FAQ.
 const socialProof = (projectCount: number, capabilityCount: number) => [
   { value: projectCount, suffix: "", label: "Projects shipped" },
-  { value: capabilityCount, suffix: "", label: "Capabilities, one team" },
+  { value: capabilityCount, suffix: "", label: "Services, one team" },
   { value: 30, suffix: "", label: "Days of support after launch" },
 ];
 

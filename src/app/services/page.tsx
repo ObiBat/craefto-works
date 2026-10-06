@@ -1,14 +1,12 @@
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Header, Footer, Container, Section } from "@/components/layout";
 import { Separator, PageTransition, AnimatedSection, HeroText, SectionLabel } from "@/components/ui";
 import { Button } from "@/components/ui/button";
-import { chargesGst } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
 import { RevealText } from "@/components/editorial/reveal-text";
 import { Glide } from "@/components/editorial/glide";
 import { ScrollSpotlight } from "@/components/editorial/scroll-spotlight";
-import { aiAutomationProject, formatPrice, monthlyPlans, plansFrom, priceFor, rangeLabel, weeksLabel, type MonthlyPlan } from "@/lib/pricing";
+import { formatPrice, plansFrom, rangeLabel, weeksLabel } from "@/lib/pricing";
 import {
   capabilities,
   capabilityPrices,
@@ -20,68 +18,17 @@ import {
 import { CapabilityScroll } from "./capability-scroll";
 import { faqGroups } from "@/content/faq";
 import { Faq } from "./faq";
+import { MonthlyPlans, Tick } from "@/components/sections/monthly-plans";
 
-// The capabilities page. It keeps the /services address so existing links
-// work; the old service anchors are rewritten in CapabilityScroll.
+// The Services page: the five services (brand, product, systems, media and
+// growth), in code still "capabilities"; the old service anchors are
+// rewritten in CapabilityScroll.
 
 function Arrow({ className }: { className?: string }) {
   return (
     <svg className={cn("w-4 h-4 shrink-0", className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
     </svg>
-  );
-}
-
-/** A plan card's header. The copy, laid over it, is decoration: no heading. */
-function PlanHead({ plan, copy = false }: { plan: MonthlyPlan; copy?: boolean }) {
-  const name = <span className="plan-name block text-4xl font-semibold tracking-tight">{plan.name}</span>;
-  return (
-    <>
-      {copy ? name : <h3>{name}</h3>}
-      <p className="plan-for mt-2 text-sm leading-relaxed md:min-h-[3lh] xl:min-h-[2lh]">{plan.bestFor}</p>
-      <p className="mt-6 flex items-baseline gap-1.5">
-        <span className="plan-price text-3xl font-semibold tracking-tight tabular-nums">{formatPrice(plan.price)}</span>
-        <span className="plan-per text-sm">/ month</span>
-      </p>
-    </>
-  );
-}
-
-/** The AI Automation project's header, laid out like a plan's. The copy, laid over it, is decoration: no heading. */
-function ProjectHead({ copy = false }: { copy?: boolean }) {
-  const range = priceFor(aiAutomationProject.service)!;
-  const name = <span className="plan-name block text-4xl font-semibold tracking-tight">{aiAutomationProject.name}</span>;
-  return (
-    <>
-      <p className="mb-3">
-        <span className="plan-label inline-flex rounded-full px-2.5 py-1 font-mono text-[0.6875rem] uppercase leading-none tracking-[0.06em]">
-          One-off project
-        </span>
-      </p>
-      {copy ? name : <h3>{name}</h3>}
-      <p className="plan-for mt-2 text-sm leading-relaxed">{aiAutomationProject.bestFor}</p>
-      <p className="mt-6">
-        <span className="plan-price text-3xl font-semibold tracking-tight tabular-nums">{rangeLabel(range)}</span>
-      </p>
-      <p className="plan-per mt-1 text-sm">Fixed price, {weeksLabel(range)}</p>
-    </>
-  );
-}
-
-function CheckMark() {
-  return (
-    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-    </svg>
-  );
-}
-
-/** A tick in a list; fills in after the ticks before it once its card or section is on (see .tick). */
-function Tick({ index, className }: { index: number; className?: string }) {
-  return (
-    <span className={cn("tick", className)} style={{ "--i": index } as CSSProperties} aria-hidden="true">
-      <CheckMark />
-    </span>
   );
 }
 
@@ -215,11 +162,11 @@ export default function ServicesPage() {
                       </Link>
                     </li>
                     <li aria-hidden="true"><span className="mx-2">/</span></li>
-                    <li className="text-[hsl(var(--color-foreground))] font-medium" aria-current="page">Capabilities</li>
+                    <li className="text-[hsl(var(--color-foreground))] font-medium" aria-current="page">Services</li>
                   </ol>
                 </nav>
 
-                <h1 className="font-semibold tracking-tight mb-6"><RevealText text={"Capabilities"} mode="load" /></h1>
+                <h1 className="font-semibold tracking-tight mb-6"><RevealText text={"Services"} mode="load" /></h1>
                 <HeroText delay={0.1}>
                   <p className="text-xl md:text-2xl leading-snug text-[hsl(var(--color-foreground))]">
                     Craefto Works brings brand, digital products, business systems and creative content together.
@@ -227,13 +174,13 @@ export default function ServicesPage() {
                 </HeroText>
                 <HeroText delay={0.2}>
                   <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[hsl(var(--color-foreground-muted))]">
-                    Commission one capability or combine several. When a project needs more than one, we plan them together, so your identity, website, internal tools and content are made to fit.
+                    Commission one service or combine several. When a project needs more than one, we plan them together, so your identity, website, internal tools and content are made to fit.
                   </p>
                 </HeroText>
               </div>
 
               <HeroText delay={0.3}>
-                <nav id="capabilities" aria-label="Capabilities on this page" className="mt-14 scroll-mt-8 md:mt-20">
+                <nav id="capabilities" aria-label="Services on this page" className="mt-14 scroll-mt-8 md:mt-20">
                   <Glide bleed={16}>
                     <ol>
                       {capabilities.map((capability) => (
@@ -284,9 +231,9 @@ export default function ServicesPage() {
                 <AnimatedSection>
                   <div className="flex flex-col gap-4">
                     <SectionLabel number="06" label="Together" />
-                    <h2 id="together-heading" className="font-semibold tracking-tight"><RevealText text={"One capability, or several"} /></h2>
+                    <h2 id="together-heading" className="font-semibold tracking-tight"><RevealText text={"One service, or several"} /></h2>
                     <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-2xl">
-                      Each capability can be commissioned on its own. When a project needs more than one, we plan them as one piece of work: the brand rules carry into the product, the systems fit how the product is used, and the media and marketing are made for the same launch.
+                      Each service can be commissioned on its own. When a project needs more than one, we plan them as one piece of work: the brand rules carry into the product, the systems fit how the product is used, and the media and marketing are made for the same launch.
                     </p>
                   </div>
                 </AnimatedSection>
@@ -299,7 +246,7 @@ export default function ServicesPage() {
                     {engagements.map((engagement) => (
                       <li key={engagement.title} className="flex flex-col gap-4">
                         <h4 className="text-xl font-semibold tracking-tight text-[hsl(var(--color-foreground))]">{engagement.title}</h4>
-                        <CapabilityTags ids={engagement.capabilities} label={`Capabilities for ${engagement.title.toLowerCase()}`} />
+                        <CapabilityTags ids={engagement.capabilities} label={`Services for ${engagement.title.toLowerCase()}`} />
                         <p className="leading-relaxed text-[hsl(var(--color-foreground-muted))]">{engagement.description}</p>
                       </li>
                     ))}
@@ -325,102 +272,8 @@ export default function ServicesPage() {
             </Container>
           </Section>
 
-          {/* Monthly plans and the AI Automation project (lib/pricing.ts) */}
-          <Section spacing="lg" className="pt-0 md:pt-0" aria-labelledby="plans">
-            <Container>
-              <div className="flex flex-col gap-14 md:gap-10">
-                <AnimatedSection>
-                  <div className="flex flex-col gap-4">
-                    <SectionLabel number="07" label="Plans" />
-                    <h2 id="plans" className="scroll-mt-8 font-semibold tracking-tight"><RevealText text={"Monthly plans"} /></h2>
-                    <p data-ink className="text-lg text-[hsl(var(--color-foreground-muted))] leading-relaxed max-w-xl">
-                      Choose the support you can budget for each month. Every plan draws on all five capabilities, and we help you decide where that budget will have the most impact.
-                    </p>
-                  </div>
-                </AnimatedSection>
-
-                <Separator />
-
-                <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5">
-                  {monthlyPlans.map((plan) => (
-                    <li key={plan.id} className="plan-card flex flex-col rounded-3xl bg-[hsl(var(--color-background-subtle))] p-2">
-                      <div className="plan-card-head rounded-[1.25rem] bg-[hsl(var(--color-accent-subtle))] px-6 pt-6 pb-7">
-                        <PlanHead plan={plan} />
-                        {/* The same header in white on green, uncovered while the card is on. */}
-                        <div className="plan-card-flood px-6 pt-6 pb-7" aria-hidden="true">
-                          <PlanHead plan={plan} copy />
-                        </div>
-                      </div>
-                      <div className="flex flex-1 flex-col p-6">
-                        <ul className="space-y-3">
-                          {plan.includes.map((item, index) => (
-                            <li key={item} className="flex gap-3 text-sm text-[hsl(var(--color-foreground))]">
-                              <Tick index={index} />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                        <p className="mt-6">
-                          <a
-                            href="#capabilities"
-                            className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--color-background-muted))] px-3 py-1.5 text-xs font-medium text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-accent))]"
-                          >
-                            <span className="font-mono text-[hsl(var(--color-accent))]" aria-hidden="true">
-                              01&ndash;05
-                            </span>
-                            All five capabilities
-                          </a>
-                        </p>
-                        <div className="mt-auto pt-8">
-                          <Button asChild size="md" className="w-full">
-                            <Link href={`/subscribe/${plan.id}`}>Choose this plan</Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                {/* Phones can't hover: there the plan in mid-screen lights up instead. */}
-                <ScrollSpotlight selector=".plan-card" media="(hover: none) and (max-width: 767px)" />
-
-                {/* A one-off project rather than a plan. It lights up like the plans (a plan-card). */}
-                <AnimatedSection>
-                  <div className="plan-card grid rounded-3xl bg-[hsl(var(--color-background-subtle))] p-2 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-                    <div className="plan-card-head rounded-[1.25rem] bg-[hsl(var(--color-accent-subtle))] px-6 pt-6 pb-7 md:px-8 md:pt-8">
-                      <ProjectHead />
-                      {/* The same header in white on green, uncovered while the card is on. */}
-                      <div className="plan-card-flood px-6 pt-6 pb-7 md:px-8 md:pt-8" aria-hidden="true">
-                        <ProjectHead copy />
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-8 p-6 md:p-8">
-                      <ul className="space-y-3">
-                        {aiAutomationProject.includes.map((item, index) => (
-                          <li key={item} className="flex gap-3 text-sm text-[hsl(var(--color-foreground))]">
-                            <Tick index={index} />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="mt-auto">
-                        <Button asChild size="md">
-                          <Link href="/contact?service=ai">Discuss your project</Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </AnimatedSection>
-
-                <p className="text-sm text-[hsl(var(--color-foreground-muted))] max-w-2xl">
-                  Monthly plans are billed in advance, in AUD{chargesGst() ? " excluding GST" : ""}. Studio time covers planning, revisions, testing and meetings, and we estimate each piece of work before starting. Advertising, software, AI usage, hosting and production costs are budgeted separately. Prefer a single fixed-price project?{" "}
-                  <Link href="/contact" className="font-medium text-[hsl(var(--color-accent))] hover:underline">
-                    Tell us what you&apos;re working on
-                  </Link>
-                  .
-                </p>
-              </div>
-            </Container>
-          </Section>
+          {/* Monthly plans and the AI Automation project (shared with the home page) */}
+          <MonthlyPlans number="07" capabilitiesHref="#capabilities" />
 
           {/* FAQ: the heading and a way to ask stay in view beside the questions */}
           <Section spacing="lg" className="pt-0 md:pt-0" aria-labelledby="faq-heading">

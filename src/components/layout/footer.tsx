@@ -124,10 +124,10 @@ export function Footer() {
                 </ul>
               </nav>
 
-              {/* Capabilities */}
-              <nav aria-label="Capabilities">
+              {/* Services */}
+              <nav aria-label="Services">
                 <p className="text-xs font-medium uppercase font-mono tracking-[0.06em] mb-4" style={{ color: '#ffffff' }}>
-                  Capabilities
+                  Services
                 </p>
                 <ul className="space-y-2.5">
                   {capabilities.map((capability) => (

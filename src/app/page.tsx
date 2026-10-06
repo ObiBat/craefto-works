@@ -9,6 +9,7 @@ import { SelectedWork } from "@/components/sections/selected-work";
 import { StackMarquee } from "@/components/sections/team";
 import { CTABlock } from "@/components/sections/cta-block";
 import { JournalStrip } from "@/components/sections/journal-strip";
+import { MonthlyPlans } from "@/components/sections/monthly-plans";
 
 // The journal strip reads the newest articles: rebuild at most every 5 minutes.
 export const revalidate = 300;
@@ -36,6 +37,7 @@ export default function Home() {
         <Hero projectCount={caseStudies.length} capabilityNames={capabilities.map((capability) => capability.name)} />
         <ServicesOverview />
         <SelectedWork />
+        <MonthlyPlans number="03" />
         <JournalStrip />
         <Container>
           <StackMarquee />

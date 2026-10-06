@@ -6,7 +6,7 @@ export const contentType = "image/png";
 
 export default function Image() {
   return ogCard({
-    eyebrow: "Capabilities",
+    eyebrow: "Services",
     title: "Brand, product, systems, media, growth",
     description: "Craefto Works brings brand, digital products, business systems and creative content together.",
   });

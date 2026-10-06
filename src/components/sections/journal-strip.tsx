@@ -45,7 +45,7 @@ export async function JournalStrip() {
         <div className="flex flex-col gap-14">
           <AnimatedSection>
             <div className="flex flex-col gap-4">
-              <SectionLabel number="03" label="Journal" />
+              <SectionLabel number="04" label="Journal" />
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                 <div>
                   <h2 className="font-semibold tracking-tight"><RevealText text={"From the journal"} /></h2>

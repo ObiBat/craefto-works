@@ -123,7 +123,7 @@ test.describe("smooth scroll", () => {
     await page.goto("/services");
     await expect(page.locator("html")).toHaveClass(LENIS);
     const recorded = await recordScroll(page, 2500);
-    await page.getByRole("navigation", { name: "Capabilities on this page" }).locator('a[href="#systems"]').click();
+    await page.getByRole("navigation", { name: "Services on this page" }).locator('a[href="#systems"]').click();
     const ys = await recorded();
     expect(ys.filter((y) => y > 5 && y < ys.at(-1)! - 5).length).toBeGreaterThan(4);
     await expect(page).toHaveURL(/#systems$/);

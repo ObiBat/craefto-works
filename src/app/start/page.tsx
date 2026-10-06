@@ -53,7 +53,7 @@ const facts: { icon: Icon; title: string; text: string }[] = [
   { icon: MapPin, title: "Sydney, since 2025", text: "A small studio, founded by Obi Batbileg, a design technologist." },
   {
     icon: Stack,
-    title: "Five capabilities, one team",
+    title: "Five services, one team",
     text: "Brand, product, systems, media and growth, designed and built by the same people.",
   },
   {
@@ -70,13 +70,13 @@ const ways: { icon: Icon; title: string; price: string; text: string; href: stri
     price: `Most from ${formatPrice(projectMin)} to ${formatPrice(projectMax)}`,
     text: "For work with a clear finish line: a brand, a website, an app or a shoot. You get a fixed price before any work begins.",
     href: "/services",
-    cta: "Capabilities and prices",
+    cta: "Services and prices",
   },
   {
     icon: CalendarCheck,
     title: "A monthly plan",
     price: `From ${formatPrice(plansFrom)} a month`,
-    text: `Ongoing help across all five capabilities, within a budget you choose: ${list(monthlyPlans.map((plan) => plan.name))}.`,
+    text: `Ongoing help across all five services, within a budget you choose: ${list(monthlyPlans.map((plan) => plan.name))}.`,
     href: "/services#plans",
     cta: "Compare the plans",
   },
@@ -374,7 +374,7 @@ export default function StartPage() {
                       </Link>
                       ,{" "}
                       <Link href="/services" className="text-white underline-offset-4 hover:underline">
-                        capabilities
+                        services
                       </Link>{" "}
                       or the{" "}
                       <Link href="/journal" className="text-white underline-offset-4 hover:underline">

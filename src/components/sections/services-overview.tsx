@@ -165,7 +165,7 @@ export function ServicesOverview() {
           {/* Header */}
           <AnimatedSection>
             <div className="flex flex-col gap-4">
-              <SectionLabel number="01" label="Capabilities" />
+              <SectionLabel number="01" label="Services" />
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                 <div>
                   <h2 className="font-semibold tracking-tight"><RevealText text={"What we do"} /></h2>
@@ -177,7 +177,7 @@ export function ServicesOverview() {
                   href="/services"
                   className="text-sm text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors group flex items-center gap-2 shrink-0"
                 >
-                  View all capabilities
+                  View all services
                   <svg
                     className="w-4 h-4 transition-transform group-hover:translate-x-1"
                     fill="none"
@@ -216,7 +216,7 @@ export function ServicesOverview() {
                 {PLAN_NAMES}, from {PLANS_FROM} a month.
               </p>
               <Link
-                href="/services#plans"
+                href="#plans"
                 className="text-sm text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-foreground))] transition-colors group flex items-center gap-2 shrink-0"
               >
                 See the plans

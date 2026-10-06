@@ -18,7 +18,7 @@ export const siteConfig = {
 export const navigation = {
   main: [
     { name: "Case studies", href: "/work" },
-    { name: "Capabilities", href: "/services" },
+    { name: "Services", href: "/services" },
     { name: "How we work", href: "/process" },
     { name: "Journal", href: "/journal" },
     { name: "About", href: "/about" },
