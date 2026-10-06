@@ -72,11 +72,11 @@ const sections: SectionData[] = [
     content: [
       {
         subtitle: "What it is",
-        text: "Ask Craefto is an AI assistant on this site. It answers questions from the content of our pages and can pass your enquiry to Obi. It runs on Anthropic's Claude models through Vercel's AI Gateway, so your messages are processed in the United States, by providers that don't keep them after answering (zero data retention) and don't use them to train their models. It can make mistakes: prices, dates and commitments are always confirmed by Obi.",
+        text: "Ask Craefto is an AI assistant on this site. It answers questions from the content of our pages and can pass your enquiry to Craefto Works. It runs on Anthropic's Claude models through Vercel's AI Gateway, so your messages are processed in the United States, by providers that don't keep them after answering (zero data retention) and don't use them to train their models. It can make mistakes: prices, dates and commitments are always confirmed by Craefto Works.",
       },
       {
         subtitle: "What we keep",
-        text: "The conversation, the page you opened it on, your browser type and a daily one-way fingerprint of your IP address, used only to stop abuse. Nothing is sent to Obi until you confirm it: if you send an enquiry or ask for a person, we keep your name, email, any company and project details you give us, and the conversation with your enquiry, just as we do for the contact form. Ticking the journal box adds your email to our mailing list, and you can unsubscribe from any issue.",
+        text: "The conversation, the page you opened it on, your browser type and a daily one-way fingerprint of your IP address, used only to stop abuse. Nothing is sent to us until you confirm it: if you send an enquiry or ask for a person, we keep your name, email, any company and project details you give us, and the conversation with your enquiry, just as we do for the contact form. Ticking the journal box adds your email to our mailing list, and you can unsubscribe from any issue.",
       },
       {
         subtitle: "How long we keep it",
@@ -89,7 +89,7 @@ const sections: SectionData[] = [
     title: "Emails to Businesses",
     content: [
       {
-        text: "We sometimes email businesses about their website, at addresses they publish for business enquiries. For each one we keep the business's name and website, the published address and where it was published, what we noticed on their site, the emails we exchange, and whether they've asked us not to write again. Replies are sorted with the help of AI (the same providers and safeguards as Ask Craefto), and Obi reads every reply that needs an answer. To stop our emails, reply \"no thanks\" or use the link in any email: the address goes on our do-not-email list, which we keep so we never write to it again.",
+        text: "We sometimes email businesses about their website, at addresses they publish for business enquiries. For each one we keep the business's name and website, the published address and where it was published, what we noticed on their site, the emails we exchange, and whether they've asked us not to write again. Replies are sorted with the help of AI (the same providers and safeguards as Ask Craefto), and a person at Craefto Works reads every reply that needs an answer. To stop our emails, reply \"no thanks\" or use the link in any email: the address goes on our do-not-email list, which we keep so we never write to it again.",
       },
     ],
   },
@@ -98,7 +98,7 @@ const sections: SectionData[] = [
     title: "Data Sharing & Third Parties",
     content: [
       {
-        text: "We do not sell your personal information. We share it only with the service providers that run our business, and only as far as they need it: Vercel (website hosting and the AI Gateway), Supabase (our database, hosted in Sydney), Anthropic (the AI models behind Ask Craefto and reply sorting), Resend (the site's emails), Spaceship (our mailbox), Cal.com (booking calls), Stripe (payments for monthly plans) and Telegram (instant alerts to Obi about new enquiries and replies). Some of these providers store or process information outside Australia, mainly in the United States.",
+        text: "We do not sell your personal information. We share it only with the service providers that run our business, and only as far as they need it: Vercel (website hosting and the AI Gateway), Supabase (our database, hosted in Sydney), Anthropic (the AI models behind Ask Craefto and reply sorting), Resend (the site's emails), Spaceship (our mailbox), Cal.com (booking calls), Stripe (payments for monthly plans) and Telegram (instant alerts to us about new enquiries and replies). Some of these providers store or process information outside Australia, mainly in the United States.",
       },
     ],
   },

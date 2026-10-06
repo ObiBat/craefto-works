@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses, type InferUITools, type UIMessage } from "ai";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import type { AssistantTools } from "@/lib/assistant/agent";
 import { pauseSmoothScroll } from "@/lib/smooth-scroll";
 import { BUDGETS, ENQUIRY_GROUPS, ENQUIRY_UNSURE, TIMELINES } from "@/lib/enquiry";
@@ -91,7 +91,7 @@ function errorText(error: Error) {
 
 function Facts({ rows }: { rows: [string, string | null | undefined][] }) {
   return (
-    <dl className="grid grid-cols-[88px_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
+    <dl className="grid grid-cols-[72px_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm leading-5 [@media(max-height:600px)]:gap-y-0.5">
       {rows
         .filter(([, value]) => value)
         .map(([name, value]) => (
@@ -104,22 +104,44 @@ function Facts({ rows }: { rows: [string, string | null | undefined][] }) {
   );
 }
 
-function Card({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("space-y-4 rounded-2xl bg-[hsl(var(--color-accent-subtle))] p-4 text-[hsl(var(--color-foreground))]", className)}>{children}</div>;
+/**
+ * A card in the conversation. Given the id of its title, it's a named group:
+ * a confirmation card, which sits a little closer on short screens (an
+ * iPhone SE's, under Safari's bars) so it still fits whole.
+ */
+function Card({ children, className, labelledBy }: { children: React.ReactNode; className?: string; labelledBy?: string }) {
+  return (
+    <div
+      role={labelledBy ? "group" : undefined}
+      aria-labelledby={labelledBy}
+      className={cn(
+        "space-y-3 rounded-2xl bg-[hsl(var(--color-accent-subtle))] p-4 text-[hsl(var(--color-foreground))]",
+        labelledBy && "[@media(max-height:600px)]:space-y-2",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
 function Note({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-[hsl(var(--color-foreground-muted))]">{children}</p>;
 }
 
-/** A confirmation card's two buttons. */
+/** A confirmation card's small print. */
+function Fine({ children }: { children: React.ReactNode }) {
+  return <p className="text-[13px] leading-[18px] text-[hsl(var(--color-foreground-muted))]">{children}</p>;
+}
+
+/** A confirmation card's two buttons, side by side down to a 375px-wide phone. */
 function Decide({ confirm, onConfirm, onDecline, busy }: { confirm: string; onConfirm: () => void; onDecline: () => void; busy: boolean }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <Button type="button" size="sm" onClick={onConfirm} disabled={busy}>
+      <Button type="button" size="sm" className="px-4" onClick={onConfirm} disabled={busy}>
         {confirm}
       </Button>
-      <Button type="button" size="sm" variant="secondary" onClick={onDecline} disabled={busy}>
+      <Button type="button" size="sm" variant="secondary" className="px-4" onClick={onDecline} disabled={busy}>
         Change something
       </Button>
     </div>
@@ -147,14 +169,17 @@ function Chips({ options, onPick, label }: { options: string[]; onPick: (text: s
 
 function ToolPart({ part, busy, respond }: { part: Part; busy: boolean; respond: (approvalId: string, approved: boolean, newsletter?: boolean) => void }) {
   const [newsletter, setNewsletter] = useState(false);
+  const titleId = useId();
 
   if (part.type === "tool-fileEnquiry") {
     const input = part.input;
     if (part.state === "input-streaming" || part.state === "input-available") return <Note>Putting your enquiry together…</Note>;
     if (part.state === "approval-requested" && input) {
       return (
-        <Card>
-          <p className="font-medium">Send this to Obi?</p>
+        <Card labelledBy={titleId}>
+          <p id={titleId} className="font-medium">
+            Send this to Craefto Works?
+          </p>
           <Facts
             rows={[
               ["Name", input.name],
@@ -165,15 +190,15 @@ function ToolPart({ part, busy, respond }: { part: Part; busy: boolean; respond:
               ["Timeline", label(TIMELINES, input.timeline)],
             ]}
           />
-          <p className="rounded-xl bg-[hsl(var(--color-background))] px-3 py-2.5 text-sm leading-relaxed">{input.summary}</p>
-          <label className="flex items-start gap-2.5 text-sm text-[hsl(var(--color-foreground-muted))]">
-            <input type="checkbox" className="mt-0.5 size-4 accent-[hsl(var(--color-accent))]" checked={newsletter} onChange={(event) => setNewsletter(event.target.checked)} />
+          <p className="rounded-xl bg-[hsl(var(--color-background))] px-3 py-2 text-sm leading-5">{input.summary}</p>
+          <label className="flex items-start gap-2.5 text-[13px] leading-[18px] text-[hsl(var(--color-foreground-muted))]">
+            <input type="checkbox" className="mt-px size-4 shrink-0 accent-[hsl(var(--color-accent))]" checked={newsletter} onChange={(event) => setNewsletter(event.target.checked)} />
             <span>Also send me the Craefto journal (occasional, unsubscribe any time)</span>
           </label>
-          <Note>
-            Obi reads every enquiry and replies by email within one to two business days. We keep this chat with your enquiry (<Link href="/privacy#assistant" className="underline underline-offset-2">privacy</Link>).
-          </Note>
-          <Decide confirm="Send to Obi" busy={busy} onConfirm={() => respond(part.approval.id, true, newsletter)} onDecline={() => respond(part.approval.id, false)} />
+          <Fine>
+            Craefto Works replies by email within one to two business days. We keep this chat with your enquiry (<Link href="/privacy#assistant" className="underline underline-offset-2">privacy</Link>).
+          </Fine>
+          <Decide confirm="Send enquiry" busy={busy} onConfirm={() => respond(part.approval.id, true, newsletter)} onDecline={() => respond(part.approval.id, false)} />
         </Card>
       );
     }
@@ -186,7 +211,7 @@ function ToolPart({ part, busy, respond }: { part: Part; busy: boolean; respond:
       return (
         <Card>
           <p>
-            <span className="font-medium">Sent.</span> Obi has your enquiry and will reply by email within one to two business days. If you&apos;d like to talk it through, the Discovery Call is free and takes 30 minutes.
+            <span className="font-medium">Sent.</span> Craefto Works has your enquiry and will reply by email within one to two business days. If you&apos;d like to talk it through, the Discovery Call is free and takes 30 minutes.
           </p>
           <BookCall name={output.name} email={output.email} project={input?.summary} size="sm" variant="default">
             Book the Discovery Call
@@ -199,22 +224,24 @@ function ToolPart({ part, busy, respond }: { part: Part; busy: boolean; respond:
 
   if (part.type === "tool-talkToPerson") {
     const input = part.input;
-    if (part.state === "input-streaming" || part.state === "input-available") return <Note>Getting that ready for Obi…</Note>;
+    if (part.state === "input-streaming" || part.state === "input-available") return <Note>Getting your message ready…</Note>;
     if (part.state === "approval-requested" && input) {
       return (
-        <Card>
-          <p className="font-medium">Pass this to Obi?</p>
+        <Card labelledBy={titleId}>
+          <p id={titleId} className="font-medium">
+            Send this to Craefto Works?
+          </p>
           <Facts
             rows={[
               ["Name", input.name],
               ["Email", input.email],
             ]}
           />
-          <p className="rounded-xl bg-[hsl(var(--color-background))] px-3 py-2.5 text-sm leading-relaxed">{input.about}</p>
-          <Note>
-            Obi replies by email within one to two business days. We keep this chat with your message (<Link href="/privacy#assistant" className="underline underline-offset-2">privacy</Link>).
-          </Note>
-          <Decide confirm="Send to Obi" busy={busy} onConfirm={() => respond(part.approval.id, true)} onDecline={() => respond(part.approval.id, false)} />
+          <p className="rounded-xl bg-[hsl(var(--color-background))] px-3 py-2 text-sm leading-5">{input.about}</p>
+          <Fine>
+            Craefto Works replies by email within one to two business days. We keep this chat with your message (<Link href="/privacy#assistant" className="underline underline-offset-2">privacy</Link>).
+          </Fine>
+          <Decide confirm="Send message" busy={busy} onConfirm={() => respond(part.approval.id, true)} onDecline={() => respond(part.approval.id, false)} />
         </Card>
       );
     }
@@ -225,7 +252,7 @@ function ToolPart({ part, busy, respond }: { part: Part; busy: boolean; respond:
       return part.output.ok ? (
         <Card>
           <p>
-            <span className="font-medium">Sent.</span> Obi has your message and will reply by email within one to two business days.
+            <span className="font-medium">Sent.</span> Craefto Works has your message and will reply by email within one to two business days.
           </p>
         </Card>
       ) : (
@@ -299,11 +326,15 @@ const showsSomething = (message: ChatMessage) =>
       (part.type === "tool-showBooking" && part.state === "output-available"),
   );
 
+/** Whether an answer ends on a summary card still waiting for the visitor to send it or change it. */
+const awaitsAnswer = (message: ChatMessage | undefined) =>
+  message?.role === "assistant" && message.parts.some((part) => "state" in part && part.state === "approval-requested");
+
 /** The replies the latest answer suggests. */
 function suggestionsOf(message: ChatMessage | undefined): string[] {
   if (message?.role !== "assistant") return [];
   // A summary card waits for an answer of its own: no suggestions beside it.
-  if (message.parts.some((part) => "state" in part && part.state === "approval-requested")) return [];
+  if (awaitsAnswer(message)) return [];
   const last = message.parts.findLast((part) => part.type === "data-replies");
   return last?.type === "data-replies" ? last.data.options : [];
 }
@@ -312,9 +343,10 @@ function suggestionsOf(message: ChatMessage | undefined): string[] {
  * Where focus goes inside the open panel: the message box where there's a
  * mouse, or the panel itself on touch screens, so the keyboard doesn't cover
  * the conversation and its one-tap replies until the visitor asks for it.
+ * The panel too while a summary card has the box's place.
  */
 function focusInside(panel: HTMLElement | null, input: HTMLTextAreaElement | null) {
-  if (window.matchMedia("(pointer: fine)").matches) input?.focus();
+  if (window.matchMedia("(pointer: fine)").matches && input && !input.form?.hidden) input.focus();
   else panel?.focus({ preventScroll: true });
 }
 
@@ -341,6 +373,9 @@ export default function ChatPanel({ state, onClose, onClosed }: { state: "open" 
   });
   const busy = status === "submitted" || status === "streaming";
   const replies = status === "ready" ? suggestionsOf(messages.at(-1)) : [];
+  // A summary card waiting for an answer takes the message box's place, so
+  // the whole card fits in view (and a phone's keyboard gets out of its way).
+  const awaiting = awaitsAnswer(messages.at(-1));
   const panelRef = useRef<HTMLElement>(null);
 
   // A chat that was going before a reload comes back.
@@ -461,11 +496,21 @@ export default function ChatPanel({ state, onClose, onClosed }: { state: "open" 
       newsletterChoice = approved && newsletter;
       pinned.current = true;
       void addToolApprovalResponse({ id: approvalId, approved });
-      // The card's buttons go away: keep the keyboard in the panel.
-      focusInside(panelRef.current, inputRef.current);
     },
     [addToolApprovalResponse],
   );
+
+  // The card and the message box take turns. Once the card is answered, and
+  // its buttons go, focus returns to the box; while it waits, focus that was
+  // in the box (now gone) stays in the panel.
+  const wasAwaiting = useRef(false);
+  useEffect(() => {
+    if (awaiting === wasAwaiting.current) return;
+    wasAwaiting.current = awaiting;
+    if (!open) return;
+    const active = document.activeElement;
+    if (!awaiting || !panelRef.current?.contains(active) || active === inputRef.current) focusInside(panelRef.current, inputRef.current);
+  }, [awaiting, open]);
 
   // A tapped reply goes as it is; the replies give way to it, so focus stays in the panel.
   const pick = useCallback(
@@ -486,16 +531,17 @@ export default function ChatPanel({ state, onClose, onClosed }: { state: "open" 
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  // Sent while an answer is still finishing (its one-tap replies take a moment): it goes as soon as the answer is done.
+  // Sent while an answer is still finishing (its one-tap replies take a moment): it goes as soon as the answer is done,
+  // or, if the answer was a summary card, once the card has been answered.
   const sendWhenReady = useRef(false);
   useEffect(() => {
-    if (status !== "ready" || !sendWhenReady.current) return;
+    if (status !== "ready" || awaiting || !sendWhenReady.current) return;
     const timer = setTimeout(() => {
       sendWhenReady.current = false;
       send(inputRef.current?.value ?? "");
     }, 0);
     return () => clearTimeout(timer);
-  }, [status, send]);
+  }, [status, awaiting, send]);
 
   const submitTyped = () => {
     if (busy) sendWhenReady.current = Boolean(input.trim());
@@ -581,12 +627,16 @@ export default function ChatPanel({ state, onClose, onClosed }: { state: "open" 
         }}
         // The page's smooth scrolling leaves the conversation to scroll on its own.
         data-lenis-prevent
-        className="ask-craefto-log flex-1 overflow-y-auto overscroll-contain px-5 pb-4 pt-1 text-[15px] leading-relaxed"
+        className={cn(
+          "ask-craefto-log flex-1 overflow-y-auto overscroll-contain px-5 pb-4 pt-1 text-[15px] leading-relaxed",
+          // In place of the message box's own padding, which clears a phone's home bar.
+          awaiting && "pb-[max(1rem,env(safe-area-inset-bottom))]",
+        )}
       >
         <div ref={contentRef} className="space-y-5">
           <div className="space-y-3">
             <p>
-              Hi, I&apos;m Craefto&apos;s AI assistant. I can answer questions about our work, prices and process, or pass your project to Obi, who reads every enquiry.
+              Hi, I&apos;m Craefto&apos;s AI assistant. I can answer questions about our work, prices and process, or pass your project to Craefto Works, where a person reads every enquiry.
             </p>
             {messages.length === 0 && <Chips options={SUGGESTIONS} onPick={pick} label="Ways to start" />}
           </div>
@@ -643,7 +693,7 @@ export default function ChatPanel({ state, onClose, onClosed }: { state: "open" 
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="ask-craefto-compose px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
+      <form onSubmit={onSubmit} hidden={awaiting} className="ask-craefto-compose px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
         <div className="flex items-end gap-2 rounded-3xl bg-[hsl(var(--color-background-muted))] p-1.5 pl-4 focus-within:ring-2 focus-within:ring-[hsl(var(--color-accent))]/40">
           <label htmlFor="ask-craefto-input" className="sr-only">
             Your message
@@ -685,7 +735,7 @@ export default function ChatPanel({ state, onClose, onClosed }: { state: "open" 
           )}
         </div>
         <p className="mt-2 px-2 text-[12px] leading-snug text-[hsl(var(--color-foreground-subtle))]">
-          AI can make mistakes: Obi confirms prices and dates. Don&apos;t share passwords or payment details.{" "}
+          AI can make mistakes: Craefto Works confirms prices and dates. Don&apos;t share passwords or payment details.{" "}
           <Link href="/privacy#assistant" className="underline underline-offset-2">
             Privacy
           </Link>

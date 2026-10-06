@@ -10,7 +10,7 @@ import { figuresIn } from "./knowledge";
 // catches and restates keeps only the restatement. Em dashes become commas
 // on the way, as in the site's own copy.
 
-export const UNPUBLISHED_PRICE = "I can't give you a figure for that here. Obi will confirm the exact price with you, as a fixed price before any work starts.";
+export const UNPUBLISHED_PRICE = "I can't give you a figure for that here. Craefto Works will confirm the exact price with you, as a fixed price before any work starts.";
 
 /** The currency figures in a text that aren't published. */
 export function unpublished(text: string, allowed: Set<number>): number[] {
