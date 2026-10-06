@@ -52,6 +52,8 @@ export interface ClientGlance {
   id: string;
   name: string;
   allowance: number | null;
+  /** On a plan without an hour limit (Partner). */
+  unlimited: boolean;
   allowanceLabel: string | null;
   used: number;
   /** Approved work still to do this month, at the top of its estimates. */
@@ -446,6 +448,7 @@ export async function today(): Promise<Today> {
         id: account.id,
         name: clientName(account),
         allowance: allowance?.hours ?? null,
+        unlimited: allowance != null && allowance.hours == null,
         allowanceLabel: allowance?.label ?? null,
         used: usage.used,
         committed: usage.committedHigh,

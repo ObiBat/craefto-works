@@ -227,8 +227,8 @@ export default async function SubscribePage({ params }: { params: Promise<{ plan
                     <span className={cn("text-sm", muted)}>/ month</span>
                   </p>
                   <p className={cn("mt-2 text-sm leading-relaxed", muted)}>
-                    {plan.hours} hours of studio time a month, billed in advance in AUD{gst ? " plus GST" : ""}. Cancel any time; it takes
-                    effect at your next renewal.
+                    {plan.hours == null ? "No monthly hour limit" : `${plan.hours} hours of studio time a month`}, billed in advance in AUD{gst ? " plus GST" : ""}. Cancel
+                    any time; it takes effect at your next renewal.
                   </p>
                 </div>
                 <div className="px-5 pt-6 pb-5 sm:px-6">

@@ -21,6 +21,34 @@ export function HoursMeter({ usage, className }: { usage: Usage; className?: str
       </div>
     );
   }
+  if (allowance.hours == null) {
+    // A plan without an hour limit (Partner): what's gone in and what's queued, nothing counting down.
+    return (
+      <section aria-label="Your hours this month" className={cn("rounded-3xl bg-[hsl(var(--color-background-subtle))] p-6 md:p-7", className)}>
+        <div className="flex items-baseline justify-between gap-4">
+          <p className="font-mono text-xs uppercase tracking-[0.06em] text-[hsl(var(--color-foreground-subtle))]">This month</p>
+          <p className="truncate text-xs text-[hsl(var(--color-foreground-subtle))]">{allowance.label}</p>
+        </div>
+        <p className="mt-3 flex flex-wrap items-baseline gap-x-2">
+          <span className="font-[family-name:var(--font-heading)] text-5xl font-semibold tracking-tight tabular-nums">{shortHours(used).replace(" h", "")}</span>
+          <span className="text-[hsl(var(--color-foreground-muted))]">{used > 0 && used < 1 ? "used" : "hours used"}, no monthly limit</span>
+        </p>
+        <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <dt className="flex items-center gap-1.5 text-[hsl(var(--color-foreground-subtle))]">
+              <span aria-hidden="true" className="size-2 rounded-full bg-[hsl(var(--color-accent))]" />
+              In queue
+            </dt>
+            <dd className="mt-0.5 font-medium tabular-nums">{committedHigh > 0 ? range(committedLow, committedHigh) : "None"}</dd>
+          </div>
+          <div>
+            <dt className="text-[hsl(var(--color-foreground-subtle))]">Renews</dt>
+            <dd className="mt-0.5 font-medium">{renewsLabel(month.renews)}</dd>
+          </div>
+        </dl>
+      </section>
+    );
+  }
   const total = Math.max(allowance.hours, used + committedHigh);
   const width = (hours: number) => `${Math.max(0, (hours / total) * 100)}%`;
   const left = allowance.hours - used;

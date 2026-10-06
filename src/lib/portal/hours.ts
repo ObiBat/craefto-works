@@ -21,19 +21,26 @@ export function monthOf(date: string) {
 }
 
 export interface Allowance {
-  hours: number;
+  /** Hours a month; null when the plan has no hour limit (Partner). */
+  hours: number | null;
   /** "Studio plan", "JapanoMa monthly hours" */
   label: string;
 }
 
-/** The hours the client has this month, or null when they have none (no plan running, none agreed). */
+/**
+ * The hours the client has this month, or null when they have none (no plan
+ * running, none agreed). A running plan without an hour limit (Partner) gives
+ * an allowance with no hours: requests go ahead, and nothing counts down.
+ */
 export function allowanceFor(account: Pick<ClientAccount, "monthly_hours" | "engagement">, subscriptions: ClientSubscription[]): Allowance | null {
   if (account.monthly_hours) return { hours: Number(account.monthly_hours), label: account.engagement || "Monthly hours" };
-  const running = subscriptions.filter(isLive).map((subscription) => planById(subscription.plan)).filter((plan) => plan?.hours);
+  // Current plans only: a retired plan carries no hours at all (undefined).
+  const running = subscriptions.filter(isLive).map((subscription) => planById(subscription.plan)).filter((plan) => plan && plan.hours !== undefined);
   if (running.length === 0) return null;
-  const hours = running.reduce((total, plan) => total + (plan!.hours ?? 0), 0);
   const names = running.map((plan) => plan!.name);
-  return { hours, label: `${names.join(" and ")} plan${names.length > 1 ? "s" : ""}` };
+  const label = `${names.join(" and ")} plan${names.length > 1 ? "s" : ""}`;
+  if (running.some((plan) => plan!.hours === null)) return { hours: null, label };
+  return { hours: running.reduce((total, plan) => total + (plan!.hours ?? 0), 0), label };
 }
 
 /** Minutes logged against each request. */
@@ -51,7 +58,7 @@ export interface Usage {
   /** Hours still to come on approved, open requests (their estimates less what's logged), low and high. */
   committedLow: number;
   committedHigh: number;
-  /** Hours left this month after what's used (negative when over). */
+  /** Hours left this month after what's used (negative when over); null with no allowance or no limit. */
   left: number | null;
 }
 
@@ -68,7 +75,7 @@ export function usageFor(allowance: Allowance | null, entries: ClientTimeEntry[]
     committedLow += Math.max(0, Number(request.estimate_low) - done);
     committedHigh += Math.max(0, Number(request.estimate_high) - done);
   }
-  return { allowance, month, used, committedLow, committedHigh, left: allowance ? allowance.hours - used : null };
+  return { allowance, month, used, committedLow, committedHigh, left: allowance && allowance.hours != null ? allowance.hours - used : null };
 }
 
 /** Hours to two places at most: 2.5, 5.75, 3. */

@@ -8,14 +8,13 @@ import { ScrollSpotlight } from "@/components/editorial/scroll-spotlight";
 import { SectionIntro } from "@/components/editorial/section-intro";
 import { StudioCta } from "@/components/sections/studio-cta";
 import { clientChecklist, stages } from "@/content/process";
-import { formatPrice, monthlyPlans, plansFrom } from "@/lib/pricing";
+import { formatPrice, planHoursSummary, plansFrom } from "@/lib/pricing";
 import { StageExplorer } from "./stage-explorer";
 
 // One methodology for every kind of work. The stages and what happens in
 // each live in content/process.ts; the plan figures come from lib/pricing.ts.
 
 const muted = "text-[hsl(var(--color-foreground-muted))]";
-const list = (items: string[]) => (items.length > 1 ? `${items.slice(0, -1).join(", ")} or ${items.at(-1)}` : items.join(""));
 
 const ways: { icon: Icon; title: string; text: string; href: string; cta: string }[] = [
   {
@@ -23,12 +22,12 @@ const ways: { icon: Icon; title: string; text: string; href: string; cta: string
     title: "A fixed-price project",
     text: "Runs through the six stages once. You get a fixed price before any work begins, and pay in milestones as the work is delivered: typically 30% upfront, 40% at design approval and 30% on launch. Every project includes 30 days of support after launch.",
     href: "/services",
-    cta: "Capabilities and prices",
+    cta: "Services and prices",
   },
   {
     icon: ArrowsClockwise,
     title: "A monthly plan",
-    text: `Define, Create, Build / Produce and Launch repeat every month, from a shared, prioritised queue, within the studio time you reserve: ${list(monthlyPlans.map((plan) => `${plan.hours}`))} hours a month, from ${formatPrice(plansFrom)}. Estimates are agreed before anything starts.`,
+    text: `Define, Create, Build / Produce and Launch repeat every month, from a shared, prioritised queue, within the studio time your plan reserves (${planHoursSummary()}), from ${formatPrice(plansFrom)} a month. Estimates are agreed before anything starts.`,
     href: "/services#plans",
     cta: "Compare the plans",
   },

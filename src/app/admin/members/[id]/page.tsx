@@ -500,9 +500,15 @@ function HoursPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => 
         <p className="text-sm font-semibold">This month</p>
         {allowance ? (
           <>
-            <p className="text-3xl font-semibold tabular-nums">
-              {hours(Math.round((allowance.hours - usage.used) * 2) / 2)} <span className="text-base font-normal text-[hsl(var(--color-foreground-muted))]">of {allowance.hours} h left · {allowance.label}</span>
-            </p>
+            {allowance.hours == null ? (
+              <p className="text-3xl font-semibold tabular-nums">
+                {shortHours(usage.used)} <span className="text-base font-normal text-[hsl(var(--color-foreground-muted))]">used · no hour limit · {allowance.label}</span>
+              </p>
+            ) : (
+              <p className="text-3xl font-semibold tabular-nums">
+                {hours(Math.round((allowance.hours - usage.used) * 2) / 2)} <span className="text-base font-normal text-[hsl(var(--color-foreground-muted))]">of {allowance.hours} h left · {allowance.label}</span>
+              </p>
+            )}
             <p className="text-sm text-[hsl(var(--color-foreground-muted))]">
               {shortHours(usage.used)} used · {usage.committedHigh > 0 ? `${hours(usage.committedLow)}–${hours(usage.committedHigh)} h approved in the queue` : "nothing approved in the queue"}
             </p>

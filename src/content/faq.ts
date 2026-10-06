@@ -2,7 +2,7 @@
 // by the website assistant (lib/assistant/knowledge.ts). The answers quote the
 // published prices and timelines (lib/pricing.ts), so they can't drift.
 
-import { formatPrice, priceRanges } from "@/lib/pricing";
+import { formatPrice, planHoursSummary, priceRanges } from "@/lib/pricing";
 
 export interface FaqEntry {
   question: string;
@@ -38,7 +38,7 @@ export const faqGroups: FaqGroup[] = [
       },
       {
         question: "How do monthly plans work?",
-        answer: "Each plan reserves studio time every month: 10 hours on Essential, 20 on Studio and 35 on Partner. That time covers planning, revisions, testing and meetings as well as the work itself, and we agree estimates before starting anything. Advertising, software, AI usage, hosting and production costs (including shoot preparation, travel and editing) are budgeted separately. Plans are billed monthly in advance.",
+        answer: `Each plan reserves studio time every month: ${planHoursSummary()}. That time covers planning, revisions, testing and meetings as well as the work itself, and we agree estimates before starting anything. Advertising, software, AI usage, hosting and production costs (including shoot preparation, travel and editing) are budgeted separately. Plans are billed monthly in advance.`,
       },
       {
         question: "What happens if we stop?",

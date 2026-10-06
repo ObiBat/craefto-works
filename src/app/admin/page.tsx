@@ -197,7 +197,9 @@ function ClientCard({ client }: { client: ClientGlance }) {
           </p>
         </>
       ) : (
-        <p className="mt-4 text-sm text-[hsl(var(--color-foreground-muted))]">No monthly hours set</p>
+        <p className="mt-4 text-sm text-[hsl(var(--color-foreground-muted))]">
+          {client.unlimited ? <><span className="font-mono font-semibold tabular-nums text-[hsl(var(--color-foreground))]">{hours(client.used)} h</span> used · no hour limit</> : "No monthly hours set"}
+        </p>
       )}
       <p className="mt-3 text-xs text-[hsl(var(--color-foreground-muted))]">
         {client.open} open request{client.open === 1 ? "" : "s"}

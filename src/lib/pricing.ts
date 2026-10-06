@@ -5,14 +5,15 @@
 // production shortens the routine work. Change prices here.
 //
 // The monthly plans (October 2026) are sold by budget, not by discipline:
-// Essential, Studio and Partner each reserve studio time across all five
-// capabilities, and priorities are agreed within that budget. AI Automation
+// Essential and Studio each reserve studio time across all five capabilities
+// (10 and 30 hours a month); Partner has no monthly hour limit, with the work
+// planned weekly against the client's roadmap. AI Automation
 // is a one-off custom project at the "ai" price range above. Benchmarks
 // (advertised, checked 1 October 2026; scope and staffing differ): Graphiker
 // $1,190-$3,490/month design subscriptions; SLICK from $3,990/month; ID
 // Digital 30 hours/month at $6,500-$7,300 (2024-25 rate card); Kursol AI
 // implementation $1,750/month for 5 hours. At these allowances revenue is
-// about $190-$200 a delivery hour before costs.
+// about $190 a delivery hour on Essential and $130 on Studio, before costs.
 
 export type ServiceKey = "brand" | "web" | "product" | "ai" | "tools" | "photo" | "video" | "landing" | "seo";
 
@@ -44,8 +45,8 @@ export interface MonthlyPlan {
   name: string;
   /** AUD a month, before GST. */
   price: number;
-  /** Studio time reserved each month (planning, revisions, testing and meetings included). */
-  hours: number;
+  /** Studio time reserved each month (planning, revisions, testing and meetings included); null: no monthly hour limit. */
+  hours: number | null;
   /** Who it suits, in one short line. */
   bestFor: string;
   /** The headline inclusions. */
@@ -69,24 +70,33 @@ export const monthlyPlans: MonthlyPlan[] = [
     id: "studio",
     name: "Studio",
     price: 3900,
-    hours: 20,
+    hours: 30,
     bestFor: "For consistent work across your website, brand, content and systems.",
-    includes: ["20 hours of studio time a month", "One active workstream", "Fortnightly planning", "Shift priorities month to month"],
+    includes: ["30 hours of studio time a month", "One active workstream", "Fortnightly planning", "Shift priorities month to month"],
   },
   {
     id: "partner",
     name: "Partner",
     price: 6900,
-    hours: 35,
+    hours: null,
     bestFor: "For teams with a sustained roadmap and more to deliver.",
     includes: [
-      "35 hours of studio time a month",
+      "No monthly hour limit",
       "Milestones coordinated across design, development and content",
       "Weekly planning",
       "Larger work delivered in stages",
     ],
   },
 ];
+
+/** A plan's studio time in words: "30 hours of studio time a month", or "no monthly hour limit". */
+export const studioTime = (plan: Pick<MonthlyPlan, "hours">) => (plan.hours == null ? "no monthly hour limit" : `${plan.hours} hours of studio time a month`);
+
+/** Every plan's hours in one phrase: "10 hours on Essential, 30 on Studio and no set limit on Partner". */
+export function planHoursSummary() {
+  const parts = monthlyPlans.map((plan, index) => (plan.hours == null ? `no set limit on ${plan.name}` : `${plan.hours}${index === 0 ? " hours" : ""} on ${plan.name}`));
+  return parts.length > 1 ? `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}` : parts.join("");
+}
 
 /** The one-off custom project for AI and automation, priced as the "ai" range above. */
 export const aiAutomationProject = {

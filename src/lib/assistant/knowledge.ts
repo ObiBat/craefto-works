@@ -2,7 +2,7 @@ import "server-only";
 import { siteConfig } from "@/lib/constants";
 import { BOOKING_URL } from "@/lib/leads";
 import { BUDGETS, ENQUIRY_GROUPS, ENQUIRY_UNSURE, TIMELINES } from "@/lib/enquiry";
-import { aiAutomationProject, formatPrice, monthlyPlans, priceFor, priceRanges, rangeLabel, weeksLabel } from "@/lib/pricing";
+import { aiAutomationProject, formatPrice, monthlyPlans, priceFor, priceRanges, rangeLabel, studioTime, weeksLabel } from "@/lib/pricing";
 import { chargesGst } from "@/lib/stripe";
 import { capabilities, capabilityPrices, engagements } from "@/content/capabilities";
 import { caseStudies } from "@/content/case-studies";
@@ -44,7 +44,7 @@ function aboutStudio() {
 
 function aboutCapabilities() {
   return [
-    `# The five capabilities (${url("/services")})`,
+    `# The five services (${url("/services")})`,
     ...capabilities.map((capability) =>
       [
         `## ${capability.number} ${capability.name}: ${capability.serviceName}`,
@@ -71,7 +71,7 @@ function aboutPrices() {
     "## Projects",
     bullets(priceRanges.map((range) => `${range.label}: ${rangeLabel(range)}, typically ${weeksLabel(range)}`)),
     "## Monthly plans",
-    bullets(monthlyPlans.map((plan) => `${plan.name}: ${formatPrice(plan.price)} a month for ${plan.hours} hours of studio time. ${plan.bestFor} Includes: ${plan.includes.join("; ")}.`)),
+    bullets(monthlyPlans.map((plan) => `${plan.name}: ${formatPrice(plan.price)} a month, ${studioTime(plan)}. ${plan.bestFor} Includes: ${plan.includes.join("; ")}.`)),
     `## ${aiAutomationProject.name} (a one-off project)`,
     `${aiAutomationProject.bestFor}${ai ? ` Priced as workflow automation and AI: ${rangeLabel(ai)}, typically ${weeksLabel(ai)}.` : ""} ${aiAutomationProject.includes.join(". ")}.`,
     "## Monthly plan terms",

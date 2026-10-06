@@ -32,7 +32,7 @@ export function weeklySummary(account: ClientAccount, subscriptions: ClientSubsc
 
   const usage = usageFor(allowanceFor(account, subscriptions), entries, requests, today);
   const monthLine = usage.allowance
-    ? `This month: ${longHours(tidy(usage.used))} of your ${usage.allowance.hours} used${usage.committedHigh > 0 ? `, with about ${tidy(usage.committedLow)} to ${tidy(usage.committedHigh)} more approved in your queue` : ""}.`
+    ? `This month: ${longHours(tidy(usage.used))}${usage.allowance.hours == null ? "" : ` of your ${usage.allowance.hours}`} used${usage.committedHigh > 0 ? `, with about ${tidy(usage.committedLow)} to ${tidy(usage.committedHigh)} more approved in your queue` : ""}.`
     : null;
   const byQueue = (a: ClientRequest, b: ClientRequest) => (a.queue_position ?? 999) - (b.queue_position ?? 999);
   return emails.weeklyEmail({

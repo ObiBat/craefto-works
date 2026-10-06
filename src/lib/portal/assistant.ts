@@ -77,11 +77,16 @@ export function acknowledgement(account: ClientAccount, read: Reading | null, us
     const { allowance, used, committedLow, committedHigh } = usage;
     const queued = committedHigh > 0 ? `, with about ${hours(Math.round(committedLow * 2) / 2)} to ${hours(Math.round(committedHigh * 2) / 2)} more approved in your queue` : "";
     const projected = Math.round((used + committedHigh + high) * 2) / 2;
-    const after =
-      projected <= allowance.hours
-        ? `With this one, that comes to at most about ${hours(projected)} of ${hours(allowance.hours)}.`
-        : `With this one, that's more than this month's ${hours(allowance.hours)} hours, so Obi will suggest what to move to next month.`;
-    lines.push(`This month you've used ${hours(Math.round(used * 2) / 2)} of your ${hours(allowance.hours)} hours${queued}. ${after}`);
+    if (allowance.hours == null) {
+      // A plan without an hour limit: what's gone in, with nothing to count down from.
+      lines.push(`This month you've used ${hours(Math.round(used * 2) / 2)} hours${queued}. Your plan has no monthly hour limit.`);
+    } else {
+      const after =
+        projected <= allowance.hours
+          ? `With this one, that comes to at most about ${hours(projected)} of ${hours(allowance.hours)}.`
+          : `With this one, that's more than this month's ${hours(allowance.hours)} hours, so Obi will suggest what to move to next month.`;
+      lines.push(`This month you've used ${hours(Math.round(used * 2) / 2)} of your ${hours(allowance.hours)} hours${queued}. ${after}`);
+    }
   }
   return lines.join("\n\n");
 }
@@ -133,7 +138,9 @@ export function prompt(account: ClientAccount, request: ClientRequest, others: C
   const queue = others.filter((r) => isOpen(r) && r.id !== request.id).map((r) => `- ${r.title} (${r.status.replace("_", " ")}, ${est(r)})`);
   return [
     `Client: ${account.name ?? "unknown"}${account.company ? `, ${account.company}` : ""}.`,
-    usage.allowance ? `Their monthly studio time: ${hours(usage.allowance.hours)} hours (${usage.allowance.label}); ${hours(Math.round(usage.used * 2) / 2)} used so far this month.` : "",
+    usage.allowance
+      ? `Their monthly studio time: ${usage.allowance.hours == null ? "no hour limit" : `${hours(usage.allowance.hours)} hours`} (${usage.allowance.label}); ${hours(Math.round(usage.used * 2) / 2)} used so far this month.`
+      : "",
     calibration.client.length ? `How Craefto adjusted your initial estimates for this client:\n${calibration.client.map((line) => `- ${line}`).join("\n")}` : "",
     calibration.ratio != null
       ? `Across Craefto's recent requests (${calibration.pairs}), its confirmed estimates came to about ${Math.round(calibration.ratio * 100)}% of your initial ones: estimate with that in mind.`
@@ -217,7 +224,8 @@ export async function reviewRequest(requestId: string, origin: string, model: La
 
   if (telegramConfigured()) {
     const estimate = read ? (sized ? `AI initial estimate ${hours(halfHour(read.low))}–${hours(Math.max(halfHour(read.low), halfHour(read.high)))} h` : "Project-sized: needs splitting or a quote") : "No AI estimate: add one";
-    const month = usage.allowance ? ` · ${hours(Math.round(usage.used * 2) / 2)}/${hours(usage.allowance.hours)} h used this month` : "";
+    const used = hours(Math.round(usage.used * 2) / 2);
+    const month = usage.allowance ? ` · ${usage.allowance.hours == null ? `${used} h used this month, no limit` : `${used}/${hours(usage.allowance.hours)} h used this month`}` : "";
     await alertOwnerTelegram(
       [`<b>New request · ${telegramHtml(account.company || account.name || account.email)}</b>`, telegramHtml(request.title), `${estimate}${month}`].join("\n"),
       [{ text: "Open in admin", url: `${origin}/admin/members/${account.id}` }]

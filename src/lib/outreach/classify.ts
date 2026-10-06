@@ -4,7 +4,7 @@ import { z } from "zod";
 import { PRIVATE_AI } from "@/lib/ai";
 import { BOOKING_URL } from "@/lib/leads";
 import { siteConfig } from "@/lib/constants";
-import { formatPrice, monthlyPlans, priceRanges, weeksLabel } from "@/lib/pricing";
+import { formatPrice, monthlyPlans, priceRanges, studioTime, weeksLabel } from "@/lib/pricing";
 import type { IncomingEmail } from "./parse";
 import { localParts } from "./schedule";
 import type { Referral, ReplyLabel } from "./types";
@@ -225,11 +225,11 @@ export function craeftoFacts() {
     `${siteConfig.studioName}: a creative and technology studio in Sydney, Australia (ABN 81 278 859 855). Founder: Obi Batbileg.`,
     "What we do: brand identity, marketing websites, web apps and SaaS, internal tools and dashboards, workflow automation and AI, photography and video, SEO and analytics.",
     `Discovery Call: free, 30 minutes, on Google Meet. Book at ${BOOKING_URL}`,
-    `Website: ${siteConfig.url} (case studies at ${siteConfig.url}/work, capabilities and plans at ${siteConfig.url}/services).`,
+    `Website: ${siteConfig.url} (case studies at ${siteConfig.url}/work, services and plans at ${siteConfig.url}/services).`,
     "Published project prices, AUD before GST:",
     ...priceRanges.map((range) => `- ${range.label}: ${formatPrice(range.min)} to ${formatPrice(range.max)}, typically ${weeksLabel(range)}`),
     "Monthly plans, AUD a month before GST, billed in advance, scope agreed before starting:",
-    ...monthlyPlans.map((plan) => `- ${plan.name}: ${formatPrice(plan.price)} for ${plan.hours} hours of studio time. ${plan.bestFor}`),
+    ...monthlyPlans.map((plan) => `- ${plan.name}: ${formatPrice(plan.price)}, ${studioTime(plan)}. ${plan.bestFor}`),
     "The one-page list of fixes offered in the outreach email is free, with no obligation.",
   ].join("\n");
 }

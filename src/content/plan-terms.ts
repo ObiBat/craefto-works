@@ -1,4 +1,4 @@
-import { monthlyPlans } from "@/lib/pricing";
+import { planHoursSummary } from "@/lib/pricing";
 
 // The monthly plan terms, in plain language: shown on each plan's start page
 // (/subscribe/[plan]), where clients agree to them before paying, and in the
@@ -6,13 +6,9 @@ import { monthlyPlans } from "@/lib/pricing";
 // it showed, and checkout records it on the Stripe subscription, so change
 // the version whenever the terms change.
 
-export const PLAN_TERMS_VERSION = "2026-10-02";
-
-/** "a, b and c" */
-const list = (items: string[]) => (items.length > 1 ? `${items.slice(0, -1).join(", ")} and ${items.at(-1)}` : items.join(""));
+export const PLAN_TERMS_VERSION = "2026-10-06";
 
 export function planTerms(chargesGst: boolean): Array<{ title: string; text: string }> {
-  const hours = list(monthlyPlans.map((plan, index) => `${plan.hours}${index === 0 ? " hours" : ""} on ${plan.name}`));
   return [
     {
       title: "Billing",
@@ -20,7 +16,7 @@ export function planTerms(chargesGst: boolean): Array<{ title: string; text: str
     },
     {
       title: "Studio time",
-      text: `Your plan reserves studio time each month: ${hours}. That time covers planning, revisions, testing and meetings as well as the work itself.`,
+      text: `Your plan reserves studio time each month: ${planHoursSummary()}, where we plan the work with you each week. That time covers planning, revisions, testing and meetings as well as the work itself.`,
     },
     {
       title: "Priorities and estimates",
