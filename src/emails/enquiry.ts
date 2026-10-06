@@ -23,20 +23,20 @@ export function enquiryConfirmationEmail({
   phrase?: string | null;
   bookingUrl: string;
 }): Email {
+  const first = safeFirstName(name) ?? "there";
+  const thanks = (about: string) => `Thanks for your enquiry${about}. We read every one ourselves, and you'll hear back within one to two business days.`;
+  const call = "If it's easier to talk it through, book a free 30-minute call at a time that suits you";
+  const why = "You're receiving this because this address was given with an enquiry at craefto.com. If that wasn't you, you can ignore this email.";
   return {
     subject: "We've received your enquiry",
     html: layout({
       eyebrow: "Enquiry received",
       heading: "Thanks for getting in touch",
-      body:
-        paragraph(`Hi ${escapeHtml(safeFirstName(name) ?? "there")},`) +
-        paragraph(
-          `Thanks for your enquiry${phrase ? ` about ${escapeHtml(phrase)}` : ""}. We read every one ourselves, and you'll hear back within one to two business days.`
-        ) +
-        paragraph("If it's easier to talk it through, book a free 30-minute call at a time that suits you."),
+      body: paragraph(`Hi ${escapeHtml(first)},`) + paragraph(thanks(phrase ? ` about ${escapeHtml(phrase)}` : "")) + paragraph(`${call}.`),
       action: { label: "Book a free call", href: bookingUrl },
-      footnote:
-        "You're receiving this because this address was entered on the enquiry form at craefto.com. If that wasn't you, you can ignore this email.",
+      footnote: why,
     }),
+    // Written out rather than left to the sender to derive from the HTML, which runs the heading and button into the text.
+    text: [`Hi ${first},`, thanks(phrase ? ` about ${phrase}` : ""), `${call}:\n${bookingUrl}`, "Craefto Works\nSydney, Australia\nhttps://www.craefto.com", why].join("\n\n"),
   };
 }

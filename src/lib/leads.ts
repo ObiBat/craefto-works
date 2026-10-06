@@ -198,7 +198,7 @@ function leadAlert(lead: LeadRow, eyebrow: string, extra: Array<[string, string 
   });
 }
 
-async function sendLogged(db: Db, leadId: string, template: string, message: { to: string; subject: string; html: string; replyTo?: string }) {
+async function sendLogged(db: Db, leadId: string, template: string, message: { to: string; subject: string; html: string; text?: string; replyTo?: string }) {
   try {
     const result = await resend.emails.send({ from: EMAIL_FROM, ...message });
     if (result.error) throw result.error;
@@ -281,7 +281,7 @@ export async function createLead(input: LeadInput, context: LeadContext): Promis
   if (isEmailEnabled()) {
     if (context.confirm !== false) {
       const email = enquiryConfirmationEmail({ name: lead.name, phrase: enquiryPhrase(lead.service_interest), bookingUrl: BOOKING_URL });
-      const sent = await sendLogged(db, lead.id, "lead-confirmation", { to: lead.email, subject: email.subject, html: email.html });
+      const sent = await sendLogged(db, lead.id, "lead-confirmation", { to: lead.email, subject: email.subject, html: email.html, text: email.text });
       if (sent) await logActivity(db, lead.id, { type: "email_sent", title: "Confirmation email sent" });
     }
     if (context.notify !== false) await alertOwner(db, lead, context.alert ?? "New enquiry", context.alertRows);

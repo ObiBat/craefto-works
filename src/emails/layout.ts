@@ -15,6 +15,8 @@ const HEAD_FONT = "'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Rob
 export interface Email {
   subject: string;
   html: string;
+  /** The plain-text version, written out (otherwise the sender derives one from the HTML). */
+  text?: string;
 }
 
 export function layout({ eyebrow, heading, body, action, footnote }: {
