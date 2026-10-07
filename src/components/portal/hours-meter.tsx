@@ -104,7 +104,7 @@ export function HoursMeter({ usage, className }: { usage: Usage; className?: str
       </dl>
       {afterQueue < 0 && !over && (
         <p className="mt-4 rounded-2xl bg-[hsl(var(--color-warning-subtle))] px-4 py-3 text-sm leading-relaxed">
-          Your approved queue comes to more than this month&apos;s hours. Obi will carry what doesn&apos;t fit to next month.
+          Your approved queue comes to more than this month&apos;s hours. Craefto Works will carry what doesn&apos;t fit to next month.
         </p>
       )}
     </section>

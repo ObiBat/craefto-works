@@ -194,7 +194,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
           {requests.length === 0 && (
             <Empty title={allowance ? "Send your first request" : "No requests yet"} action={newRequest}>
               {allowance
-                ? "Tell us what you need next: a page, a fix, a shoot. Ask Craefto replies within a minute with an initial estimate, Obi confirms it, and you approve it before work starts."
+                ? "Tell us what you need next: a page, a fix, a shoot. Ask Craefto replies within a minute with an initial estimate, Craefto Works confirms it, and you approve it before work starts."
                 : "Requests open again when a plan is active."}
             </Empty>
           )}

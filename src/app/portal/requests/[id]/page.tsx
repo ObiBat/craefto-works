@@ -124,13 +124,13 @@ export default async function RequestPage({
         <Progress status={request.status} />
         {sent && (
           <Callout title="Request sent">
-            Ask Craefto replies below with an initial estimate in a moment. Obi then confirms it, you approve it, and it joins your queue. We&apos;ll email
+            Ask Craefto replies below with an initial estimate in a moment. Craefto Works then confirms it, you approve it, and it joins your queue. We&apos;ll email
             you at {account.email} as it moves.
           </Callout>
         )}
         {approved && request.status === "queued" && (
           <Callout title={`Approved: #${request.queue_position ?? ""} in your queue`}>
-            Obi has been told. You&apos;ll see the time logged against it here as the work goes on.
+            Craefto Works has been told. You&apos;ll see the time logged against it here as the work goes on.
           </Callout>
         )}
         {request.status === "needs_info" && (

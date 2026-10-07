@@ -10,7 +10,7 @@ import { isOpen, type ClientAccount, type ClientRequest, type ClientRequestEvent
 
 // Ask Craefto in the client portal: the moment a client sends a request, it
 // replies in the request's conversation. The request is with the team and
-// Obi has been told; here's what it understood; an initial estimate in hours
+// Craefto Works has it; here's what it understood; an initial estimate in hours
 // of studio time, with what it covers; what would firm it up; and what it
 // means for their month. Craefto then confirms the estimate and the client
 // approves it before any work starts. The reply is composed here from the
@@ -56,20 +56,20 @@ const halfHour = (value: number) => Math.max(0.5, Math.round(value * 2) / 2);
 
 /** The reply, from the model's reading of the request and where the client's month stands. */
 export function acknowledgement(account: ClientAccount, read: Reading | null, usage: Usage | null): string {
-  const lines = [`Thanks${firstName(account) ? `, ${firstName(account)}` : ""}. Your request is with the Craefto team, and Obi has been notified.`];
+  const lines = [`Thanks${firstName(account) ? `, ${firstName(account)}` : ""}. Your request is with the Craefto Works team.`];
   if (!read) {
-    lines.push("Obi will add an estimate shortly, and nothing starts until you approve it.");
+    lines.push("Craefto Works will add an estimate shortly, and nothing starts until you approve it.");
     return lines.join("\n\n");
   }
   lines.push(`**What I understood:** ${read.understood.trim()}`);
   const low = halfHour(read.low);
   const high = Math.max(low, halfHour(read.high));
   if (high > PROJECT_SIZED) {
-    lines.push(`This looks bigger than a monthly request, at more than about ${PROJECT_SIZED} hours, so Obi will suggest splitting it into stages or quoting it as a project.`);
+    lines.push(`This looks bigger than a monthly request, at more than about ${PROJECT_SIZED} hours, so Craefto Works will suggest splitting it into stages or quoting it as a project.`);
   } else {
     const covers = read.covers.map((note) => note.trim()).filter(Boolean).slice(0, 4);
     lines.push(`**Initial estimate:** ${hours(low)} to ${hours(high)} hours of studio time${covers.length ? ", covering:" : "."}${covers.length ? `\n${covers.map((note) => `- ${note}`).join("\n")}` : ""}`);
-    lines.push("Obi checks this estimate and confirms it, then you approve it here before any work starts.");
+    lines.push("Craefto Works checks this estimate and confirms it, then you approve it here before any work starts.");
   }
   const questions = read.questions.map((question) => question.trim()).filter(Boolean).slice(0, 3);
   if (questions.length) lines.push(`A few things that would firm it up:\n${questions.map((question) => `- ${question}`).join("\n")}`);
@@ -84,7 +84,7 @@ export function acknowledgement(account: ClientAccount, read: Reading | null, us
       const after =
         projected <= allowance.hours
           ? `With this one, that comes to at most about ${hours(projected)} of ${hours(allowance.hours)}.`
-          : `With this one, that's more than this month's ${hours(allowance.hours)} hours, so Obi will suggest what to move to next month.`;
+          : `With this one, that's more than this month's ${hours(allowance.hours)} hours, so Craefto Works will suggest what to move to next month.`;
       lines.push(`This month you've used ${hours(Math.round(used * 2) / 2)} of your ${hours(allowance.hours)} hours${queued}. ${after}`);
     }
   }
@@ -153,7 +153,7 @@ export function prompt(account: ClientAccount, request: ClientRequest, others: C
     .join("\n\n");
 }
 
-/** The model's reading of a request, or null when it's unavailable (the reply then says Obi will estimate). */
+/** The model's reading of a request, or null when it's unavailable (the reply then says Craefto Works will estimate). */
 export async function readRequest(model: LanguageModel, input: string): Promise<Reading | null> {
   try {
     const { output } = await generateText({

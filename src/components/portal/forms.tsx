@@ -72,7 +72,7 @@ export function NewRequestForm({ email, today }: { email: string; today: string 
           Needed by <span className="font-normal text-[hsl(var(--color-foreground-subtle))]">(optional)</span>
         </label>
         <p id="needed-by-hint" className={hint}>
-          If there&apos;s a date it has to be ready for. Obi plans around it and tells you if it&apos;s tight.
+          If there&apos;s a date it has to be ready for. Craefto Works plans around it and tells you if it&apos;s tight.
         </p>
         <Input id="needed_by" name="needed_by" type="date" min={today} defaultValue={state.values?.needed_by} aria-describedby="needed-by-hint" className="sm:max-w-[14rem]" />
       </div>

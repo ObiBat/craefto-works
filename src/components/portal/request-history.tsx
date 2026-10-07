@@ -12,9 +12,9 @@ function eventText(event: ClientRequestEvent) {
     case "sent":
       return "You sent the request";
     case "estimated":
-      return range ? `Ask Craefto gave an initial estimate of ${range}` : "Ask Craefto read the request and passed it to Obi to estimate";
+      return range ? `Ask Craefto gave an initial estimate of ${range}` : "Ask Craefto read the request and passed it to Craefto Works to estimate";
     case "confirmed":
-      return range ? `Obi confirmed the estimate: ${range}` : "Obi confirmed the estimate";
+      return range ? `Craefto Works confirmed the estimate: ${range}` : "Craefto Works confirmed the estimate";
     case "approved":
       return `You approved the estimate${position ? `; it's #${position} in your queue` : ""}`;
     case "started":

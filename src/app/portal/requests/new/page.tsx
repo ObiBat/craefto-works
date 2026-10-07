@@ -21,7 +21,7 @@ export default async function NewRequestPage() {
           <ol className="mb-12 grid gap-4 rounded-3xl bg-[hsl(var(--color-background-subtle))] p-6 sm:grid-cols-3 md:p-8">
             {[
               ["Within a minute", "Ask Craefto replies with an initial estimate in hours, and what it covers."],
-              ["Then", "Obi checks the estimate and confirms it. Nothing starts until you approve it."],
+              ["Then", "Craefto Works checks the estimate and confirms it. Nothing starts until you approve it."],
               ["Once approved", "It joins your queue, and you see the time we log on it as the work goes."],
             ].map(([when, what], index) => (
               <li key={when} className="flex flex-col gap-1.5">

@@ -91,9 +91,9 @@ export function estimateEmail({
       heading: title,
       body:
         paragraph(hello(name)) +
-        paragraph(`Obi has confirmed the estimate for this request: <strong>${escapeHtml(estimate)}</strong> of studio time.`) +
+        paragraph(`Craefto Works has confirmed the estimate for this request: <strong>${escapeHtml(estimate)}</strong> of studio time.`) +
         (note ? quote(note) : "") +
-        (targetDate ? paragraph(`Once it's approved, Obi aims to deliver it by ${escapeHtml(targetDate)}.`) : "") +
+        (targetDate ? paragraph(`Once it's approved, Craefto Works aims to deliver it by ${escapeHtml(targetDate)}.`) : "") +
         paragraph("Approve it in your portal and it joins your queue. Nothing starts before you do."),
       action: { label: "Review and approve", href: link },
     }),

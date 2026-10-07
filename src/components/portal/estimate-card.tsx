@@ -65,19 +65,19 @@ export function EstimateCard({ request, loggedMinutes }: { request: ClientReques
 
       {request.target_date && !closed && (request.estimate_state === "confirmed" || request.estimate_state === "approved") && (
         <p className="mt-5 text-sm text-[hsl(var(--color-foreground-muted))]">
-          Obi aims to deliver it by <span className="font-medium text-[hsl(var(--color-foreground))]">{dayLabel(request.target_date)}</span>
+          Craefto Works aims to deliver it by <span className="font-medium text-[hsl(var(--color-foreground))]">{dayLabel(request.target_date)}</span>
           {request.estimate_state === "confirmed" ? ", once you approve it." : "."}
         </p>
       )}
 
       {request.estimate_state === "initial" && !closed && (
         <p className="mt-5 text-sm leading-relaxed text-[hsl(var(--color-foreground-muted))]">
-          Ask Craefto&apos;s first read. Obi checks it and confirms it, and you approve it here before any work starts.
+          Ask Craefto&apos;s first read. Craefto Works checks it and confirms it, and you approve it here before any work starts.
         </p>
       )}
       {request.estimate_state === "none" && !closed && (
         <p className="mt-2 text-sm leading-relaxed text-[hsl(var(--color-foreground-muted))]">
-          Obi adds one shortly, and you approve it before any work starts.
+          Craefto Works adds one shortly, and you approve it before any work starts.
         </p>
       )}
 
@@ -96,7 +96,7 @@ export function EstimateCard({ request, loggedMinutes }: { request: ClientReques
             />
           </div>
           {logged > high && (
-            <p className="mt-2 text-sm text-[hsl(var(--color-foreground-muted))]">This has taken longer than estimated. Obi will talk it through with you.</p>
+            <p className="mt-2 text-sm text-[hsl(var(--color-foreground-muted))]">This has taken longer than estimated. Craefto Works will talk it through with you.</p>
           )}
         </div>
       )}
