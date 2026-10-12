@@ -116,6 +116,20 @@ function ProjectImage({
  * A photo shoot's frames by setup, near-identical takes together: side by
  * side from small screens up, and a row to swipe through on phones.
  */
+/** The client's own channels (Instagram, Facebook), beside the live site. */
+function ProfileLinks({ project }: { project: CaseStudy }) {
+  return (project.profiles ?? []).map((profile) => (
+    <Button key={profile.url} size="lg" variant="secondary" asChild>
+      <a href={profile.url} target="_blank" rel="noopener noreferrer" aria-label={`${project.title} on ${profile.label}`}>
+        {profile.label}
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </a>
+    </Button>
+  ));
+}
+
 function PhotoSets({ project, sets }: { project: CaseStudy; sets: PhotoSet[] }) {
   if (sets.length === 0) return null;
   return (
@@ -250,7 +264,7 @@ export function CaseStudyView({
                 </HeroText>
                 {project.liveUrl && (
                   <HeroText delay={0.15}>
-                    <div className="mt-8">
+                    <div className="mt-8 flex flex-wrap items-center gap-3">
                       <Button size="lg" asChild>
                         <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">
                           <span className="btn-text-wrapper">
@@ -269,6 +283,7 @@ export function CaseStudyView({
                           </span>
                         </a>
                       </Button>
+                      <ProfileLinks project={project} />
                     </div>
                   </HeroText>
                 )}
@@ -608,6 +623,7 @@ export function CaseStudyView({
                         </span>
                       </a>
                     </Button>
+                    <ProfileLinks project={project} />
                   </div>
                 </AnimatedSection>
               </Container>

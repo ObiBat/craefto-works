@@ -58,6 +58,8 @@ export interface CaseStudy {
   liveUrl?: string;
   /** The link's label when it isn't a website ("Visit live site"). */
   liveLabel?: string;
+  /** The client's own channels, linked beside the live site: Instagram, Facebook. */
+  profiles?: { label: string; url: string }[];
   githubUrl?: string;
   challenge: string;
   approach: string;
@@ -166,6 +168,10 @@ export const caseStudies: CaseStudy[] = [
     services: ["Visual Identity", "Motion Design", "UI/UX Design", "Design System", "Frontend Development", "Backend Development", "API Integration", "Database Design", "Authentication", "Payments", "CMS", "SEO", "Analytics", "Deployment and DevOps", "Content", "Copywriting"],
     techStack: ["Next.js 15", "React 19", "TypeScript 5", "Tailwind CSS 4", "shadcn/ui", "Supabase", "Drizzle ORM", "Sanity 5", "Stripe", "Resend", "three.js / React Three Fiber 9", "Remotion 4", "Recharts 3", "React Hook Form 7 + Zod 4", "Zustand 5", "Google Gemini (vision)", "Cal.com", "Plausible", "Sentry", "Playwright + Jest 30", "Vercel"],
     liveUrl: "https://www.japanoma.com.au",
+    profiles: [
+      { label: "Instagram", url: "https://www.instagram.com/japanoma_au/" },
+      { label: "Facebook", url: "https://www.facebook.com/japanoma" },
+    ],
     challenge: "Go&C Partners wanted to help Australian skiers decide whether to buy a home base in Northern Japan without behaving like a listings portal or a broker. The audience is roughly 184,500 Australian skiers who distrust hype and need honest total-cost figures, due diligence and local execution before they talk to anyone selling. The engagement had a thirteen-week timeline, a two-person Craefto team, a client with no existing brand guidelines, and content still to be written. The platform also had to meet the Australian Privacy Act, Japan's APPI and GDPR from day one, hold up under launch traffic, and hand over cleanly to Go&C as a documented codebase.",
     approach: "We ran a three-week discovery that produced twelve architecture decision records, a scope-boundaries document separating v1 from v2, personas and sixty user stories before writing code. The visual language, Ma Space, treats emptiness as the primary material: a near-monochrome sumi and washi palette with one indigo accent, Shippori Mincho for headings, Satoshi for everything else, and a three-colour-per-screen rule. We chose Next.js with React Server Components and ISR so public pages are CDN-served, Supabase in Sydney for data residency, and Sanity so the client could edit without us. Every decision, and every later reversal, was written into the changelog with its reasoning, so the client inherits the why as well as the code.",
     solution: "We delivered a production platform with 49 pages and 19 API routes. Visitors take a seven-step lifestyle quiz that scores 29 launch areas across nine prefectures, explore them on a three.js map of Japan, and compare towns side by side. A weekly partner workbook feeds the property pipeline: parsing, haversine area assignment, deduplicated image mirroring, caption-based gallery selection and a Gemini-assisted floor-plan translation pilot. Registration gates listings, quiz and consultation booking; Stripe handles consultation credits. A 33-second Remotion film opens the homepage, and a customer story turns one recorded interview into fifteen chapters with audio, word-timed captions and transcripts. An admin area covers leads, users, reviews, area media, compliance exports and insights.",
