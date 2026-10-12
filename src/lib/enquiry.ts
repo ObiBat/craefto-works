@@ -34,7 +34,7 @@ export const ENQUIRY_GROUPS: { capability: string; types: EnquiryType[] }[] = [
   },
   {
     capability: "Media",
-    types: [{ value: "media", label: "Photography, video or motion", phrase: "photography and video", pricing: ["photo", "video"], pricingLabel: "Photography and video" }],
+    types: [{ value: "media", label: "Content, photography or video", phrase: "content, photography and video", pricing: ["photo", "video"], pricingLabel: "Photography and video" }],
   },
   {
     capability: "Growth",

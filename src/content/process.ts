@@ -59,9 +59,9 @@ export const stages: Stage[] = [
       },
       media: {
         activities: [
-          "What the content is for, and where it will run",
-          "References, mood and the brand rules to follow",
-          "Practicalities: people, products, locations and dates",
+          "What the content is for, and the channels it will run on",
+          "What works on those channels now, and when your audience is active",
+          "References, brand rules, and the people, products and places to shoot",
         ],
         outcome: "A brief everyone agrees on",
       },
@@ -109,11 +109,11 @@ export const stages: Stage[] = [
       },
       media: {
         activities: [
-          "Shot list or storyboard, formats and lengths",
-          "Crew, locations, schedule and where the content will be used",
-          "The proposal and its milestones",
+          "The channel plan: content themes, formats and how often each channel posts",
+          "Shot list or storyboard, crew, locations and dates",
+          "The proposal, or the first month's work under a plan",
         ],
-        outcome: "A shot list and schedule, and a fixed-price proposal",
+        outcome: "A channel plan and shot list, priced as a project or a monthly plan",
       },
       growth: {
         activities: [
@@ -150,8 +150,8 @@ export const stages: Stage[] = [
         outcome: "An agreed design for the system",
       },
       media: {
-        activities: ["Mood boards, shot lists and storyboards", "Scripts and motion style frames where needed", "Casting, styling and locations"],
-        outcome: "An approved plan for the shoot or the edit",
+        activities: ["The content grid for each feed, and templates for recurring posts", "Mood boards, scripts and motion style frames", "Casting, styling and locations"],
+        outcome: "An approved grid, and a plan for the shoot or the edit",
       },
       growth: {
         activities: ["Campaign concepts and key messages", "Drafts of ads and landing pages", "Content plans for each channel"],
@@ -180,8 +180,8 @@ export const stages: Stage[] = [
         outcome: "A working system, tested on your data",
       },
       media: {
-        activities: ["The shoot or the recording", "Editing, colour, sound and motion", "Captions, and versions sized for each channel"],
-        outcome: "Finished photos and edits, ready to publish",
+        activities: ["The shoot or the recording, then editing, colour, sound and motion", "A stack of ready-to-post content for each channel, with captions", "A content calendar timed for when your audience is active"],
+        outcome: "A content stack and calendar, ready to publish",
       },
       growth: {
         activities: ["Landing pages and tracking", "Ads and content", "Campaign set-up in each channel"],
@@ -210,8 +210,8 @@ export const stages: Stage[] = [
         outcome: "The new process in daily use",
       },
       media: {
-        activities: ["Delivery in every format and size you need", "Files organised, with notes on where each can be used", "30 days of support"],
-        outcome: "Content in place on every channel",
+        activities: ["Posts scheduled on each channel", "Every file in the formats you need, organised with notes on where each can be used", "30 days of support"],
+        outcome: "Content scheduled and running on every channel",
       },
       growth: {
         activities: ["The campaign goes live", "Tracking checked from end to end", "Early results reviewed together"],
@@ -240,8 +240,8 @@ export const stages: Stage[] = [
         outcome: "More time back, one workflow at a time",
       },
       media: {
-        activities: ["Regular shoots and edits", "Content for new campaigns and launches", "Replacing what has dated"],
-        outcome: "A steady supply of content",
+        activities: ["A new content stack made and scheduled each month", "Reviewing what performed, and adjusting the channel plan", "Regular shoots, and content for campaigns and launches"],
+        outcome: "Channels that post steadily and keep improving",
       },
       growth: {
         activities: ["Monthly reporting and planning", "Testing the pages and messages that underperform", "New campaigns as the plan evolves"],
@@ -257,7 +257,7 @@ export const shapes: Record<CapabilityId | "all", string> = {
   brand: "Brand work spends most of its time in Discover, Define and Create, because the thinking is the work.",
   product: "Product work runs through every stage, with the most time in Create and Build.",
   systems: "Systems work starts small: one workflow, designed, built and tested on real data before the next.",
-  media: "Media work moves quickly from planning to production. Most of the effort goes into preparing the shoot, then the shoot itself.",
+  media: "Media work moves quickly from planning to production. On a monthly plan it becomes a rhythm: each month's stack is made, scheduled and reviewed.",
   growth: "Growth work loops: Launch and Evolve repeat as the results come in.",
 };
 

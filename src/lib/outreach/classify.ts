@@ -223,7 +223,7 @@ export async function classify(email: IncomingEmail, context: ReplyContext, labe
 export function craeftoFacts() {
   return [
     `${siteConfig.studioName}: a creative and technology studio in Sydney, Australia (ABN 81 278 859 855). Founder: Obi Batbileg.`,
-    "What we do: brand identity, marketing websites, web apps and SaaS, internal tools and dashboards, workflow automation and AI, photography and video, SEO and analytics.",
+    "What we do: brand identity, marketing websites, web apps and SaaS, internal tools and dashboards, workflow automation and AI, content made and scheduled for each channel, photography and video, SEO and analytics.",
     `Discovery Call: free, 30 minutes, on Google Meet. Book at ${BOOKING_URL}`,
     `Website: ${siteConfig.url} (case studies at ${siteConfig.url}/work, services and plans at ${siteConfig.url}/services).`,
     "Published project prices, AUD before GST:",
