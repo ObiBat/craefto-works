@@ -226,6 +226,7 @@ export function craeftoFacts() {
     "What we do: brand identity, marketing websites, web apps and SaaS, internal tools and dashboards, workflow automation and AI, content made and scheduled for each channel, photography and video, SEO and analytics.",
     `Discovery Call: free, 30 minutes, on Google Meet. Book at ${BOOKING_URL}`,
     `Website: ${siteConfig.url} (case studies at ${siteConfig.url}/work, services and plans at ${siteConfig.url}/services).`,
+    `Reference projects, the ones to point to first: JapanoMa (${siteConfig.url}/work/japanoma), a platform that helps Australian skiers weigh a home base in Japan, live 13 weeks after kickoff, with registration, consultation booking and payments; and TAV & Partners (${siteConfig.url}/work/tav-partners), the website for a Sydney chartered accounting firm, with Lighthouse scores of 100 for performance, accessibility and best practices. MNG Steel (${siteConfig.url}/work/mng-steel) only for Mongolian businesses.`,
     "Published project prices, AUD before GST:",
     ...priceRanges.map((range) => `- ${range.label}: ${formatPrice(range.min)} to ${formatPrice(range.max)}, typically ${weeksLabel(range)}`),
     "Monthly plans, AUD a month before GST, billed in advance, scope agreed before starting:",
