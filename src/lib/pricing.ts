@@ -26,14 +26,16 @@ export interface PriceRange {
   max: number;
   /** Typical timeline in weeks: [from, to]. */
   weeks: [number, number];
+  /** What the row covers, where that needs saying: Systems' small automations against its larger custom systems. */
+  note?: string;
 }
 
 export const priceRanges: PriceRange[] = [
   { service: "brand", label: "Brand identity", min: 1900, max: 5500, weeks: [2, 4] },
   { service: "web", label: "Marketing website", min: 2900, max: 8500, weeks: [2, 5] },
   { service: "product", label: "Web app, SaaS or MVP", min: 7500, max: 25000, weeks: [3, 10] },
-  { service: "ai", label: "Workflow automation and AI", min: 1500, max: 7500, weeks: [1, 4] },
-  { service: "tools", label: "Internal tools and dashboards", min: 6000, max: 18000, weeks: [3, 8] },
+  { service: "ai", label: "Workflow automation and AI", min: 1500, max: 7500, weeks: [1, 4], note: "Smaller projects: one workflow automated, or two tools connected, using the software you already have." },
+  { service: "tools", label: "Internal tools and dashboards", min: 6000, max: 18000, weeks: [3, 8], note: "Larger custom systems: software your team works in every day, built around how you operate." },
   { service: "photo", label: "Brand photography", min: 900, max: 2500, weeks: [1, 2] },
   { service: "video", label: "Video production", min: 2500, max: 9500, weeks: [2, 4] },
   { service: "landing", label: "Landing page", min: 1200, max: 3500, weeks: [1, 2] },

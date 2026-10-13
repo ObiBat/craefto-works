@@ -130,6 +130,23 @@ function AccordionItem({
                     </svg>
                   </Link>
                 </div>
+
+                {/* A specialised solution within the service (Systems: construction operations), kept quiet */}
+                {capability.solutions?.map((solution) => (
+                  <Link
+                    key={solution.href}
+                    href={solution.href}
+                    className="group/solution inline-flex w-fit flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-accent))]"
+                  >
+                    <span className="font-mono text-[0.6875rem] uppercase tracking-[0.06em] text-[hsl(var(--color-accent))]">Industry solution</span>
+                    <span className="inline-flex items-center gap-2">
+                      {solution.name}
+                      <svg className="w-4 h-4 transition-transform group-hover/solution:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </span>
+                  </Link>
+                ))}
               </div>
 
               {/* Deliverables */}

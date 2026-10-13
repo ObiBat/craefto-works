@@ -185,6 +185,7 @@ const jsonLd = {
     "Software Development",
     "Systems Integration",
     "Workflow Automation",
+    "Construction Workflow Automation",
     "Artificial Intelligence",
     "Photography",
     "Video Production",

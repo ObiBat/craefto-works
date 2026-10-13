@@ -88,6 +88,7 @@ function CapabilityDetail({ capability }: { capability: Capability }) {
                   <span className="font-medium tabular-nums text-[hsl(var(--color-accent))]">{rangeLabel(range)}</span>
                   <span className="text-[hsl(var(--color-foreground-muted))]"> · {weeksLabel(range)}</span>
                 </span>
+                {range.note && <span className="mt-1 block text-sm leading-relaxed text-[hsl(var(--color-foreground-muted))]">{range.note}</span>}
               </li>
             ))}
           </ul>
@@ -138,6 +139,26 @@ function CapabilityDetail({ capability }: { capability: Capability }) {
             ))}
           </ul>
         </div>
+
+        {/* Specialised solutions within this service, such as construction operations under Systems */}
+        {capability.solutions?.length ? (
+          <div>
+            <h3 className="label-heading mb-4">Industry solutions</h3>
+            <ul className="space-y-3">
+              {capability.solutions.map((solution) => (
+                <li key={solution.href}>
+                  <Link href={solution.href} className="group block rounded-2xl bg-[hsl(var(--color-background-subtle))] p-5 transition-colors hover:bg-[hsl(var(--color-accent-subtle))]">
+                    <span className="flex items-center gap-2 font-medium text-[hsl(var(--color-foreground))] transition-colors group-hover:text-[hsl(var(--color-accent))]">
+                      {solution.name}
+                      <Arrow className="text-[hsl(var(--color-foreground-subtle))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--color-accent))]" />
+                    </span>
+                    <span className="mt-1 block leading-relaxed text-[hsl(var(--color-foreground-muted))]">{solution.summary}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
     </section>
   );

@@ -30,7 +30,11 @@ export const ENQUIRY_GROUPS: { capability: string; types: EnquiryType[] }[] = [
   },
   {
     capability: "Systems",
-    types: [{ value: "ai", label: "Software, automation or AI", phrase: "software and automation", pricing: ["ai", "tools"], pricingLabel: "Software and automation" }],
+    types: [
+      { value: "ai", label: "Software, automation or AI", phrase: "software and automation", pricing: ["ai", "tools"], pricingLabel: "Software and automation" },
+      // The construction solution (content/construction.ts), priced from the same Systems rows.
+      { value: "construction", label: "Construction operations", phrase: "construction operations", pricing: ["ai", "tools"], pricingLabel: "Construction operations" },
+    ],
   },
   {
     capability: "Media",
@@ -98,6 +102,7 @@ export const ENQUIRY_PRESELECT: Record<string, string> = {
   saas: "saas",
   ai: "ai",
   systems: "ai",
+  construction: "construction",
   media: "media",
   growth: "growth",
 };
@@ -121,4 +126,68 @@ export function enquiryPhrase(value: string | null | undefined): string | undefi
 export function enquiryPriceRange(value: string): PriceRange | null {
   const type = ENQUIRY_TYPES.find((entry) => entry.value === value);
   return type ? combinedRange(type.pricing, type.pricingLabel) : null;
+}
+
+// ── Construction operations ───────────────────────────────────────────────
+// Optional questions on a construction operations enquiry, kept with the
+// lead's first history entry (lib/leads.ts) and shown in the owner's alert
+// and admin. Nothing here is required, and other enquiries never see them.
+
+type Option = { value: string; label: string };
+
+export const CONSTRUCTION_TRADES: Option[] = [
+  { value: "steel-fixing", label: "Steel fixing" },
+  { value: "formwork", label: "Formwork" },
+  { value: "concreting", label: "Concreting" },
+  { value: "scaffolding", label: "Scaffolding" },
+  { value: "carpentry", label: "Carpentry" },
+  { value: "electrical", label: "Electrical" },
+  { value: "plumbing", label: "Plumbing" },
+  { value: "civil", label: "Civil works" },
+  { value: "other", label: "Another trade" },
+];
+
+export const WORKFORCE_SIZES: Option[] = [
+  { value: "1-10", label: "1 to 10 workers" },
+  { value: "11-25", label: "11 to 25 workers" },
+  { value: "26-50", label: "26 to 50 workers" },
+  { value: "51-100", label: "51 to 100 workers" },
+  { value: "100+", label: "More than 100 workers" },
+];
+
+export const ACTIVE_SITES: Option[] = [
+  { value: "1", label: "1 site" },
+  { value: "2-3", label: "2 or 3 sites" },
+  { value: "4-10", label: "4 to 10 sites" },
+  { value: "10+", label: "More than 10 sites" },
+];
+
+export const PREFERRED_LANGUAGES: Option[] = [
+  { value: "en", label: "English" },
+  { value: "mn", label: "Mongolian (Монгол)" },
+];
+
+export interface ConstructionDetails {
+  trade: string | null;
+  workforce: string | null;
+  sites: string | null;
+  tools: string | null;
+  bottleneck: string | null;
+  language: string | null;
+}
+
+const labelIn = (list: Option[], value: string | null | undefined) => (value ? (list.find((option) => option.value === value)?.label ?? null) : null);
+
+/** The answers given, as labelled rows for the owner's alert and admin. */
+export function constructionRows(details: Partial<ConstructionDetails> | null | undefined): Array<[string, string]> {
+  if (!details) return [];
+  const rows: Array<[string, string | null | undefined]> = [
+    ["Trade", labelIn(CONSTRUCTION_TRADES, details.trade)],
+    ["Workforce", labelIn(WORKFORCE_SIZES, details.workforce)],
+    ["Active sites", labelIn(ACTIVE_SITES, details.sites)],
+    ["Current tools", details.tools],
+    ["Biggest bottleneck", details.bottleneck],
+    ["Preferred language", labelIn(PREFERRED_LANGUAGES, details.language)],
+  ];
+  return rows.filter((row): row is [string, string] => Boolean(row[1]));
 }

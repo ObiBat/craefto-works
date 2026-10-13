@@ -3,7 +3,18 @@ import { z } from "zod";
 import { createServerClient } from "@/lib/supabase";
 import { resend, EMAIL_FROM, ADMIN_EMAIL, isEmailEnabled } from "@/lib/resend";
 import { siteConfig } from "@/lib/constants";
-import { BUDGETS, ENQUIRY_VALUES, TIMELINES, enquiryLabel, enquiryPhrase } from "@/lib/enquiry";
+import {
+  ACTIVE_SITES,
+  BUDGETS,
+  CONSTRUCTION_TRADES,
+  ENQUIRY_VALUES,
+  PREFERRED_LANGUAGES,
+  TIMELINES,
+  WORKFORCE_SIZES,
+  constructionRows,
+  enquiryLabel,
+  enquiryPhrase,
+} from "@/lib/enquiry";
 import { enquiryConfirmationEmail } from "@/emails/enquiry";
 import { alertEmail } from "@/emails/portal";
 
@@ -45,6 +56,23 @@ const oneOf = (values: string[]) =>
     .nullish()
     .transform((value) => (value && values.includes(value) ? value : null));
 
+/** A construction operations enquiry's optional answers (lib/enquiry.ts): nothing when none were given. */
+const constructionSchema = z
+  .object({
+    trade: oneOf(CONSTRUCTION_TRADES.map((option) => option.value)),
+    workforce: oneOf(WORKFORCE_SIZES.map((option) => option.value)),
+    sites: oneOf(ACTIVE_SITES.map((option) => option.value)),
+    tools: optionalLine(300),
+    bottleneck: z
+      .string()
+      .max(1000, "Please keep the bottleneck to 1,000 characters.")
+      .nullish()
+      .transform((value) => (value ? multiLine(value) || null : null)),
+    language: oneOf(PREFERRED_LANGUAGES.map((option) => option.value)),
+  })
+  .nullish()
+  .transform((details) => (details && Object.values(details).some(Boolean) ? details : null));
+
 export const leadInputSchema = z.object({
   name: z.string({ error: "Please tell us your name." }).max(100, "That name is too long.").transform(oneLine).pipe(z.string().min(1, "Please tell us your name.")),
   email: z
@@ -67,6 +95,7 @@ export const leadInputSchema = z.object({
   utm_campaign: optionalLine(200),
   utm_content: optionalLine(200),
   landing_page: optionalLine(500),
+  construction: constructionSchema,
 });
 
 export type LeadInput = z.output<typeof leadInputSchema>;
@@ -98,7 +127,7 @@ export function calculateLeadScore(data: Pick<LeadInput, "budget" | "timeline" |
     discuss: 5,
   };
   const timelineScores: Record<string, number> = { asap: 25, "1-3months": 20, "3-6months": 10, flexible: 5 };
-  const serviceScores: Record<string, number> = { saas: 15, ai: 15, web: 12, brand: 10, media: 10, growth: 10, other: 5 };
+  const serviceScores: Record<string, number> = { saas: 15, ai: 15, construction: 15, web: 12, brand: 10, media: 10, growth: 10, other: 5 };
 
   let score = budgetScores[data.budget ?? ""] ?? 0;
   score += timelineScores[data.timeline ?? ""] ?? 0;
@@ -174,8 +203,8 @@ export async function logActivity(db: Db, leadId: string, activity: Activity, ac
   if (error) console.error(`Failed to log "${activity.type}" for lead ${leadId}:`, error);
 }
 
-/** The owner's alert: who it is, what they want, and a link straight to the lead. */
-function leadAlert(lead: LeadRow, eyebrow: string, extra: Array<[string, string | null | undefined]> = []) {
+/** The owner's alert: who it is, what they want (with any qualifying answers), and a link straight to the lead. */
+function leadAlert(lead: LeadRow, eyebrow: string, extra: Array<[string, string | null | undefined]> = [], details: Array<[string, string]> = []) {
   const budget = enquiryLabel(lead.budget_range);
   return alertEmail({
     eyebrow,
@@ -187,6 +216,7 @@ function leadAlert(lead: LeadRow, eyebrow: string, extra: Array<[string, string 
       ["Company", lead.company],
       ["Phone", lead.phone],
       ["About", enquiryLabel(lead.service_interest)],
+      ...details,
       ["Budget", budget],
       ["Timeline", enquiryLabel(lead.timeline)],
       ["Score", `${lead.score} / 100`],
@@ -219,9 +249,9 @@ async function sendLogged(db: Db, leadId: string, template: string, message: { t
 }
 
 /** Tells the owner about a lead, with replies going straight to the person. */
-export async function alertOwner(db: Db, lead: LeadRow, eyebrow: string, extra?: Array<[string, string | null | undefined]>) {
+export async function alertOwner(db: Db, lead: LeadRow, eyebrow: string, extra?: Array<[string, string | null | undefined]>, details?: Array<[string, string]>) {
   if (!isEmailEnabled()) return;
-  const email = leadAlert(lead, eyebrow, extra);
+  const email = leadAlert(lead, eyebrow, extra, details);
   await sendLogged(db, lead.id, "admin-notification", { to: ADMIN_EMAIL, subject: email.subject, html: email.html, replyTo: lead.email });
 }
 
@@ -267,16 +297,15 @@ export async function createLead(input: LeadInput, context: LeadContext): Promis
   const { data: lead, error } = await db.from("leads").insert(row).select().single<LeadRow>();
   if (error || !lead) throw error ?? new Error("Lead insert returned nothing");
 
-  await logActivity(
-    db,
-    lead.id,
-    context.activity ?? {
-      type: "form_submission",
-      title: "Enquiry received",
-      description: `Submitted through the ${SOURCE_LABELS[context.source].toLowerCase()}`,
-      metadata: { page: input.landing_page, utm_source: input.utm_source, utm_campaign: input.utm_campaign },
-    }
-  );
+  // A construction enquiry's optional answers live with its first history entry; other enquiries never carry them.
+  const qualification = input.service === "construction" ? (input.construction ?? null) : null;
+  const activity = context.activity ?? {
+    type: "form_submission" as const,
+    title: "Enquiry received",
+    description: `Submitted through the ${SOURCE_LABELS[context.source].toLowerCase()}`,
+    metadata: { page: input.landing_page, utm_source: input.utm_source, utm_campaign: input.utm_campaign },
+  };
+  await logActivity(db, lead.id, qualification ? { ...activity, metadata: { ...activity.metadata, qualification } } : activity);
 
   if (isEmailEnabled()) {
     if (context.confirm !== false) {
@@ -284,7 +313,7 @@ export async function createLead(input: LeadInput, context: LeadContext): Promis
       const sent = await sendLogged(db, lead.id, "lead-confirmation", { to: lead.email, subject: email.subject, html: email.html, text: email.text });
       if (sent) await logActivity(db, lead.id, { type: "email_sent", title: "Confirmation email sent" });
     }
-    if (context.notify !== false) await alertOwner(db, lead, context.alert ?? "New enquiry", context.alertRows);
+    if (context.notify !== false) await alertOwner(db, lead, context.alert ?? "New enquiry", context.alertRows, constructionRows(qualification));
   }
 
   return lead;

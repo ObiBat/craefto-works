@@ -18,7 +18,7 @@ import {
   IconPhone,
 } from "@/components/admin/icons";
 import { DetailSection, EmptyState, InfoField, PageContainer, PageHeader, StatusBadge } from "@/components/admin/ui";
-import { LEAD_SOURCES, enquiryLabel } from "@/lib/enquiry";
+import { LEAD_SOURCES, constructionRows, enquiryLabel, type ConstructionDetails } from "@/lib/enquiry";
 import { StageSelect, saveStage, when, type Stage } from "../shared";
 
 interface Lead {
@@ -49,6 +49,7 @@ interface Activity {
   type: string;
   title: string | null;
   description: string | null;
+  metadata?: { qualification?: Partial<ConstructionDetails> } | null;
   actor_type: string | null;
   created_at: string;
 }
@@ -214,6 +215,8 @@ export default function LeadPage() {
   if (!detail) return <AdminLoader message="Loading lead..." />;
 
   const { lead, activities, chat, replies, client } = detail;
+  // A construction operations enquiry's optional answers, kept with its first history entry (lib/leads.ts).
+  const qualification = constructionRows(activities.findLast((activity) => activity.metadata?.qualification)?.metadata?.qualification);
   const source = LEAD_SOURCES[lead.source ?? ""] ?? "Enquiry";
   const place = [lead.city, lead.country].filter(Boolean).join(", ");
   const campaign = [lead.utm_source, lead.utm_medium, lead.utm_campaign].filter(Boolean).join(" · ");
@@ -267,6 +270,16 @@ export default function LeadPage() {
               {campaign && <InfoField label="Campaign" value={campaign} />}
             </div>
           </DetailSection>
+
+          {qualification.length > 0 && (
+            <DetailSection title="About their operations">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {qualification.map(([label, value]) => (
+                  <InfoField key={label} label={label} value={value} />
+                ))}
+              </div>
+            </DetailSection>
+          )}
 
           <DetailSection title="Connected">
             <div className="-mx-3 space-y-1">

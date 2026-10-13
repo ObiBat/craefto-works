@@ -2,7 +2,18 @@
 
 import * as React from "react";
 import { formatPrice, monthlyPlans, priceRanges } from "@/lib/pricing";
-import { ENQUIRY_GROUPS, ENQUIRY_PRESELECT, ENQUIRY_UNSURE, PLAN_PROJECT_TYPE, enquiryPlan, enquiryPriceRange } from "@/lib/enquiry";
+import {
+  ACTIVE_SITES,
+  CONSTRUCTION_TRADES,
+  ENQUIRY_GROUPS,
+  ENQUIRY_PRESELECT,
+  ENQUIRY_UNSURE,
+  PLAN_PROJECT_TYPE,
+  PREFERRED_LANGUAGES,
+  WORKFORCE_SIZES,
+  enquiryPlan,
+  enquiryPriceRange,
+} from "@/lib/enquiry";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -61,6 +72,7 @@ const BUDGET_SUGGESTIONS: Record<string, string> = {
   web: "5-10k",
   saas: "10-25k",
   ai: "5-10k",
+  construction: "5-10k",
   media: "3-5k",
   growth: "under-3k",
   other: "discuss",
@@ -72,6 +84,7 @@ const TIMELINE_SUGGESTIONS: Record<string, string> = {
   web: "1-3months",
   saas: "1-3months",
   ai: "1-3months",
+  construction: "1-3months",
   media: "1-3months",
   growth: "1-3months",
   other: "flexible",
@@ -88,7 +101,7 @@ function getComplexityScore(
   
   // Project type scoring
   if (projectType === "saas") score += 3;
-  else if (projectType === "ai") score += 2;
+  else if (projectType === "ai" || projectType === "construction") score += 2;
   else if (projectType === "web") score += 1;
   else if (projectType === "brand" || projectType === "media" || projectType === "growth") score += 1;
   
@@ -119,6 +132,13 @@ const contactSchema = z.object({
   budget: z.string().min(1, "Please select a budget range"),
   timeline: z.string().min(1, "Please select a timeline"),
   message: z.string().min(20, "Please tell us a little more (at least 20 characters)"),
+  // Construction operations only, and all optional.
+  trade: z.string().optional(),
+  workforce: z.string().optional(),
+  sites: z.string().optional(),
+  tools: z.string().max(300, "Please keep this to 300 characters").optional(),
+  bottleneck: z.string().max(1000, "Please keep this to 1,000 characters").optional(),
+  language: z.string().optional(),
 });
 
 const quickInquirySchema = z.object({
@@ -226,6 +246,18 @@ export function ContactForm() {
           budget: data.budget,
           timeline: data.timeline,
           message: data.message,
+          // A construction operations enquiry's optional answers; other enquiries send none.
+          construction:
+            data.projectType === "construction"
+              ? {
+                  trade: data.trade || null,
+                  workforce: data.workforce || null,
+                  sites: data.sites || null,
+                  tools: data.tools || null,
+                  bottleneck: data.bottleneck || null,
+                  language: data.language || null,
+                }
+              : undefined,
           // Honeypot for spam protection
           website_url: honeypotRef.current?.value || '',
           // UTM parameters for attribution
@@ -668,6 +700,68 @@ export function ContactForm() {
         </p>
       )}
     </div>
+
+    {/* Construction operations: a few optional questions that help us prepare (lib/enquiry.ts) */}
+    {watchedProjectType === "construction" && (
+      <fieldset className="space-y-5 rounded-2xl bg-[hsl(var(--color-background-subtle))] p-5 sm:p-6">
+        {/* The legend is read out; the heading shows it, since a legend can't sit inside the padded card. */}
+        <legend className="sr-only">About your operations, optional</legend>
+        <div>
+          <p aria-hidden="true" className="text-sm font-medium text-[hsl(var(--color-foreground))]">
+            About your operations <span className="font-normal text-[hsl(var(--color-foreground-muted))]">(optional)</span>
+          </p>
+          <p className="mt-1 text-sm text-[hsl(var(--color-foreground-muted))]">Answer whatever is useful. It helps us prepare for the call.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="space-y-2">
+            <label htmlFor="trade" className="text-sm font-medium text-[hsl(var(--color-foreground))]">Trade</label>
+            <Select id="trade" {...register("trade")}>
+              <option value="">Select one</option>
+              {CONSTRUCTION_TRADES.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="workforce" className="text-sm font-medium text-[hsl(var(--color-foreground))]">Workforce size</label>
+            <Select id="workforce" {...register("workforce")}>
+              <option value="">Select one</option>
+              {WORKFORCE_SIZES.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="sites" className="text-sm font-medium text-[hsl(var(--color-foreground))]">Active sites</label>
+            <Select id="sites" {...register("sites")}>
+              <option value="">Select one</option>
+              {ACTIVE_SITES.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="language" className="text-sm font-medium text-[hsl(var(--color-foreground))]">Preferred language</label>
+            <Select id="language" {...register("language")}>
+              <option value="">No preference</option>
+              {PREFERRED_LANGUAGES.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </Select>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="tools" className="text-sm font-medium text-[hsl(var(--color-foreground))]">Current scheduling and accounting tools</label>
+          <Input id="tools" placeholder="For example: spreadsheets, group chats, an accounting package" error={!!errors.tools} {...register("tools")} />
+          {errors.tools && <p className="text-sm text-[hsl(var(--color-error))]">{errors.tools.message}</p>}
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="bottleneck" className="text-sm font-medium text-[hsl(var(--color-foreground))]">Biggest operational bottleneck</label>
+          <Textarea id="bottleneck" rows={3} placeholder="What takes the most time, or goes wrong most often?" error={!!errors.bottleneck} {...register("bottleneck")} />
+          {errors.bottleneck && <p className="text-sm text-[hsl(var(--color-error))]">{errors.bottleneck.message}</p>}
+        </div>
+      </fieldset>
+    )}
 
           {/* Submit */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">

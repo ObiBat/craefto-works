@@ -4,6 +4,7 @@
 // says only what those pages show. Prices come from lib/pricing.ts.
 
 import { combinedRange, priceRanges, type PriceRange, type ServiceKey } from "@/lib/pricing";
+import { construction } from "@/content/construction";
 
 export type CapabilityId = "brand" | "product" | "systems" | "media" | "growth";
 
@@ -25,6 +26,8 @@ export interface Capability {
   work: { slug: string; project: string; detail: string }[];
   /** Published price ranges this capability covers. */
   pricing: ServiceKey[];
+  /** Industry solutions within the capability: specialised pages it links to, never services of their own. */
+  solutions?: { name: string; summary: string; href: string }[];
 }
 
 export const capabilities: Capability[] = [
@@ -102,6 +105,7 @@ export const capabilities: Capability[] = [
       { slug: "artisan", project: "Artisan", detail: "A Supabase backend with 40 SQL functions and an operations dashboard." },
     ],
     pricing: ["ai", "tools"],
+    solutions: [{ name: construction.shortName, summary: construction.summary, href: construction.path }],
   },
   {
     id: "media",

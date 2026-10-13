@@ -6,6 +6,7 @@ import { aiAutomationProject, formatPrice, monthlyPlans, priceFor, priceRanges, 
 import { chargesGst } from "@/lib/stripe";
 import { capabilities, capabilityPrices, engagements } from "@/content/capabilities";
 import { caseStudies } from "@/content/case-studies";
+import { construction } from "@/content/construction";
 import { faqGroups } from "@/content/faq";
 import { planTerms } from "@/content/plan-terms";
 import { clientChecklist, shapes, stages } from "@/content/process";
@@ -52,14 +53,37 @@ function aboutCapabilities() {
         capability.description,
         `Deliverables: ${capability.deliverables.join("; ")}.`,
         `When you'd need it: ${capability.example}`,
-        `Published prices, AUD before GST: ${capabilityPrices(capability).map((range) => `${range.label} ${rangeLabel(range)}, typically ${weeksLabel(range)}`).join("; ")}.`,
+        `Published prices, AUD before GST: ${capabilityPrices(capability).map((range) => `${range.label} ${rangeLabel(range)}, typically ${weeksLabel(range)}${range.note ? ` (${range.note})` : ""}`).join("; ")}.`,
         capability.work.length ? `Related work: ${capability.work.map((work) => `${work.project} (${url(`/work/${work.slug}`)}): ${work.detail}`).join(" ")}` : "",
+        capability.solutions?.length ? `Industry solutions within it: ${capability.solutions.map((solution) => `${solution.name} (${url(solution.href)})`).join("; ")}.` : "",
       ]
         .filter(Boolean)
         .join("\n"),
     ),
     "## How the capabilities combine (illustrations, not past projects)",
     bullets(engagements.map((engagement) => `${engagement.title}: ${engagement.description}`)),
+  ].join("\n\n");
+}
+
+function aboutConstruction() {
+  return [
+    `# Industry solution within Systems: ${construction.name} (${url(construction.path)})`,
+    `${construction.headline} ${construction.statement} ${construction.intro}`,
+    "It isn't a sixth service, a separate brand or a product to subscribe to: each system is connected or built for one business, and what we make is theirs.",
+    "## What it can include",
+    bullets(construction.capabilities.map((item) => `${item.title}: ${item.text}`)),
+    "## How the data moves",
+    bullets(construction.workflow.map((step, index) => `${index + 1}. ${step.title} (${step.who}${step.approval ? `; ${step.approval}` : ""}): ${step.text}`)),
+    `Who sees what: ${construction.roles.map((entry) => `${entry.role}: ${entry.sees}`).join(" ")}`,
+    "## Integrate or build",
+    bullets(construction.paths.map((path) => `${path.kicker} (${path.title.toLowerCase()}): ${path.text}`)),
+    construction.pathsNote,
+    "## Ways to start (indicative)",
+    bullets(construction.tiers.map((tier) => `${tier.name}: ${tier.summary} ${tier.price}, ${tier.timing.charAt(0).toLowerCase()}${tier.timing.slice(1)}.`)),
+    construction.tiersNote,
+    `Related work: Artisan (${url(`/work/${construction.proof.slug}`)}). ${construction.proof.text}`,
+    ...construction.faq.map((item) => `Q: ${item.question}\nA: ${item.answer}`),
+    `To enquire: the contact form with construction operations chosen (${url("/contact?service=construction")}). It asks optional questions about their trade, workforce, active sites, current tools, biggest bottleneck and preferred language (English or Mongolian).`,
   ].join("\n\n");
 }
 
@@ -124,7 +148,7 @@ function aboutEnquiries() {
 }
 
 /** The whole document, built once per deploy. */
-export const KNOWLEDGE = [aboutStudio(), aboutCapabilities(), aboutPrices(), aboutProcess(), aboutWork(), aboutFaq(), aboutEnquiries()].join("\n\n");
+export const KNOWLEDGE = [aboutStudio(), aboutCapabilities(), aboutConstruction(), aboutPrices(), aboutProcess(), aboutWork(), aboutFaq(), aboutEnquiries()].join("\n\n");
 
 // ── Prices it may quote ───────────────────────────────────────────────────
 
