@@ -15,7 +15,8 @@ import { construction, type ConstructionCapabilityId, type ConstructionTier } fr
 import { plansFrom } from "@/lib/pricing";
 import { SITE_URL } from "@/lib/seo";
 import { cn } from "@/lib/utils";
-import { ApprovalChain, Workflow } from "./diagrams";
+import { FlowPreview } from "./flow-preview";
+import { ConstructionWorkflow } from "./workflow/graph";
 
 // Construction Operations & AI Integration: an industry solution within
 // Systems, for construction subcontractors in Sydney and NSW. Everything it
@@ -108,7 +109,7 @@ function structuredData() {
           { "@type": "Country", name: "Australia" },
         ],
         audience: { "@type": "BusinessAudience", audienceType: "Construction subcontractors" },
-        availableChannel: { "@type": "ServiceChannel", serviceUrl: `${SITE_URL}${ENQUIRE}`, availableLanguage: ["English", "Mongolian"] },
+        availableChannel: { "@type": "ServiceChannel", serviceUrl: `${SITE_URL}${ENQUIRE}`, availableLanguage: ["English"] },
         hasOfferCatalog: { "@type": "OfferCatalog", name: "Ways to start", itemListElement: construction.tiers.map(offer) },
       },
       {
@@ -209,13 +210,10 @@ export default function ConstructionOperationsPage() {
                         <Arrow className="rotate-90 transition-transform group-hover:translate-y-0.5" />
                       </a>
                     </div>
-                    <p className={`mt-6 text-sm ${muted}`}>
-                      We talk in English or Mongolian. <span lang="mn">Монгол хэлээр ярилцаж болно.</span>
-                    </p>
                   </HeroText>
                 </div>
                 <HeroText delay={0.25} className="lg:col-span-5">
-                  <ApprovalChain />
+                  <FlowPreview />
                 </HeroText>
               </div>
             </Container>
@@ -289,9 +287,7 @@ export default function ConstructionOperationsPage() {
                 <SectionIntro number="03" label="How it works" id="how-it-works" heading="From the schedule to payroll, without retyping">
                   How scheduling and timesheet data move through a connected system. Each step is built for you or connected to a tool you already use, and people approve at the marked points.
                 </SectionIntro>
-                <AnimatedSection>
-                  <Workflow steps={construction.workflow} />
-                </AnimatedSection>
+                <ConstructionWorkflow />
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                   <AnimatedSection className="flex flex-col gap-5 rounded-3xl bg-[hsl(var(--color-background-subtle))] p-7 sm:flex-row lg:col-span-7">
                     <span className="icon-tile">
@@ -397,7 +393,7 @@ export default function ConstructionOperationsPage() {
             <Container>
               <div className="flex flex-col gap-14 md:gap-10">
                 <SectionIntro number="06" label="Related work" id="proof-heading" heading="Built for the trade before">
-                  We&apos;ve designed and built crew software for Sydney&apos;s steel-fixing trade, in English and Mongolian.
+                  We&apos;ve designed and built crew software for Sydney&apos;s steel-fixing trade.
                 </SectionIntro>
                 <AnimatedSection>
                   <Link href={`/work/${artisan.slug}`} className="group grid overflow-hidden rounded-3xl bg-[hsl(var(--color-background-subtle))] lg:grid-cols-2">
@@ -452,7 +448,7 @@ export default function ConstructionOperationsPage() {
                     <div className="mt-6 rounded-2xl bg-[hsl(var(--color-background-subtle))] p-6">
                       <p className="font-medium text-[hsl(var(--color-foreground))]">Still have a question?</p>
                       <p className={`mt-2 text-sm leading-relaxed ${muted}`}>
-                        Tell us how your business runs today and we&apos;ll reply within one to two business days, in English or Mongolian.
+                        Tell us how your business runs today and we&apos;ll reply within one to two business days.
                       </p>
                       <Link href={ENQUIRE} className="group mt-4 inline-flex items-center gap-2 text-sm font-medium text-[hsl(var(--color-accent))]">
                         Ask us

@@ -36,7 +36,11 @@ export interface ConstructionTier {
 export type ConstructionCapabilityId = "scheduling" | "timesheets" | "ai" | "costing" | "integration" | "languages";
 
 export interface WorkflowStep {
+  /** The node it is in the page's workflow graph (solutions/construction/workflow). */
+  id: "jobs" | "scheduling" | "approval" | "crew" | "timesheets" | "payroll";
   title: string;
+  /** What kind of stage it is, as the graph labels it. */
+  category: string;
   text: string;
   /** Who does it. */
   who: "Office" | "Supervisor" | "Crew" | "System";
@@ -76,8 +80,8 @@ export const construction = {
       text: "The schedule, the spreadsheets and the accounts each hold part of the picture, so the same details are keyed in more than once.",
     },
     {
-      title: "Two languages on every site",
-      text: "Instructions written in English reach crews more at home in Mongolian, and details get lost along the way.",
+      title: "More than one language on site",
+      text: "Instructions written in English reach crews more at home in another language, and details get lost along the way.",
     },
   ],
 
@@ -109,18 +113,57 @@ export const construction = {
     },
     {
       id: "languages",
-      title: "English and Mongolian",
-      text: "Crew screens and messages in English and Mongolian. Fixed wording is translated and checked by a fluent speaker, and AI-drafted translations wait for approval before they’re sent.",
+      title: "Your crews’ languages",
+      text: "Crew screens and messages in English and the languages your crews speak. Fixed wording is translated and checked by a fluent speaker, and AI-drafted translations wait for approval before they’re sent.",
     },
   ] satisfies { id: ConstructionCapabilityId; title: string; text: string }[],
 
   workflow: [
-    { title: "Jobs and sites", text: "Job details come in from your quotes or project software, or the office adds them.", who: "Office" },
-    { title: "Schedule", text: "Crews are planned for each site. AI can suggest who’s free and flag clashes.", who: "Supervisor", approval: "Supervisor approves" },
-    { title: "Crew notified", text: "Each worker gets their site and start time on their phone, in English or Mongolian.", who: "Crew" },
-    { title: "Hours recorded", text: "Workers record start and finish, and anything unusual is flagged for a closer look.", who: "Crew", approval: "Supervisor approves" },
-    { title: "Job costs", text: "Approved hours and rates become labour cost per job, updated as the week goes.", who: "System" },
-    { title: "Payroll and accounts", text: "Approved hours and job codes go to payroll and your accounts, where your software allows.", who: "Office", approval: "Office signs off" },
+    {
+      id: "jobs",
+      title: "Jobs and sites",
+      category: "Office · Input",
+      who: "Office",
+      text: "Every working day starts here. Active projects, site locations, crew numbers, start times and deadlines come in from your project software or job lists, or the office adds them.",
+    },
+    {
+      id: "scheduling",
+      title: "Workforce scheduling",
+      category: "Scheduling · Coordination",
+      who: "System",
+      text: "Matches crew availability, assignments and existing shifts. AI suggests available workers, detects clashes, proposes day hire when the crew is short and prepares recommendations for a supervisor. It never changes an assignment on its own.",
+    },
+    {
+      id: "approval",
+      title: "Supervisor approval",
+      category: "Human decision",
+      who: "Supervisor",
+      approval: "Supervisor approves",
+      text: "A supervisor reviews each recommendation, then approves, changes or rejects it. Nothing moves on until they do.",
+    },
+    {
+      id: "crew",
+      title: "Crew notifications and attendance",
+      category: "Field operations",
+      who: "Crew",
+      text: "Approved assignments reach each worker’s phone, in their language where needed, and workers record when they start and finish on site.",
+    },
+    {
+      id: "timesheets",
+      title: "Timesheet approval and job costing",
+      category: "Operations · Finance",
+      who: "Supervisor",
+      approval: "Supervisor approves",
+      text: "Submitted hours wait for a supervisor’s approval. Only approved hours flow into labour cost per job.",
+    },
+    {
+      id: "payroll",
+      title: "Payroll and accounts",
+      category: "Business systems · Output",
+      who: "Office",
+      approval: "Office signs off",
+      text: "Each pay period, weekly or fortnightly, approved hours, job codes and labour-cost records become a payroll-ready export for your accounting software, where it supports one. Day-hire hours are kept apart for the agency’s invoice. The office signs off, and nothing is paid automatically.",
+    },
   ] satisfies WorkflowStep[],
 
   /** Who sees what: role-based access in every system we propose. */
@@ -168,7 +211,7 @@ export const construction = {
       summary: "Scheduling, timesheets and job costing in one system your team works in every day, connected to your accounts.",
       price: rangeLabel(system),
       timing: weeksLabel(system),
-      includes: ["Crew screens in English and Mongolian", "Access by role for crews, supervisors and the office", "Built in stages, tried with one crew first"],
+      includes: ["Crew screens in your crews’ languages", "Access by role for crews, supervisors and the office", "Built in stages, tried with one crew first"],
       range: system,
     },
     {
@@ -185,8 +228,8 @@ export const construction = {
   /** The case study that shows this kind of work (content/case-studies.ts). */
   proof: {
     slug: "artisan",
-    text: "Artisan is a crew and jobs app we built for Sydney construction labour, beginning with the Mongolian steel-fixing community: crew invites by phone, a schedule grid, one-tap attendance on a 6am Today screen, and a backend locked down with row-level security, alongside a bilingual English and Mongolian website.",
-    facts: ["37 app screens across boss, worker and sign-in flows", "Security tests run in CI on every change", "A bilingual English and Mongolian website"],
+    text: "Artisan is a crew and jobs app we built for Sydney construction labour, beginning with the steel-fixing trade: crew invites by phone, a schedule grid, one-tap attendance on a 6am Today screen, and a backend locked down with row-level security, alongside a bilingual marketing website.",
+    facts: ["37 app screens across boss, worker and sign-in flows", "Security tests run in CI on every change", "A bilingual marketing website"],
     note: "Artisan shows the kind of system we build. Yours is designed for your business, and it’s yours.",
   },
 
@@ -204,7 +247,7 @@ export const construction = {
     {
       question: "Will our crews actually use it?",
       answer:
-        "Crew screens stick to the few things a worker needs: today’s site, start and finish, and messages, in English or Mongolian, on the phone they already carry. We test the screens with your crews and change what doesn’t work for them. It also needs supervisors who use it every day, so we plan the rollout with them.",
+        "Crew screens stick to the few things a worker needs: today’s site, start and finish, and messages, in their language where needed, on the phone they already carry. We test the screens with your crews and change what doesn’t work for them. It also needs supervisors who use it every day, so we plan the rollout with them.",
     },
     {
       question: "What does the AI do, and who’s in control?",
