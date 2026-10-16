@@ -16,7 +16,7 @@ import {
   UserCheck,
   type Icon,
 } from "@phosphor-icons/react";
-import { APPS, type AppId } from "./workflow/apps";
+import { APPS, type AppId } from "./flow/apps";
 
 // The hero's preview of the workflow in section 03: a week on Site A in
 // miniature. The five daily stages fill down a rail and start again each

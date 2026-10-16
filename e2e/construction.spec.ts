@@ -36,90 +36,72 @@ test.describe("construction operations", () => {
     await expect(preview.getByRole("button")).toHaveCount(0);
   });
 
-  test.describe("the workflow graph", () => {
-    const card = (page: import("@playwright/test").Page, id: string) => page.locator(`.wf-node[data-node="${id}"]`);
-    const APPS = [
-      "Procore", "Google Drive", "Microsoft Excel", "Google Sheets", "Assignar", "Deputy", "Google Calendar", "Microsoft Outlook",
-      "Microsoft Teams", "Slack", "Gmail", "WhatsApp", "Twilio (SMS)", "Google Maps", "HammerTech", "Power BI",
-      "Facebook", "Xero", "MYOB", "QuickBooks", "Employment Hero", "Reckon",
+  test.describe("the information flow", () => {
+    const STAGES = [
+      "Jobs and sites",
+      "Workforce scheduling",
+      "Supervisor approval",
+      "Crew notifications and attendance",
+      "Timesheet approval and job costing",
+      "Day hire",
+      "Payroll and accounts",
     ];
 
-    test("still, it tells the whole week in three layers, with the software at every stage", async ({ page }) => {
+    test("still, it shows the whole system, and each stage explains itself", async ({ page }) => {
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto("/solutions/construction");
-      for (const lane of ["Every working day", "When the crew is short", "Weekly or fortnightly"]) {
-        await expect(page.getByRole("region", { name: lane })).toBeVisible();
-      }
-      await expect(page.locator(".wf-node")).toHaveCount(7);
-      await expect(page.locator(".wf-days li[data-state=\"done\"]")).toHaveCount(5);
-      // At rest, the end of the week: approved, hired for the day, and the pay run sent.
-      await expect(card(page, "approval")).toContainText("Approved by the supervisor");
-      await expect(card(page, "hire")).toContainText("3 day-hire fixers");
-      await expect(card(page, "payroll")).toContainText("Sent to Xero");
-      // Every stage connects to real software, by name, and all of it has been reached.
-      await expect(page.locator(".wf-apps img")).toHaveCount(27);
-      for (const name of APPS) await expect(page.locator(".wf-apps").getByRole("img", { name, exact: true }).first()).toBeVisible();
-      await expect(page.locator(".wf-apps[data-lit]")).toHaveCount(7);
-      // Nothing plays, and there's nothing for the visitor to approve.
-      await expect(page.getByRole("button", { name: /Pause the demo|Play the demo/ })).toHaveCount(0);
-      await expect(page.getByRole("button", { name: /Approve/ })).toHaveCount(0);
-      // Inspecting a stage opens its description.
-      const title = card(page, "scheduling").getByRole("button", { name: /Scheduling/ });
-      await title.click();
-      await expect(title).toHaveAttribute("aria-pressed", "true");
-      await expect(page.getByRole("region", { name: "Stage details" })).toContainText("proposes day hire when the crew is short");
+      const flow = page.locator("figure.flow");
+      await expect(flow).toHaveAttribute("data-mode", "still");
+      for (const name of STAGES) await expect(flow.getByRole("button", { name, exact: true })).toBeVisible();
+      // The software round each stage: twenty tools, WhatsApp and Gmail at two stages each.
+      await expect(flow.locator(".flow-app")).toHaveCount(22);
+      // Nothing moves, so there's nothing to pause.
+      await expect(flow.getByRole("button", { name: /Pause the animation|Play the animation/ })).toHaveCount(0);
+      // A stage describes itself on focus.
+      await flow.getByRole("button", { name: "Day hire", exact: true }).focus();
+      await expect(page.getByRole("tooltip")).toContainText("Facebook doesn’t let apps post in groups");
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("tooltip")).toHaveCount(0);
     });
 
-    test("on a laptop screen, the whole graph fits in view", async ({ page }) => {
+    test("on a laptop screen, it fits in view", async ({ page }) => {
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto("/solutions/construction");
-      const box = await page.locator(".wf").boundingBox();
-      expect(box!.height).toBeLessThan(780);
-      // The five daily stages share one row.
-      const tops = await page
-        .locator('.wf-lane[data-lane="daily"] .wf-node')
-        .evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
-      expect(tops).toHaveLength(5);
-      expect(new Set(tops).size).toBe(1);
+      const box = await page.locator("figure.flow").boundingBox();
+      expect(box!.height).toBeLessThan(700);
     });
 
-    test("playing, the week runs on its own and starts again", async ({ page }) => {
-      test.setTimeout(120_000);
+    test("playing, the signal goes round a day at a time, and pauses", async ({ page }) => {
       await page.goto("/solutions/construction");
-      await page.locator(".wf").scrollIntoViewIfNeeded();
+      const flow = page.locator("figure.flow");
+      await flow.scrollIntoViewIfNeeded();
       await page.mouse.move(2, 2);
-      await expect(page.getByRole("button", { name: "Pause the demo" })).toBeVisible({ timeout: 20_000 });
-      // Tuesday: a person approves the suggestion, with nothing for the visitor to press.
-      await expect(card(page, "approval")).toHaveAttribute("data-state", "waiting", { timeout: 30_000 });
-      await expect(card(page, "approval")).toHaveAttribute("data-state", "done", { timeout: 10_000 });
-      // Thursday: day hire goes out through the casual pool, Facebook and agencies.
-      await expect(card(page, "hire")).toHaveAttribute("data-state", "active", { timeout: 40_000 });
-      await expect(card(page, "hire").locator(".wf-apps")).toHaveAttribute("data-lit", "");
-      // Pause holds the week where it is; play carries on.
-      await page.getByRole("button", { name: "Pause the demo" }).click();
-      const held = await card(page, "hire").getAttribute("data-state");
-      await page.waitForTimeout(3000);
-      await expect(card(page, "hire")).toHaveAttribute("data-state", held!);
-      await page.getByRole("button", { name: "Play the demo", exact: true }).click();
-      // Friday's pay run, then Monday again.
-      await expect(card(page, "payroll")).toHaveAttribute("data-state", "done", { timeout: 40_000 });
-      await expect(page.locator(".wf-days li").first()).toHaveAttribute("data-state", "current", { timeout: 15_000 });
-      await expect(card(page, "payroll")).toHaveAttribute("data-state", "idle");
+      await expect(flow.locator(".flow-svg")).toHaveAttribute("data-playing", "", { timeout: 15_000 });
+      // Monday, then the ring comes round to Tuesday.
+      await expect(flow.locator('[data-day="1"]')).toHaveAttribute("data-state", "on", { timeout: 20_000 });
+      await expect(flow.locator('[data-day="0"]')).toHaveAttribute("data-state", "done");
+      // Pause holds it where it is; play carries on.
+      await flow.getByRole("button", { name: "Pause the animation" }).click();
+      await expect(flow.locator(".flow-svg")).not.toHaveAttribute("data-playing");
+      await flow.getByRole("button", { name: "Play the animation" }).click();
+      await expect(flow.locator(".flow-svg")).toHaveAttribute("data-playing", "");
     });
 
     test.describe("on a phone", () => {
       test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
-      test("the week plays down one column", async ({ page }) => {
+      test("it has its own layout that fits the screen", async ({ page }) => {
         await page.goto("/solutions/construction");
-        await expect(page.locator(".wf-node")).toHaveCount(7);
-        await page.locator(".wf").evaluate((element) => {
-          window.scrollTo({ top: element.getBoundingClientRect().top + window.scrollY - 80, behavior: "instant" });
-        });
-        await expect(card(page, "jobs")).toHaveAttribute("data-state", /active|done/, { timeout: 20_000 });
-        await expect(page.getByText("Round again the next working day")).toBeVisible();
-        await expect(page.getByRole("button", { name: /Approve/ })).toHaveCount(0);
+        const flow = page.locator("figure.flow");
+        await expect(flow).toHaveAttribute("data-layout", "narrow");
+        const stage = await flow.locator(".flow-stage").boundingBox();
+        expect(stage!.width).toBeLessThanOrEqual(390);
+        expect(stage!.height).toBeLessThan(600);
+        // A tap shows what a stage does (in view first, in one jump: the site scrolls smoothly).
+        await flow.evaluate((element) => window.scrollTo({ top: element.getBoundingClientRect().top + window.scrollY - 60, behavior: "instant" }));
+        await flow.getByRole("button", { name: "Supervisor approval", exact: true }).click();
+        await expect(page.getByRole("tooltip")).toContainText("A supervisor reviews each recommendation");
       });
     });
   });

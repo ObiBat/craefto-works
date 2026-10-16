@@ -16,7 +16,7 @@ import { plansFrom } from "@/lib/pricing";
 import { SITE_URL } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import { FlowPreview } from "./flow-preview";
-import { ConstructionWorkflow } from "./workflow/graph";
+import { ConstructionFlow } from "./flow/flow-graph";
 
 // Construction Operations & AI Integration: an industry solution within
 // Systems, for construction subcontractors in Sydney and NSW. Everything it
@@ -287,7 +287,7 @@ export default function ConstructionOperationsPage() {
                 <SectionIntro number="03" label="How it works" id="how-it-works" heading="From the schedule to payroll, without retyping">
                   How scheduling and timesheet data move through a connected system. Each step is built for you or connected to a tool you already use, and people approve at the marked points.
                 </SectionIntro>
-                <ConstructionWorkflow />
+                <ConstructionFlow />
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                   <AnimatedSection className="flex flex-col gap-5 rounded-3xl bg-[hsl(var(--color-background-subtle))] p-7 sm:flex-row lg:col-span-7">
                     <span className="icon-tile">
