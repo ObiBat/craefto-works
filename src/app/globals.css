@@ -2854,9 +2854,12 @@ html.ask-craefto-open {
    a time (solutions/construction/flow/flow-graph.tsx). use-flow.ts plays it
    through custom properties: --a (a stage at work), --lit (its software),
    --e (a line just used), --w (waiting on a person), --pop (a badge). */
-.flow {
+.flow,
+.flow-svg {
   --flow-ink: 30 7% 9%;
   --flow-ochre: 35 70% 28%; /* readable ochre on light backgrounds */
+}
+.flow {
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -3292,18 +3295,15 @@ html.ask-craefto-open {
   }
 }
 
-/* ── The hero's preview of the workflow (/solutions/construction) ───────────
-   Six stages on a rail; a signal runs down them, waits for a supervisor and
-   lights up the software at each stage (solutions/construction/flow-preview.tsx). */
+/* ── The hero's preview of the information flow (/solutions/construction) ───
+   The same diagram as section 03, small, in a card that leads to it
+   (solutions/construction/flow-preview.tsx). */
 .fp {
-  --fp-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --fp-row: 3.25rem;
-  --fp-ink: 30 7% 9%;
   position: relative;
   margin: 0;
   border-radius: 1.75rem;
   background: hsl(var(--color-background));
-  padding: 1rem 0.75rem 0.875rem;
+  padding: 1rem 0.875rem 0.875rem;
   box-shadow:
     0 0 0 1px hsl(var(--color-border)),
     0 1px 2px hsl(30 12% 18% / 0.05),
@@ -3311,7 +3311,7 @@ html.ask-craefto-open {
 }
 @media (min-width: 640px) {
   .fp {
-    padding: 1.25rem 1.125rem 1rem;
+    padding: 1.25rem 1.25rem 1rem;
   }
 }
 .fp::before {
@@ -3329,88 +3329,15 @@ html.ask-craefto-open {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0 0.5rem 0.875rem;
-}
-.fp-head-text {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
-  min-width: 0;
+  /* The pause button arrives with JavaScript; its room is kept so nothing shifts. */
+  min-height: 2rem;
+  padding: 0 0.375rem;
 }
 .fp-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: hsl(var(--color-accent));
-}
-.fp-days {
-  display: inline-flex;
-  gap: 0.1875rem;
-}
-.fp-days span {
-  border-radius: 9999px;
-  background: hsl(var(--color-background-subtle));
-  padding: 0.125rem 0.4375rem;
-  font-family: var(--font-mono);
-  font-size: 0.5625rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: hsl(var(--color-foreground-subtle));
-  transition:
-    background-color 400ms ease,
-    color 400ms ease;
-}
-.fp-days span[data-state="done"] {
-  background: hsl(var(--color-accent-subtle));
-  color: hsl(var(--color-accent));
-}
-.fp-days span[data-state="current"] {
-  background: hsl(var(--color-foreground));
-  color: hsl(var(--color-background));
-}
-.fp-body {
-  position: relative;
-}
-.fp-status {
-  position: absolute;
-  top: -0.625rem;
-  right: 0.5rem;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  border-radius: 9999px;
-  background: hsl(var(--color-background-subtle));
-  padding: 0.1875rem 0.625rem 0.1875rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  white-space: nowrap;
-  color: hsl(var(--color-foreground-muted));
-  animation: fp-in 400ms var(--fp-ease) both;
-}
-.fp-status-dot {
-  width: 0.4375rem;
-  height: 0.4375rem;
-  border-radius: 50%;
-  background: hsl(var(--color-accent));
-}
-.fp[data-running] .fp-status-dot {
-  animation: fp-blink 1.6s ease-in-out infinite;
-}
-.fp-status[data-tone="warn"] {
-  background: hsl(var(--color-warning-subtle));
-  color: hsl(35 70% 28%);
-}
-.fp-status[data-tone="warn"] .fp-status-dot {
-  background: hsl(var(--color-warning));
-}
-.fp-status[data-tone="ok"] {
-  background: hsl(var(--color-accent-subtle));
   color: hsl(var(--color-accent));
 }
 .fp-toggle {
@@ -3436,299 +3363,18 @@ html.ask-craefto-open {
   outline: 2px solid hsl(var(--color-ring));
   outline-offset: 3px;
 }
-
-/* The rail: a track from the first stage to the last, filled to where the signal is */
-.fp-flow {
+.fp-stage {
   position: relative;
-}
-.fp-track {
-  position: absolute;
-  left: calc(0.625rem + 0.875rem - 1px);
-  top: calc(var(--fp-row) / 2);
-  height: calc(var(--fp-row) * 4);
-  width: 2px;
-  overflow: hidden;
-  border-radius: 2px;
-  background: hsl(var(--color-border));
-}
-.fp-fill {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(hsl(var(--color-accent) / 0.55), hsl(var(--color-accent)));
-  transform: scaleY(calc(var(--fp-at, 0) / 4));
-  transform-origin: top;
-  transition: transform 800ms var(--fp-ease);
-}
-/* A new day: the rail empties quickly and fills again. */
-.fp-flow[data-reset] .fp-fill {
-  transition-duration: 350ms;
-}
-.fp-dot {
-  position: absolute;
-  left: calc(0.625rem + 0.875rem - 5px);
-  top: calc(var(--fp-row) / 2 - 5px);
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: hsl(var(--color-accent));
-  box-shadow:
-    0 0 0 4px hsl(var(--color-accent) / 0.16),
-    0 0 16px 3px hsl(var(--color-accent) / 0.45);
-  opacity: 0;
-  transform: translateY(calc(var(--fp-at, 0) * var(--fp-row)));
-  transition:
-    transform 800ms var(--fp-ease),
-    opacity 400ms ease;
-}
-.fp-flow[data-moving] .fp-dot {
-  opacity: 1;
-}
-.fp-rows {
-  position: relative;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.fp-row {
-  display: grid;
-  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
-  align-items: center;
-  column-gap: 0.75rem;
-  height: var(--fp-row);
-  border-radius: 0.875rem;
-  padding: 0 0.625rem;
-  transition: background-color 500ms ease;
-}
-.fp-node {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
-  background: hsl(var(--color-background-subtle));
-  color: hsl(var(--color-foreground-subtle));
-  box-shadow: 0 0 0 3px hsl(var(--color-background));
-  transition:
-    background-color 500ms ease,
-    color 500ms ease,
-    box-shadow 500ms ease;
-}
-.fp-node::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid currentColor;
-  opacity: 0;
-}
-.fp-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.fp-title,
-.fp-line {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.fp-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  color: hsl(var(--color-foreground-subtle));
-  transition: color 500ms ease;
-}
-.fp-line {
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: hsl(var(--color-foreground-subtle));
-  animation: fp-in 450ms var(--fp-ease) both;
-}
-.fp-line[data-tone="warn"] {
-  font-weight: 500;
-  color: hsl(35 70% 28%);
-}
-.fp-end {
-  display: flex;
-  justify-content: flex-end;
-}
-.fp-row:is([data-state="active"], [data-state="done"]) .fp-title {
-  color: hsl(var(--color-foreground));
-}
-.fp-row[data-state="active"] {
-  background: hsl(var(--color-accent-subtle) / 0.75);
-}
-.fp-row[data-state="active"] .fp-node {
-  background: hsl(var(--color-accent));
-  color: hsl(var(--color-accent-foreground));
-  box-shadow: 0 0 0 3px hsl(var(--color-background));
-}
-.fp-row[data-state="active"] .fp-node::after {
-  animation: fp-ring 1.6s ease-out infinite;
-  color: hsl(var(--color-accent));
-}
-.fp-row[data-state="done"] .fp-node {
-  background: hsl(var(--color-accent-subtle));
-  color: hsl(var(--color-accent));
-}
-.fp-row[data-state="active"] .fp-line {
-  color: hsl(var(--color-foreground-muted));
-}
-
-/* Approval: a dark band, where a person decides */
-.fp-row[data-row="approval"] {
-  background: hsl(var(--fp-ink));
-}
-.fp-row[data-row="approval"] .fp-node {
-  background: hsl(var(--color-background) / 0.1);
-  color: hsl(var(--color-background) / 0.7);
-  box-shadow: 0 0 0 3px hsl(var(--fp-ink));
-}
-.fp-row[data-row="approval"] .fp-title {
-  color: hsl(var(--color-background) / 0.92);
-}
-.fp-row[data-row="approval"] .fp-line {
-  color: hsl(var(--color-background) / 0.6);
-}
-.fp-row[data-row="approval"][data-state="waiting"] {
-  box-shadow: 0 0 0 3px hsl(var(--color-warning) / 0.35);
-}
-.fp-row[data-row="approval"][data-state="waiting"] .fp-node {
-  background: hsl(var(--color-warning));
-  color: hsl(var(--fp-ink));
-}
-.fp-row[data-row="approval"][data-state="waiting"] .fp-node::after {
-  animation: fp-ring 1.4s ease-out infinite;
-  color: hsl(var(--color-warning));
-}
-.fp-row[data-row="approval"][data-state="done"] .fp-node {
-  background: hsl(var(--color-accent));
-  color: hsl(var(--color-accent-foreground));
-}
-.fp-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3125rem;
-  border-radius: 9999px;
-  padding: 0.1875rem 0.5625rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  white-space: nowrap;
-  animation: fp-pop 500ms var(--fp-ease) both;
-}
-.fp-chip[data-tone="ok"] {
-  background: hsl(var(--color-accent-subtle));
-  color: hsl(var(--color-accent));
-}
-.fp-chip[data-tone="warn"] {
-  background: hsl(var(--color-warning) / 0.2);
-  color: hsl(38 85% 72%);
-}
-.fp-row[data-row="approval"] .fp-chip[data-tone="ok"] {
-  background: hsl(var(--color-accent) / 0.3);
-  color: hsl(145 35% 78%);
-}
-.fp-chip[data-tone="hire"] {
-  gap: 0.375rem;
-  background: hsl(var(--color-warning-subtle));
-  padding-left: 0.1875rem;
-  color: hsl(35 70% 28%);
-}
-.fp-chip-logo {
-  display: grid;
-  place-items: center;
-  width: 1.125rem;
-  height: 1.125rem;
-  border-radius: 50%;
-  background: hsl(var(--color-background));
-}
-.fp-chip-logo img {
-  width: 0.8125rem;
-  height: 0.8125rem;
-}
-/* The pay run: its own layer, weekly or fortnightly */
-.fp-layer {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  margin: 0.5rem 0.625rem 0.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.5625rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: hsl(var(--color-foreground-subtle));
-}
-.fp-layer::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: hsl(var(--color-border));
-}
-.fp-chip-dot {
-  width: 0.375rem;
-  height: 0.375rem;
-  border-radius: 50%;
-  background: currentColor;
-  animation: fp-blink 1.2s ease-in-out infinite;
-}
-
-/* The software at each stage, grey until the data reaches it */
-.fp-apps {
-  display: flex;
-  gap: 0.25rem;
-}
-.fp-app {
-  display: grid;
-  place-items: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 0.4375rem;
-  background: hsl(var(--color-background));
-  box-shadow: 0 0 0 1px hsl(var(--color-border));
-}
-.fp-app img {
-  width: 0.9375rem;
-  height: 0.9375rem;
-  object-fit: contain;
-  filter: grayscale(1);
-  opacity: 0.4;
-  transition:
-    filter 500ms ease,
-    opacity 500ms ease;
-}
-.fp-app[data-tile] img {
   width: 100%;
-  height: 100%;
-  border-radius: inherit;
+  margin-top: 0.25rem;
 }
-.fp-apps[data-lit] .fp-app img {
-  filter: none;
-  opacity: 1;
-  transition-delay: calc(var(--j) * 90ms);
-}
-.fp-apps[data-lit] .fp-app {
-  animation: fp-pop 520ms var(--fp-ease) calc(var(--j) * 90ms) both;
-}
-.fp-row[data-state="done"] .fp-apps[data-lit] .fp-app {
-  animation: none;
-}
-@media (max-width: 400px) {
-  .fp-app:nth-child(n + 4) {
-    display: none;
-  }
-}
-
 .fp-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-top: 0.625rem;
-  padding: 0.5rem 0.5rem 0;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.375rem 0;
 }
 .fp-link {
   display: inline-flex;
@@ -3741,7 +3387,7 @@ html.ask-craefto-open {
   transition: color 250ms ease;
 }
 .fp-link svg {
-  transition: transform 300ms var(--fp-ease);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .fp-link:hover {
   color: hsl(var(--color-accent));
@@ -3756,40 +3402,90 @@ html.ask-craefto-open {
   text-transform: uppercase;
   color: hsl(var(--color-foreground-subtle));
 }
-
-@keyframes fp-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
+/* Scattered: today's tools, drifting, each on its own tangled line */
+.hf-in {
+  fill: none;
+  stroke: hsl(var(--color-border-strong));
+  stroke-width: 1.2;
+  stroke-dasharray: 2 4;
+  stroke-linecap: round;
 }
-@keyframes fp-pop {
-  0% {
-    transform: scale(0.82);
-  }
-  55% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+.hf-tool {
+  --a: 0;
 }
-@keyframes fp-ring {
+.hf-float {
+  animation: hf-float var(--t, 5s) ease-in-out var(--d, 0s) infinite alternate;
+}
+.hf-tool-shape {
+  transform: scale(calc(1 + var(--a) * 0.14));
+}
+.hf-tool-disc {
+  fill: hsl(var(--color-background));
+  stroke: color-mix(in srgb, hsl(var(--color-accent)) calc(var(--a) * 100%), hsl(var(--color-border)));
+  stroke-width: calc(1 + var(--a));
+}
+/* Connected: one system, with the working day turning inside it */
+.hf-hub {
+  --a: 0;
+}
+.hf-hub-halo {
+  fill: hsl(var(--color-accent) / 0.14);
+  opacity: calc(0.35 + var(--a) * 0.65);
+  transform: scale(calc(0.85 + var(--a) * 0.2));
+}
+.hf-hub-body {
+  fill: hsl(var(--flow-ink));
+  stroke: color-mix(in srgb, hsl(var(--color-accent)) calc(var(--a) * 100%), hsl(var(--flow-ink)));
+  stroke-width: 2;
+}
+.hf-hub-ring {
+  animation: hf-spin 16s linear infinite;
+}
+.hf-hub-orbit {
+  fill: none;
+  stroke: hsl(var(--color-background) / 0.18);
+  stroke-width: 1;
+}
+.hf-hub-dot {
+  fill: color-mix(in srgb, hsl(var(--color-accent)) calc(40% + var(--a) * 60%), hsl(var(--color-background)));
+}
+.hf-out {
+  stroke-width: 1.8;
+}
+.hf-app-badge .hf-badge-disc {
+  fill: hsl(var(--color-background));
+  stroke: hsl(var(--color-border));
+  stroke-width: 1;
+}
+.hf-word {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: hsl(var(--color-foreground-subtle));
+}
+.hf-word-on {
+  fill: hsl(var(--color-accent));
+}
+.hf-label {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 600;
+  fill: hsl(var(--color-foreground));
+}
+@keyframes hf-float {
   from {
-    transform: scale(1);
-    opacity: 0.7;
+    transform: translate(-1px, -3px);
   }
   to {
-    transform: scale(1.75);
-    opacity: 0;
+    transform: translate(1px, 3px);
   }
 }
-@keyframes fp-blink {
-  50% {
-    opacity: 0.35;
+@keyframes hf-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
-
 @media (prefers-reduced-motion: reduce) {
   .fp *,
   .fp *::before,

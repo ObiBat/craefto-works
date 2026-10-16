@@ -28,12 +28,24 @@ test.describe("construction operations", () => {
     const main = page.locator("main");
     await expect(main).not.toContainText(/Mongolian|[\u0400-\u04FF]/);
     await expect(main.locator('[lang="mn"]')).toHaveCount(0);
-    // The hero's preview rests on the finished flow and leads to the full one.
+    // The hero's preview: today's tools, scattered, feeding one system, then one line out through a
+    // person's approval to the crew and payroll; it leads to the full flow.
     const preview = page.locator("figure.fp");
-    await expect(preview.locator(".fp-row")).toHaveCount(6);
-    await expect(preview.locator('.fp-row[data-row="approval"]')).toHaveAttribute("data-state", "done");
+    await expect(preview.locator(".hf-tool")).toHaveCount(6);
+    await expect(preview.locator('[data-node="hub"]')).toHaveCount(1);
+    await expect(preview.locator(".flow-node")).toHaveCount(3);
     await expect(preview.getByRole("link", { name: "See the full workflow" })).toHaveAttribute("href", "#how-it-works");
     await expect(preview.getByRole("button")).toHaveCount(0);
+  });
+
+  test("the hero's preview plays, and pauses", async ({ page }) => {
+    await page.goto("/solutions/construction");
+    const preview = page.locator("figure.fp");
+    await expect(preview.locator(".flow-svg")).toHaveAttribute("data-playing", "", { timeout: 15_000 });
+    await preview.getByRole("button", { name: "Pause the animation" }).click();
+    await expect(preview.locator(".flow-svg")).not.toHaveAttribute("data-playing");
+    await preview.getByRole("button", { name: "Play the animation" }).click();
+    await expect(preview.locator(".flow-svg")).toHaveAttribute("data-playing", "");
   });
 
   test.describe("the information flow", () => {

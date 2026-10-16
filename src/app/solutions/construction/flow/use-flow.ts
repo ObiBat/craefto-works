@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useRef, type RefObject } from "react";
-import { DAYS, NODES, WEEK, type Hop, type NodeId } from "./model";
+import { WEEK, type Hop, type Timeline } from "./model";
 
-// Plays the information-flow diagram (model.ts) on a loop: one clock, and
-// everything on screen worked out from it each frame — where each signal is
-// along its line, how lit each stage and its software are, how full the pay
-// week is. It writes straight to the SVG through CSS custom properties, so
-// React doesn't re-render while it plays. It runs only while enabled (in
-// view, not paused, motion allowed); the clock keeps its place in between.
+// Plays an information-flow diagram on a loop: one clock and a timeline
+// (model.ts's week by default), and everything on screen worked out from them
+// each frame — where each signal is along its line, how lit each stage and its
+// software are, which badges show, how full the pay week is. It drives
+// whatever it finds in the SVG by data attributes, and writes straight to it
+// through CSS custom properties, so React doesn't re-render while it plays.
+// It runs only while enabled (in view, not paused, motion allowed); the clock
+// keeps its place in between.
 
 const ease = (p: number) => (p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2);
 const smooth = (p: number) => p * p * (3 - 2 * p);
@@ -24,10 +26,10 @@ function envelope(t: number, start: number, duration: number, rise = 200, fall =
 /** A badge that pops in at `at` and fades after `hold`. */
 const pop = (t: number, at: number, hold: number) => envelope(t, at, hold, 260, 500);
 
-const HOPS = WEEK.hops.reduce((all, hop) => {
-  (all[hop.id] ??= []).push(hop);
-  return all;
-}, {} as Record<string, Hop[]>);
+/** The custom property each kind of pulse drives, beside --a. */
+const KINDS: Record<string, string> = { wait: "--w", ai: "--ai", hire: "--hot" };
+/** How long a badge holds, in ms. */
+const HOLD: Record<string, number> = { hired: 1100 };
 
 interface Comet {
   halo: SVGPathElement;
@@ -37,13 +39,37 @@ interface Comet {
   shown: boolean;
 }
 
-export function useFlow(svg: RefObject<SVGSVGElement | null>, { enabled, layout }: { enabled: boolean; layout: string }) {
-  // Where the week is, kept across pauses, scrolls and re-renders.
+interface Options {
+  enabled: boolean;
+  /** Which layout is drawn, so a new one is measured afresh. */
+  layout: string;
+  timeline?: Timeline;
+}
+
+export function useFlow(svg: RefObject<SVGSVGElement | null>, { enabled, layout, timeline = WEEK }: Options) {
+  // Where the loop is, kept across pauses, scrolls and re-renders.
   const clock = useRef(0);
+  // The first time it plays, the software eases down from full colour rather than snapping.
+  const warmed = useRef(false);
 
   useEffect(() => {
     const root = svg.current;
     if (!root || !enabled) return;
+
+    const hops = timeline.hops.reduce(
+      (all, hop) => {
+        (all[hop.id] ??= []).push(hop);
+        return all;
+      },
+      {} as Record<string, Hop[]>,
+    );
+    const kinds = timeline.pulses.reduce(
+      (all, pulse) => {
+        if (pulse.kind) (all[pulse.node] ??= new Set()).add(pulse.kind);
+        return all;
+      },
+      {} as Record<string, Set<string>>,
+    );
 
     const comets = new Map<string, Comet>();
     for (const core of root.querySelectorAll<SVGPathElement>("[data-comet-core]")) {
@@ -54,13 +80,13 @@ export function useFlow(svg: RefObject<SVGSVGElement | null>, { enabled, layout 
       if (halo && head && length) comets.set(id, { halo, core, head, length, shown: true });
     }
     const select = <T extends Element>(selector: string) => [...root.querySelectorAll<T>(selector)];
-    const nodes = new Map(select<SVGGElement>("[data-node]").map((element) => [element.dataset.node as NodeId, element]));
-    const apps = new Map(select<SVGGElement>("[data-apps]").map((element) => [element.dataset.apps as NodeId, element]));
+    const nodes = new Map(select<SVGGElement>("[data-node]").map((element) => [element.dataset.node!, element]));
+    const apps = new Map(select<SVGGElement>("[data-apps]").map((element) => [element.dataset.apps!, element]));
     const tracks = new Map(select<SVGPathElement>("[data-track]").map((element) => [element.dataset.track!, element]));
+    const badges = new Map(select<SVGGElement>("[data-badge]").map((element) => [element.dataset.badge!, element]));
     const days = select<SVGTextElement>("[data-day]");
     const progress = root.querySelector<SVGCircleElement>("[data-progress]");
     const progressLength = progress ? 2 * Math.PI * Number(progress.getAttribute("r")) : 0;
-    const badges = new Map(select<SVGGElement>("[data-badge]").map((element) => [element.dataset.badge!, element]));
 
     // Only write what changed.
     const written = new Map<Element, Map<string, string>>();
@@ -74,11 +100,11 @@ export function useFlow(svg: RefObject<SVGSVGElement | null>, { enabled, layout 
       (element as SVGElement).style.setProperty(property, text);
     };
 
-    const activity = (id: NodeId, t: number, kind?: string) => {
+    const activity = (id: string, t: number, kind?: string) => {
       let value = 0;
-      for (const pulse of WEEK.pulses) {
+      for (const pulse of timeline.pulses) {
         if (pulse.node !== id || (kind && pulse.kind !== kind)) continue;
-        value = Math.max(value, envelope(t, pulse.start, pulse.duration), envelope(t + WEEK.loop, pulse.start, pulse.duration));
+        value = Math.max(value, envelope(t, pulse.start, pulse.duration), envelope(t + timeline.loop, pulse.start, pulse.duration));
       }
       return value;
     };
@@ -86,7 +112,7 @@ export function useFlow(svg: RefObject<SVGSVGElement | null>, { enabled, layout 
     const render = (t: number) => {
       // Signals along their lines.
       for (const [id, comet] of comets) {
-        const hop = (HOPS[id] ?? []).find((entry) => t >= entry.start && t < entry.start + entry.duration);
+        const hop = (hops[id] ?? []).find((entry) => t >= entry.start && t < entry.start + entry.duration);
         if (!hop) {
           if (comet.shown) {
             for (const part of [comet.halo, comet.core, comet.head]) part.style.opacity = "0";
@@ -116,7 +142,7 @@ export function useFlow(svg: RefObject<SVGSVGElement | null>, { enabled, layout 
       // Lines brighten as a signal passes, then settle.
       for (const [id, track] of tracks) {
         let lit = 0;
-        for (const hop of HOPS[id] ?? []) {
+        for (const hop of hops[id] ?? []) {
           if (hop.faint) continue;
           lit = Math.max(lit, envelope(t, hop.start, hop.duration, 300, 900));
         }
@@ -124,45 +150,49 @@ export function useFlow(svg: RefObject<SVGSVGElement | null>, { enabled, layout 
       }
 
       // Stages light as the signal arrives, and their software with them.
-      for (const entry of NODES) {
-        const a = activity(entry.id, t);
-        write(nodes.get(entry.id), "--a", a);
-        write(apps.get(entry.id), "--lit", a);
+      for (const [id, element] of nodes) {
+        write(element, "--a", activity(id, t));
+        for (const kind of kinds[id] ?? []) write(element, KINDS[kind], activity(id, t, kind));
       }
-      write(nodes.get("approve"), "--w", activity("approve", t, "wait"));
-      write(nodes.get("schedule"), "--ai", activity("schedule", t, "ai"));
-      write(nodes.get("hire"), "--hot", activity("hire", t, "hire"));
+      for (const [id, element] of apps) write(element, "--lit", Math.max(activity(id, t), warmth));
 
-      // A person approves; three are hired for the day; the pay run goes out.
-      for (const kind of ["approved", "hired", "paid"] as const) {
-        const hold = kind === "hired" ? 1100 : 900;
-        const value = WEEK.marks.reduce((most, mark) => (mark.kind === kind ? Math.max(most, pop(t, mark.at, hold)) : most), 0);
-        write(badges.get(kind), "--pop", value);
+      // Badges: a person approved, three hired, sent, paid.
+      for (const [kind, element] of badges) {
+        const hold = HOLD[kind] ?? 900;
+        write(element, "--pop", timeline.marks.reduce((most, mark) => (mark.kind === kind ? Math.max(most, pop(t, mark.at, hold)) : most), 0));
       }
 
       // The pay week fills a day at a time, and empties once the pay run is out.
-      if (progress) {
+      if (progress && timeline.hours?.length) {
         let filled = 0;
-        for (const at of WEEK.hours) filled += smooth(clamp((t - at) / 600));
-        const reset = smooth(clamp((t - WEEK.paid) / 700));
-        const share = (filled / DAYS.length) * (1 - reset);
+        for (const at of timeline.hours) filled += smooth(clamp((t - at) / 600));
+        const reset = timeline.paid === undefined ? 0 : smooth(clamp((t - timeline.paid) / 700));
+        const share = (filled / timeline.hours.length) * (1 - reset);
         write(progress, "stroke-dashoffset", `${(progressLength * (1 - share)).toFixed(2)}`);
       }
 
       // Which day it is.
-      const today = WEEK.days.reduce((current, start, index) => (t >= start ? index : current), 0);
-      days.forEach((element, index) => {
-        const state = index < today ? "done" : index === today ? "on" : "next";
-        if (element.getAttribute("data-state") !== state) element.setAttribute("data-state", state);
-      });
+      if (timeline.days?.length) {
+        const today = timeline.days.reduce((current, start, index) => (t >= start ? index : current), 0);
+        days.forEach((element, index) => {
+          const state = index < today ? "done" : index === today ? "on" : "next";
+          if (element.getAttribute("data-state") !== state) element.setAttribute("data-state", state);
+        });
+      }
     };
 
     let frame = 0;
     let last = performance.now();
+    const began = last;
+    let warmth = warmed.current ? 0 : 1;
     const tick = (now: number) => {
-      // A long gap (a hidden tab) doesn't skip the week ahead.
-      clock.current = (clock.current + Math.min(now - last, 64)) % WEEK.loop;
+      // A long gap (a hidden tab) doesn't skip the loop ahead.
+      clock.current = (clock.current + Math.min(now - last, 64)) % timeline.loop;
       last = now;
+      if (!warmed.current) {
+        warmth = smooth(clamp(1 - (now - began) / 1100));
+        if (warmth === 0) warmed.current = true;
+      }
       render(clock.current);
       frame = requestAnimationFrame(tick);
     };
@@ -176,5 +206,5 @@ export function useFlow(svg: RefObject<SVGSVGElement | null>, { enabled, layout 
       cancelAnimationFrame(frame);
       root.removeAttribute("data-playing");
     };
-  }, [svg, enabled, layout]);
+  }, [svg, enabled, layout, timeline]);
 }

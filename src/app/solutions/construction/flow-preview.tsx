@@ -1,130 +1,18 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
-import Image from "next/image";
-import {
-  ArrowDown,
-  ArrowsClockwise,
-  Buildings,
-  CalendarDots,
-  Check,
-  DeviceMobileSpeaker,
-  Pause,
-  Play,
-  Receipt,
-  Timer,
-  UserCheck,
-  type Icon,
-} from "@phosphor-icons/react";
-import { APPS, type AppId } from "./flow/apps";
+import { ArrowDown, Check, DeviceMobileSpeaker, Pause, Play, Receipt, UserCheck } from "@phosphor-icons/react";
+import { APPS } from "./flow/apps";
+import { Comet } from "./flow/diagram";
+import { GATE, HERO, HUB, INPUTS, OUT, OUTPUTS, VIEW, inputId } from "./flow/hero";
+import { useFlow } from "./flow/use-flow";
 
-// The hero's preview of the workflow in section 03: a week on Site A in
-// miniature. The five daily stages fill down a rail and start again each
-// working day; Tuesday has a sick day for a supervisor to approve, Thursday
-// a day hire, and Friday the pay run. It plays on a loop while on screen,
-// with a pause button, and holds still on Friday for reduced motion. Every
-// figure is fictional.
-
-type RowId = "jobs" | "scheduling" | "approval" | "crew" | "timesheets" | "payroll";
-type RowState = "idle" | "active" | "waiting" | "done";
-type Tone = "warn" | "ok";
-
-const DAILY: { id: RowId; title: string; icon: Icon; apps?: AppId[] }[] = [
-  { id: "jobs", title: "Jobs and sites", icon: Buildings, apps: ["procore", "drive", "excel"] },
-  { id: "scheduling", title: "Scheduling", icon: CalendarDots, apps: ["assignar", "deputy", "calendar"] },
-  { id: "approval", title: "Supervisor approval", icon: UserCheck },
-  { id: "crew", title: "Crew and attendance", icon: DeviceMobileSpeaker, apps: ["whatsapp", "twilio", "maps"] },
-  { id: "timesheets", title: "Timesheets and costing", icon: Timer },
-];
-const PAYROLL = { id: "payroll" as const, title: "Payroll and accounts", icon: Receipt, apps: ["xero", "myob", "quickbooks"] as AppId[] };
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-
-/** One beat: the day, where the signal is (0 to 4 the daily stages, 5 the way to the next day, 6 and 7 the pay run), and the header. */
-interface Beat {
-  day: number;
-  at: number;
-  key?: "tue-gap" | "tue-wait" | "tue-ok" | "thu-pour" | "thu-short" | "thu-hire";
-  status: string;
-  tone?: Tone;
-  ms: number;
-}
-
-const routine = (day: number): Beat[] => [
-  { day, at: 0, status: "A routine day", ms: 520 },
-  { day, at: 1, status: "A routine day", ms: 520 },
-  { day, at: 2, status: "Approved", tone: "ok", ms: 560 },
-  { day, at: 3, status: "Crew on site", ms: 520 },
-  { day, at: 4, status: "Hours approved", ms: 700 },
-  { day, at: 5, status: "Next working day", ms: 650 },
-];
-
-const BEATS: Beat[] = [
-  ...routine(0),
-  { day: 1, at: 0, status: "2 off sick", tone: "warn", ms: 700 },
-  { day: 1, at: 1, key: "tue-gap", status: "AI suggests cover", ms: 1300 },
-  { day: 1, at: 2, key: "tue-wait", status: "Waiting for approval", tone: "warn", ms: 1500 },
-  { day: 1, at: 2, key: "tue-ok", status: "Approved", tone: "ok", ms: 700 },
-  { day: 1, at: 3, status: "Crew on site", ms: 560 },
-  { day: 1, at: 4, status: "Hours approved", ms: 650 },
-  { day: 1, at: 5, status: "Next working day", ms: 600 },
-  ...routine(2),
-  { day: 3, at: 0, key: "thu-pour", status: "Pour brought forward", tone: "warn", ms: 1100 },
-  { day: 3, at: 1, key: "thu-short", status: "3 short: day hire", tone: "warn", ms: 1300 },
-  { day: 3, at: 1, key: "thu-hire", status: "3 hired for the day", ms: 1300 },
-  { day: 3, at: 2, status: "Approved", tone: "ok", ms: 700 },
-  { day: 3, at: 3, status: "9 on site", ms: 600 },
-  { day: 3, at: 4, status: "63 h approved", ms: 700 },
-  { day: 3, at: 5, status: "Next working day", ms: 600 },
-  ...routine(4).slice(0, 5),
-  { day: 4, at: 6, status: "Pay run ready", ms: 1300 },
-  { day: 4, at: 7, status: "Sent to Xero", tone: "ok", ms: 2200 },
-];
-const FINAL = BEATS.length - 1;
-
-/** Approved hours in the pay week after a beat. */
-function weekHours(beat: number) {
-  let hours = 0;
-  for (let i = 0; i <= beat; i += 1) if (BEATS[i].at === 4) hours += 42;
-  return hours;
-}
-
-function dailyState(index: number, beat: Beat): RowState {
-  if (beat.at >= 5) return "done";
-  if (index < beat.at) return "done";
-  if (index > beat.at) return "idle";
-  if (beat.key === "tue-gap" || beat.key === "tue-wait" || beat.key === "thu-pour" || beat.key === "thu-short") return "waiting";
-  if (DAILY[index].id === "approval") return "done";
-  return "active";
-}
-
-/** What a stage says at a beat. */
-function line(id: RowId, beat: Beat, step: number): { text: string; tone?: Tone } {
-  const thursday = beat.day === 3;
-  const state = id === "payroll" ? null : dailyState(DAILY.findIndex((row) => row.id === id), beat);
-  switch (id) {
-    case "jobs":
-      return thursday ? { text: "Pour brought forward: 9 needed", tone: beat.key === "thu-pour" ? "warn" : undefined } : { text: "Site A · 6 fixers" };
-    case "scheduling":
-      if (beat.key === "tue-gap") return { text: "2 off sick · AI: move 2 from Site B", tone: "warn" };
-      if (beat.key === "thu-short") return { text: "3 short · AI: hire for the day", tone: "warn" };
-      if (thursday && state !== "idle") return { text: "9 of 9 · 3 on day hire" };
-      if (beat.day === 1 && state === "done") return { text: "6 of 6 · 2 from Site B" };
-      return { text: "6 of 6 rostered" };
-    case "approval":
-      if (beat.key === "tue-wait") return { text: "Move 2 fixers to Site A?" };
-      return state === "done" ? { text: "Approved by the supervisor" } : { text: "A person decides" };
-    case "crew":
-      if (state === "idle") return { text: "Waits for approval" };
-      return { text: thursday ? "9 on site · 3 day hire" : "6 on site · signed in" };
-    case "timesheets":
-      if (state === "idle") return { text: "Approved hours only" };
-      return { text: thursday ? "63 h · day hire kept apart" : "42 h approved · costed" };
-    case "payroll":
-      if (beat.at === 7) return { text: "Sent to Xero · signed off" };
-      if (beat.at === 6) return { text: "210 h · pay run ready" };
-      return { text: `${weekHours(step)} h this week · weekly or fortnightly` };
-  }
-}
+// The hero's preview: scattered to connected (flow/hero.ts). Today's tools
+// drift on the left, each on its own tangled line; signals race in at odd
+// times to one system, then leave in step along one clean line, through a
+// person's approval, to the crew and the pay run. It plays while on screen
+// (after the hero has settled), pauses on request, holds still for reduced
+// motion, and leads to the full flow in section 03.
 
 const STILL = "(prefers-reduced-motion: reduce)";
 function subscribe(onChange: () => void) {
@@ -133,177 +21,205 @@ function subscribe(onChange: () => void) {
   return () => query.removeEventListener("change", onChange);
 }
 
-function Apps({ apps, lit }: { apps: AppId[]; lit: boolean }) {
-  return (
-    <span className="fp-apps" data-lit={lit ? "" : undefined}>
-      {apps.map((id, order) => {
-        const app = APPS[id];
-        return (
-          <span key={id} className="fp-app" data-tile={"tile" in app && app.tile ? "" : undefined} style={{ "--j": order } as CSSProperties}>
-            <Image src={app.src} alt="" width={32} height={32} unoptimized loading="eager" />
-          </span>
-        );
-      })}
-    </span>
-  );
-}
+const OUTPUT_ICONS = { crew: DeviceMobileSpeaker, payroll: Receipt };
+const RING = [0, 1, 2, 3, 4].map((index) => ((index * 72 - 90) * Math.PI) / 180);
 
 export function FlowPreview() {
   const root = useRef<HTMLElement>(null);
-  const labelId = useId();
+  const svg = useRef<SVGSVGElement>(null);
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const still = useSyncExternalStore(
     subscribe,
     () => window.matchMedia(STILL).matches,
-    () => false,
+    () => true,
   );
-  const [step, setStep] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [ready, setReady] = useState(false);
   const [onScreen, setOnScreen] = useState(false);
-  const [pageVisible, setPageVisible] = useState(true);
-
-  const shown = still ? FINAL : step;
-  const running = !still && !paused && ready && onScreen && pageVisible;
+  const [paused, setPaused] = useState(false);
 
   // Start once the hero has settled (later on a first visit, after the brand intro).
   useEffect(() => {
     if (still) return;
     const intro = document.documentElement.classList.contains("intro-delay") ? 2100 : 0;
-    const timer = window.setTimeout(() => setReady(true), 1200 + intro);
+    const timer = window.setTimeout(() => setReady(true), 1100 + intro);
     return () => window.clearTimeout(timer);
   }, [still]);
 
-  // Only while it's on screen and the tab is showing.
   useEffect(() => {
     const element = root.current;
     if (!element) return;
-    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), { threshold: 0.35 });
+    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), { threshold: 0.3 });
     observer.observe(element);
-    const onVisibility = () => setPageVisible(!document.hidden);
-    onVisibility();
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      observer.disconnect();
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
+    return () => observer.disconnect();
   }, []);
 
-  // A week on a loop: after Friday's pay run, Monday again.
-  useEffect(() => {
-    if (!running) return;
-    const timer = window.setTimeout(() => setStep(step === FINAL ? 0 : step + 1), BEATS[step].ms);
-    return () => window.clearTimeout(timer);
-  }, [running, step]);
+  useFlow(svg, { enabled: !still && ready && onScreen && !paused, layout: "hero", timeline: HERO });
 
-  const beat = BEATS[shown];
-  const at = Math.min(beat.at, DAILY.length - 1);
-  const payroll: RowState = beat.at === 7 ? "done" : beat.at === 6 ? "active" : "idle";
+  const lift = `url(#${uid}-lift)`;
 
   return (
-    <figure ref={root} className="fp" aria-labelledby={labelId} data-running={running ? "" : undefined}>
-      <figcaption id={labelId} className="sr-only">
-        A preview of the workflow on this page, over a week. Every working day, jobs, scheduling, a supervisor’s approval, the crew’s shifts and their hours go round
-        the same cycle. When the crew is short, extra hands are hired for the day. Each week or fortnight, approved hours go to payroll in tools like Xero and MYOB,
-        and the office signs off. Fictional data.
+    <figure ref={root} className="fp" data-mode={still ? "still" : "move"}>
+      <figcaption className="sr-only">
+        From scattered to connected: the tools a subcontractor juggles today, such as Procore, spreadsheets, WhatsApp and email, feed one system. A person
+        approves, then shifts go to the crew and approved hours to payroll in tools such as Xero. A fictional demo.
       </figcaption>
 
       <div className="fp-head">
-        <div className="fp-head-text" aria-hidden="true">
-          <span className="fp-kicker">
-            <ArrowsClockwise size={12} weight="bold" />
-            Every working day
-          </span>
-          <span className="fp-days">
-            {DAYS.map((day, index) => (
-              <span key={day} data-state={index < beat.day ? "done" : index === beat.day ? "current" : undefined}>
-                {day}
-              </span>
-            ))}
-          </span>
-        </div>
+        <span className="fp-kicker">How information moves</span>
         {!still ? (
-          <button type="button" className="fp-toggle" aria-label={paused ? "Play the animation" : "Pause the animation"} onClick={() => setPaused((current) => !current)}>
+          <button
+            type="button"
+            className="fp-toggle"
+            aria-label={paused ? "Play the animation" : "Pause the animation"}
+            onClick={() => setPaused((current) => !current)}
+          >
             {paused ? <Play size={12} weight="fill" aria-hidden="true" /> : <Pause size={12} weight="fill" aria-hidden="true" />}
           </button>
         ) : null}
       </div>
 
-      <div className="fp-body" aria-hidden="true">
-        <p key={beat.status} className="fp-status" data-tone={beat.tone}>
-          <span className="fp-status-dot" />
-          {beat.status}
-        </p>
+      <div className="fp-stage" style={{ aspectRatio: `${VIEW.width} / ${VIEW.height}` }}>
+        <svg ref={svg} className="flow-svg hf" viewBox={`0 0 ${VIEW.width} ${VIEW.height}`} aria-hidden="true" focusable="false">
+          <defs>
+            <filter id={`${uid}-lift`} x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="hsl(30 12% 18%)" floodOpacity="0.16" />
+            </filter>
+            <clipPath id={`${uid}-tool`}>
+              <circle r={16} />
+            </clipPath>
+            <clipPath id={`${uid}-badge`}>
+              <circle r={8} />
+            </clipPath>
+          </defs>
 
-        <div className="fp-flow" style={{ "--fp-at": beat.at >= 5 ? DAILY.length - 1 : at } as CSSProperties} data-moving={beat.at < 5 ? "" : undefined} data-reset={beat.at === 0 ? "" : undefined}>
-          <span className="fp-track">
-            <span className="fp-fill" />
-          </span>
-          <span className="fp-dot" />
-          <ol className="fp-rows">
-            {DAILY.map((row, index) => {
-              const state = dailyState(index, beat);
-              const { text, tone } = line(row.id, beat, shown);
-              const RowIcon = row.icon;
-              return (
-                <li key={row.id} className="fp-row" data-row={row.id} data-state={state}>
-                  <span className="fp-node">{state === "done" && !row.apps ? <Check size={13} weight="bold" /> : <RowIcon size={15} weight="duotone" />}</span>
-                  <span className="fp-text">
-                    <span className="fp-title">{row.title}</span>
-                    <span key={text} className="fp-line" data-tone={tone}>
-                      {text}
-                    </span>
-                  </span>
-                  <span className="fp-end">
-                    {row.id === "scheduling" && beat.day === 3 && (beat.key === "thu-hire" || state === "done") ? (
-                      <span className="fp-chip" data-tone="hire">
-                        <span className="fp-chip-logo">
-                          <Image src={APPS.facebook.src} alt="" width={28} height={28} unoptimized loading="eager" />
-                        </span>
-                        +3 day hire
-                      </span>
-                    ) : row.apps ? (
-                      <Apps apps={row.apps} lit={state !== "idle"} />
-                    ) : row.id === "approval" && state !== "idle" ? (
-                      <span key={state} className="fp-chip" data-tone={state === "waiting" ? "warn" : "ok"}>
-                        {state === "waiting" ? (
-                          <>
-                            <span className="fp-chip-dot" />
-                            Needs approval
-                          </>
-                        ) : (
-                          <>
-                            <Check size={11} weight="bold" />
-                            Approved
-                          </>
-                        )}
-                      </span>
-                    ) : row.id === "timesheets" && state !== "idle" ? (
-                      <span className="fp-chip" data-tone="ok">
-                        {beat.day === 3 ? "63 h" : "42 h"}
-                      </span>
-                    ) : null}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
+          {/* Each tool on its own tangled line in, and one clean line out */}
+          {INPUTS.map((input) => (
+            <path key={input.app} className="hf-in" d={input.d} />
+          ))}
+          {(["gate", "crew", "payroll"] as const).map((id) => (
+            <path key={id} className="flow-track hf-out" data-track={id} d={OUT[id]} />
+          ))}
 
-        <p className="fp-layer">
-          <span>Weekly or fortnightly</span>
-        </p>
-        <div className="fp-row fp-row-pay" data-row="payroll" data-state={payroll}>
-          <span className="fp-node">{payroll === "done" ? <Check size={13} weight="bold" /> : <Receipt size={15} weight="duotone" />}</span>
-          <span className="fp-text">
-            <span className="fp-title">{PAYROLL.title}</span>
-            <span key={line("payroll", beat, shown).text} className="fp-line">
-              {line("payroll", beat, shown).text}
-            </span>
-          </span>
-          <span className="fp-end">
-            <Apps apps={PAYROLL.apps} lit={payroll !== "idle"} />
-          </span>
-        </div>
+          {/* Signals: in at odd times, out in step */}
+          {INPUTS.map((input) => (
+            <Comet key={input.app} id={inputId(input.app)} d={input.d} small />
+          ))}
+          {(["gate", "crew", "payroll"] as const).map((id) => (
+            <Comet key={id} id={id} d={OUT[id]} />
+          ))}
+
+          {/* Today's tools, drifting */}
+          {INPUTS.map((input, index) => {
+            const app = APPS[input.app];
+            const tile = "tile" in app && app.tile;
+            const size = tile ? 32 : 19;
+            return (
+              <g key={input.app} className="hf-tool" data-node={inputId(input.app)} transform={`translate(${input.x} ${input.y})`}>
+                <g className="hf-float" style={{ "--d": `${index * -0.9}s`, "--t": `${4.4 + (index % 3) * 0.8}s` } as CSSProperties}>
+                  <g className="hf-tool-shape">
+                    <circle className="hf-tool-disc" r={16} filter={lift} />
+                    <image
+                      href={app.src}
+                      x={-size / 2}
+                      y={-size / 2}
+                      width={size}
+                      height={size}
+                      clipPath={tile ? `url(#${uid}-tool)` : undefined}
+                      preserveAspectRatio="xMidYMid meet"
+                    />
+                  </g>
+                </g>
+              </g>
+            );
+          })}
+
+          {/* One system: a small ring turning inside, the working day in miniature */}
+          <g className="hf-hub" data-node="hub" transform={`translate(${HUB.x} ${HUB.y})`}>
+            <circle className="hf-hub-halo" r={HUB.r + 14} />
+            <circle className="hf-hub-body" r={HUB.r} filter={lift} />
+            <g className="hf-hub-ring">
+              <circle className="hf-hub-orbit" r={12} />
+              {RING.map((angle, index) => (
+                <circle key={index} className="hf-hub-dot" cx={(12 * Math.cos(angle)).toFixed(2)} cy={(12 * Math.sin(angle)).toFixed(2)} r={2.6} />
+              ))}
+            </g>
+          </g>
+
+          {/* A person approves */}
+          <g className="flow-node" data-node="approve" transform={`translate(${GATE.x} ${GATE.y})`}>
+            <circle className="flow-node-halo" r={GATE.r + 9} />
+            <circle className="flow-node-wait" r={GATE.r + 4} />
+            <g className="flow-node-shape">
+              <circle className="flow-node-body" r={GATE.r} filter={lift} />
+              <g className="flow-icon-rest" transform="translate(-9 -9)">
+                <UserCheck size={18} weight="duotone" />
+              </g>
+              <g className="flow-icon-live" transform="translate(-9 -9)">
+                <UserCheck size={18} weight="duotone" />
+              </g>
+            </g>
+            <g data-badge="approved" className="flow-badge" transform={`translate(${GATE.r * 0.8} ${-GATE.r * 0.8})`}>
+              <g className="flow-badge-body">
+                <circle r={7} />
+                <Check x={-5} y={-5} size={10} weight="bold" />
+              </g>
+            </g>
+          </g>
+
+          {/* The crew, and the pay run, each in its own tool */}
+          {(["crew", "payroll"] as const).map((id) => {
+            const output = OUTPUTS[id];
+            const OutputIcon = OUTPUT_ICONS[id];
+            const app = APPS[output.app];
+            const tile = "tile" in app && app.tile;
+            return (
+              <g key={id} className="flow-node hf-output" data-node={id} transform={`translate(${output.x} ${output.y})`}>
+                <circle className="flow-node-halo" r={output.r + 10} />
+                <g className="flow-node-shape">
+                  <circle className="flow-node-body" r={output.r} filter={lift} />
+                  <g className="flow-icon-rest" transform="translate(-9 -9)">
+                    <OutputIcon size={18} weight="duotone" />
+                  </g>
+                  <g className="flow-icon-live" transform="translate(-9 -9)">
+                    <OutputIcon size={18} weight="duotone" />
+                  </g>
+                </g>
+                <g className="hf-app-badge" transform={`translate(${output.r * 0.78} ${output.r * 0.78})`}>
+                  <circle className="hf-badge-disc" r={9} />
+                  <image
+                    href={app.src}
+                    x={tile ? -8 : -6}
+                    y={tile ? -8 : -6}
+                    width={tile ? 16 : 12}
+                    height={tile ? 16 : 12}
+                    clipPath={tile ? `url(#${uid}-badge)` : undefined}
+                    preserveAspectRatio="xMidYMid meet"
+                  />
+                </g>
+                <g data-badge={id === "crew" ? "sent" : "paid"} className="flow-badge" transform={`translate(${output.r * 0.8} ${-output.r * 0.8})`}>
+                  <g className="flow-badge-body">
+                    <circle r={7} />
+                    <Check x={-5} y={-5} size={10} weight="bold" />
+                  </g>
+                </g>
+                <text className="hf-label" y={output.r + 19} textAnchor="middle">
+                  {output.label}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Four words */}
+          <text className="hf-word" x={74} y={314} textAnchor="middle">
+            Scattered
+          </text>
+          <text className="hf-word hf-word-on" x={HUB.x} y={HUB.y + HUB.r + 26} textAnchor="middle">
+            Connected
+          </text>
+          <text className="hf-label" x={GATE.x} y={GATE.y + GATE.r + 19} textAnchor="middle">
+            Approve
+          </text>
+        </svg>
       </div>
 
       <div className="fp-foot">

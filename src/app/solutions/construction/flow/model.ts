@@ -214,7 +214,8 @@ export interface Hop {
 }
 
 export interface Pulse {
-  node: NodeId;
+  /** A stage, or anything else drawn with data-node. */
+  node: string;
   start: number;
   duration: number;
   /** Waiting on a person, thinking (AI), or hiring. */
@@ -222,8 +223,22 @@ export interface Pulse {
 }
 
 export interface Mark {
-  kind: "approved" | "hired" | "paid";
+  /** Which badge pops: "approved", "hired", "paid" and so on. */
+  kind: string;
   at: number;
+}
+
+/** What a diagram plays: signals, stages lighting up and badges, on a loop of `loop` ms. */
+export interface Timeline {
+  hops: Hop[];
+  pulses: Pulse[];
+  marks: Mark[];
+  loop: number;
+  /** When each day starts, for the day letters. */
+  days?: number[];
+  /** When each day's hours are approved, and when the pay run is out, for the pay-week ring. */
+  hours?: number[];
+  paid?: number;
 }
 
 export const PACE = {
@@ -315,4 +330,4 @@ function week() {
   return { hops, pulses, marks, days, hours, paid, loop };
 }
 
-export const WEEK = week();
+export const WEEK: Timeline = week();
