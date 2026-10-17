@@ -2,7 +2,7 @@
 // Australian subcontractors and their crews already use, which a system can
 // connect to where they offer an API. Each logo is the brand's own artwork,
 // from its website (or Google's, and Wikimedia Commons' copies of the
-// Microsoft, Slack, Meta and WhatsApp marks), in public/images/integrations.
+// Microsoft, Meta and WhatsApp marks), in public/images/integrations.
 // The logos are their owners' trademarks; the page says so.
 
 export interface App {
@@ -20,8 +20,7 @@ export const APPS = {
   assignar: { name: "Assignar", src: "/images/integrations/assignar.png" },
   deputy: { name: "Deputy", src: "/images/integrations/deputy.png" },
   calendar: { name: "Google Calendar", src: "/images/integrations/google-calendar.png" },
-  teams: { name: "Microsoft Teams", src: "/images/integrations/microsoft-teams.svg" },
-  slack: { name: "Slack", src: "/images/integrations/slack.svg" },
+  telegram: { name: "Telegram", src: "/images/integrations/telegram.svg", tile: true },
   gmail: { name: "Gmail", src: "/images/integrations/gmail.png" },
   whatsapp: { name: "WhatsApp", src: "/images/integrations/whatsapp.svg" },
   twilio: { name: "Twilio (SMS)", src: "/images/integrations/twilio.png", tile: true },

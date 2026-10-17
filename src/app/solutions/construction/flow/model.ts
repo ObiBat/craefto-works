@@ -33,7 +33,7 @@ const stage = (id: string) => construction.workflow.find((step) => step.id === i
 export const NODES: FlowNode[] = [
   { id: "jobs", label: "Jobs", title: stage("jobs").title, detail: stage("jobs").text, apps: ["procore", "sheets", "drive"], flow: "in" },
   { id: "schedule", label: "Schedule", title: stage("scheduling").title, detail: stage("scheduling").text, apps: ["assignar", "deputy", "calendar"], flow: "out" },
-  { id: "approve", label: "Approve", title: stage("approval").title, detail: stage("approval").text, apps: ["teams", "slack", "gmail"], flow: "out" },
+  { id: "approve", label: "Approve", title: stage("approval").title, detail: stage("approval").text, apps: ["telegram", "gmail"], flow: "out" },
   { id: "crew", label: "Crew", title: stage("crew").title, detail: stage("crew").text, apps: ["whatsapp", "twilio", "maps"], flow: "out" },
   { id: "hours", label: "Hours", title: stage("timesheets").title, detail: stage("timesheets").text, apps: ["powerbi", "excel"], flow: "out" },
   {
@@ -124,7 +124,7 @@ function wide(): Layout {
   const nodes: Record<NodeId, Placed> = {
     jobs: { ...at.jobs, label: { x: at.jobs.x, y: at.jobs.y + 52, anchor: "middle" }, apps: fan(at.jobs, spoke, [-124, -90, -56]) },
     schedule: { ...at.schedule, label: { x: at.schedule.x - 46, y: at.schedule.y + 5, anchor: "end" }, apps: fan(at.schedule, spoke, [-92, -62, -32]) },
-    approve: { ...at.approve, label: { x: at.approve.x - 8, y: at.approve.y - 46, anchor: "middle" }, apps: fan(at.approve, spoke, [24, 54, 84]) },
+    approve: { ...at.approve, label: { x: at.approve.x - 8, y: at.approve.y - 46, anchor: "middle" }, apps: fan(at.approve, spoke, [39, 69]) },
     crew: { ...at.crew, label: { x: at.crew.x + 8, y: at.crew.y - 46, anchor: "middle" }, apps: fan(at.crew, spoke, [96, 126, 156]) },
     hours: { ...at.hours, label: { x: at.hours.x + 46, y: at.hours.y + 5, anchor: "start" }, apps: fan(at.hours, spoke, [-103, -133]) },
     hire: { ...at.hire, label: { x: at.hire.x, y: at.hire.y + 56, anchor: "middle" }, apps: fan(at.hire, spoke, [-76, -41, -6]) },
