@@ -131,8 +131,8 @@ export function ConstructionFlow() {
           </li>
         </ul>
         <p className="flow-note">
-          Hover or tap a stage for what it does. A fictional demo, built to connect with tools you already use where they offer an API. Logos are trademarks of
-          their owners.
+          Hover or tap a stage for what it does. A fictional demo, built to connect with tools you already use where they offer an API, and with a builder’s
+          Procore when they allow it. Logos are trademarks of their owners.
         </p>
       </div>
     </figure>

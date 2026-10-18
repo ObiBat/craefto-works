@@ -65,8 +65,8 @@ test.describe("construction operations", () => {
       const flow = page.locator("figure.flow");
       await expect(flow).toHaveAttribute("data-mode", "still");
       for (const name of STAGES) await expect(flow.getByRole("button", { name, exact: true })).toBeVisible();
-      // The software round each stage: nineteen tools, WhatsApp and Gmail at two stages each.
-      await expect(flow.locator(".flow-app")).toHaveCount(21);
+      // The software round each stage: twenty tools, WhatsApp at three stages.
+      await expect(flow.locator(".flow-app")).toHaveCount(22);
       // Nothing moves, so there's nothing to pause.
       await expect(flow.getByRole("button", { name: /Pause the animation|Play the animation/ })).toHaveCount(0);
       // A stage describes itself on focus.

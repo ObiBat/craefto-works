@@ -1,8 +1,9 @@
 // Software the workflow graph shows connecting to each stage: real tools that
 // Australian subcontractors and their crews already use, which a system can
 // connect to where they offer an API. Each logo is the brand's own artwork,
-// from its website (or Google's, and Wikimedia Commons' copies of the
-// Microsoft, Meta and WhatsApp marks), in public/images/integrations.
+// from its website (or Google's, Wikimedia Commons' copies of the Microsoft,
+// Meta and WhatsApp marks, and Sitemate's App Store icon for Dashpivot), in
+// public/images/integrations.
 // The logos are their owners' trademarks; the page says so.
 
 export interface App {
@@ -14,7 +15,7 @@ export interface App {
 
 export const APPS = {
   procore: { name: "Procore", src: "/images/integrations/procore.png", tile: true },
-  drive: { name: "Google Drive", src: "/images/integrations/google-drive.png" },
+  outlook: { name: "Microsoft Outlook", src: "/images/integrations/outlook.svg" },
   excel: { name: "Microsoft Excel", src: "/images/integrations/excel.svg" },
   sheets: { name: "Google Sheets", src: "/images/integrations/google-sheets.png" },
   assignar: { name: "Assignar", src: "/images/integrations/assignar.png" },
@@ -25,11 +26,12 @@ export const APPS = {
   whatsapp: { name: "WhatsApp", src: "/images/integrations/whatsapp.svg" },
   twilio: { name: "Twilio (SMS)", src: "/images/integrations/twilio.png", tile: true },
   maps: { name: "Google Maps", src: "/images/integrations/google-maps.svg" },
+  dashpivot: { name: "Sitemate Dashpivot", src: "/images/integrations/dashpivot.png", tile: true },
   powerbi: { name: "Power BI", src: "/images/integrations/power-bi.svg" },
   facebook: { name: "Facebook", src: "/images/integrations/facebook.svg" },
+  messenger: { name: "Messenger", src: "/images/integrations/messenger.svg" },
   xero: { name: "Xero", src: "/images/integrations/xero.svg", tile: true },
   myob: { name: "MYOB", src: "/images/integrations/myob.png", tile: true },
-  quickbooks: { name: "QuickBooks", src: "/images/integrations/quickbooks.png" },
   employmenthero: { name: "Employment Hero", src: "/images/integrations/employment-hero.png" },
   reckon: { name: "Reckon", src: "/images/integrations/reckon.svg" },
 } satisfies Record<string, App>;

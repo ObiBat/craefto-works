@@ -31,19 +31,19 @@ export interface FlowNode {
 const stage = (id: string) => construction.workflow.find((step) => step.id === id)!;
 
 export const NODES: FlowNode[] = [
-  { id: "jobs", label: "Jobs", title: stage("jobs").title, detail: stage("jobs").text, apps: ["procore", "sheets", "drive"], flow: "in" },
+  { id: "jobs", label: "Jobs", title: stage("jobs").title, detail: stage("jobs").text, apps: ["procore", "sheets", "outlook"], flow: "in" },
   { id: "schedule", label: "Schedule", title: stage("scheduling").title, detail: stage("scheduling").text, apps: ["assignar", "deputy", "calendar"], flow: "out" },
-  { id: "approve", label: "Approve", title: stage("approval").title, detail: stage("approval").text, apps: ["telegram", "gmail"], flow: "out" },
+  { id: "approve", label: "Approve", title: stage("approval").title, detail: stage("approval").text, apps: ["whatsapp", "telegram", "gmail"], flow: "out" },
   { id: "crew", label: "Crew", title: stage("crew").title, detail: stage("crew").text, apps: ["whatsapp", "twilio", "maps"], flow: "out" },
-  { id: "hours", label: "Hours", title: stage("timesheets").title, detail: stage("timesheets").text, apps: ["powerbi", "excel"], flow: "out" },
+  { id: "hours", label: "Hours", title: stage("timesheets").title, detail: stage("timesheets").text, apps: ["dashpivot", "excel", "powerbi"], flow: "out" },
   {
     id: "hire",
     label: "Day hire",
     tag: "On demand",
     title: "Day hire",
     detail:
-      "When a job needs more hands than the crew has, the shift goes to your casual pool on WhatsApp, your Facebook page and your labour-hire agencies. Facebook doesn’t let apps post in groups, so a person shares those posts. A person checks tickets and induction before anyone is rostered.",
-    apps: ["facebook", "whatsapp", "gmail"],
+      "When a job needs more hands than the crew has, the shift goes to your casual pool on WhatsApp, your Facebook page and your labour-hire agencies, and replies on Messenger land in one list. Facebook doesn’t let apps post in groups, so a person shares those posts. A person checks tickets and induction before anyone is rostered.",
+    apps: ["facebook", "messenger", "whatsapp"],
     flow: "out",
   },
   {
@@ -52,7 +52,7 @@ export const NODES: FlowNode[] = [
     tag: "Weekly or fortnightly",
     title: stage("payroll").title,
     detail: stage("payroll").text,
-    apps: ["xero", "myob", "quickbooks", "employmenthero", "reckon"],
+    apps: ["xero", "myob", "employmenthero", "reckon"],
     flow: "out",
   },
 ];
@@ -124,11 +124,11 @@ function wide(): Layout {
   const nodes: Record<NodeId, Placed> = {
     jobs: { ...at.jobs, label: { x: at.jobs.x, y: at.jobs.y + 52, anchor: "middle" }, apps: fan(at.jobs, spoke, [-124, -90, -56]) },
     schedule: { ...at.schedule, label: { x: at.schedule.x - 46, y: at.schedule.y + 5, anchor: "end" }, apps: fan(at.schedule, spoke, [-92, -62, -32]) },
-    approve: { ...at.approve, label: { x: at.approve.x - 8, y: at.approve.y - 46, anchor: "middle" }, apps: fan(at.approve, spoke, [39, 69]) },
+    approve: { ...at.approve, label: { x: at.approve.x - 8, y: at.approve.y - 46, anchor: "middle" }, apps: fan(at.approve, spoke, [24, 54, 84]) },
     crew: { ...at.crew, label: { x: at.crew.x + 8, y: at.crew.y - 46, anchor: "middle" }, apps: fan(at.crew, spoke, [96, 126, 156]) },
-    hours: { ...at.hours, label: { x: at.hours.x + 46, y: at.hours.y + 5, anchor: "start" }, apps: fan(at.hours, spoke, [-103, -133]) },
+    hours: { ...at.hours, label: { x: at.hours.x + 46, y: at.hours.y + 5, anchor: "start" }, apps: fan(at.hours, spoke, [-86, -118, -150]) },
     hire: { ...at.hire, label: { x: at.hire.x, y: at.hire.y + 56, anchor: "middle" }, apps: fan(at.hire, spoke, [-76, -41, -6]) },
-    payroll: { ...at.payroll, label: { x: at.payroll.x, y: at.payroll.y + 60, anchor: "middle" }, apps: fan(at.payroll, spoke + 4, [166, 196, 226, 256, 286]) },
+    payroll: { ...at.payroll, label: { x: at.payroll.x, y: at.payroll.y + 60, anchor: "middle" }, apps: fan(at.payroll, spoke + 4, [181, 211, 241, 271]) },
   };
   return {
     name: "wide",
@@ -163,7 +163,7 @@ function narrow(): Layout {
     crew: { ...at.crew, label: { x: at.crew.x + 6, y: at.crew.y - 35, anchor: "middle" }, apps: fan(at.crew, spoke, [108, 144]) },
     hours: { ...at.hours, label: { x: at.hours.x + 34, y: at.hours.y + 4, anchor: "start" }, apps: fan(at.hours, spoke, [-118, -152]) },
     hire: { ...at.hire, label: { x: at.hire.x, y: at.hire.y - 52, anchor: "middle" }, apps: fan(at.hire, spoke, [128, 162, 196]) },
-    payroll: { ...at.payroll, label: { x: at.payroll.x, y: at.payroll.y + 50, anchor: "middle" }, apps: fan(at.payroll, spoke + 4, [-84, -52, -20, 12, 44]) },
+    payroll: { ...at.payroll, label: { x: at.payroll.x, y: at.payroll.y + 50, anchor: "middle" }, apps: fan(at.payroll, spoke + 4, [-68, -36, -4, 28]) },
   };
   return {
     name: "narrow",
