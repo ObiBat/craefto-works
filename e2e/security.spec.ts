@@ -22,6 +22,7 @@ test.describe("admin API access", () => {
     "/api/admin/outreach/replies/00000000-0000-4000-8000-000000000000",
     "/api/admin/chats",
     "/api/admin/chats/00000000-0000-4000-8000-000000000000",
+    "/api/admin/work",
     "/api/analytics/article",
   ];
 
@@ -35,6 +36,22 @@ test.describe("admin API access", () => {
   test("past work can't be added without a session", async ({ request }) => {
     const res = await request.post("/api/admin/members/00000000-0000-4000-8000-000000000000/requests", { data: { title: "x", delivered_on: "2026-01-01" } });
     expect(res.status()).toBe(401);
+  });
+
+  test("shipped work and projects can't change without a session", async ({ request }) => {
+    const draft = "/api/admin/work/00000000-0000-4000-8000-000000000000";
+    expect((await request.patch(draft, { data: { action: "publish", mode: "past_work", minutes: 30 } })).status()).toBe(401);
+    expect((await request.patch(draft, { data: { title: "x" } })).status()).toBe(401);
+    const projects = "/api/admin/members/00000000-0000-4000-8000-000000000000/projects";
+    expect((await request.post(projects, { data: { repo: "someone/something" } })).status()).toBe(401);
+    expect((await request.delete(`${projects}?project=00000000-0000-4000-8000-000000000000`)).status()).toBe(401);
+  });
+
+  test("the GitHub webhook refuses unsigned or wrongly signed calls", async ({ request }) => {
+    const merged = { action: "closed", repository: { full_name: "someone/something", default_branch: "main" }, pull_request: { number: 1, merged: true } };
+    expect((await request.post("/api/github/webhook", { data: merged, headers: { "x-github-event": "pull_request" } })).status()).toBe(401);
+    const forged = { "x-github-event": "pull_request", "x-hub-signature-256": `sha256=${"0".repeat(64)}` };
+    expect((await request.post("/api/github/webhook", { data: merged, headers: forged })).status()).toBe(401);
   });
 
   // Approving outreach authorises sending: every way to change it is refused without a session or the API token.

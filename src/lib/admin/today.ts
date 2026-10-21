@@ -23,7 +23,7 @@ import {
 
 const DAY = 86_400_000;
 
-export type NeedKind = "client-message" | "estimate" | "overrun" | "reply" | "enquiry" | "handoff" | "application" | "drafts";
+export type NeedKind = "client-message" | "estimate" | "overrun" | "work" | "reply" | "enquiry" | "handoff" | "application" | "drafts";
 
 export interface Need {
   id: string;
@@ -93,6 +93,8 @@ export interface TodayCounts {
   outreach: number;
   chats: number;
   clients: number;
+  /** Shipped work waiting to publish. */
+  work: number;
   applications: number;
 }
 
@@ -177,19 +179,21 @@ async function visitsSince(db: ReturnType<typeof createServerClient>, since: str
 export async function todayCounts(): Promise<TodayCounts> {
   const db = createServerClient();
   const since = new Date(Date.now() - 7 * DAY).toISOString();
-  const [leads, replies, handoffs, received, messages, applications] = await Promise.all([
+  const [leads, replies, handoffs, received, messages, applications, work] = await Promise.all([
     freshLeads(db),
     db.from("outreach_replies").select("id", { count: "exact", head: true }).is("handled_at", null).eq("mode", "live").in("label", OPEN_LABELS),
     db.from("assistant_chats").select("id", { count: "exact", head: true }).eq("status", "handoff").is("lead_id", null).gte("updated_at", since),
     db.from("client_requests").select("id", { count: "exact", head: true }).eq("status", "received"),
     db.from("client_messages").select("account_id, request_id, author").order("created_at", { ascending: false }).limit(500),
     db.from("job_applications").select("id", { count: "exact", head: true }).eq("status", "new"),
+    db.from("client_work_drafts").select("id", { count: "exact", head: true }).eq("status", "pending"),
   ]);
   return {
     leads: leads.length,
     outreach: replies.count ?? 0,
     chats: handoffs.count ?? 0,
     clients: (received.count ?? 0) + awaitingThreads((messages.data ?? []) as ClientMessage[]).length,
+    work: work.count ?? 0,
     applications: applications.count ?? 0,
   };
 }
@@ -230,6 +234,7 @@ export async function today(): Promise<Today> {
     viewsBefore,
     visits,
     enquiries,
+    shipped,
   ] = await Promise.all([
     freshLeads(db),
     openReplies(db),
@@ -248,6 +253,7 @@ export async function today(): Promise<Today> {
     db.from("page_views").select("id", { count: "exact", head: true }).gte("created_at", fortnightAgo).lt("created_at", weekAgo),
     visitsSince(db, weekAgo),
     db.from("leads").select("id", { count: "exact", head: true }).gte("created_at", monthAgo),
+    db.from("client_work_drafts").select("id, account_id, title, merged_at").eq("status", "pending").order("merged_at", { ascending: false }),
   ]);
 
   const accountRows = (accounts.data ?? []) as ClientAccount[];
@@ -299,6 +305,21 @@ export async function today(): Promise<Today> {
       detail: `${account ? clientName(account) : "A client"} · ${shortHours(hours)} logged of up to ${shortHours(Number(request.estimate_high))}. Talk it through with them`,
       href: requestHref(request),
       at: request.updated_at,
+    });
+  }
+
+  // Shipped work: merged pull requests, drafted for the client's Past work and hours.
+  const shippedRows = (shipped.data ?? []) as Array<{ id: string; account_id: string; title: string; merged_at: string }>;
+  if (shippedRows.length > 0) {
+    const [newest] = shippedRows;
+    const clients = [...new Set(shippedRows.map((row) => accountById.get(row.account_id)).filter(Boolean).map((account) => clientName(account!)))];
+    needs.push({
+      id: "work",
+      kind: "work",
+      title: `${shippedRows.length} shipped change${shippedRows.length === 1 ? "" : "s"} to publish`,
+      detail: `${clients.join(", ") || "A client"} · newest: ${excerpt(newest.title, 70)}. Nothing reaches them until you publish it`,
+      href: "/admin/work",
+      at: newest.merged_at,
     });
   }
 

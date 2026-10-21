@@ -23,6 +23,7 @@ import { AttachButton, DropOverlay, UploadList, useAttachments, useFileDrop, typ
 import { FileList } from "@/components/portal/file-list";
 import { RichText } from "@/components/assistant/rich-text";
 import { callTime } from "@/lib/portal/call-times";
+import { requestRef } from "@/lib/portal/work-rules";
 import type { MemberDetail } from "@/lib/portal/admin";
 import { REQUEST_VARIANT, planName, planVariant, shortDate } from "../shared";
 import { cn } from "@/lib/utils";
@@ -428,7 +429,7 @@ function RequestCard({
             <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold tracking-tight">{request.title}</h3>
             <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">
               Sent {shortDate(request.created_at, true)} · updated {shortDate(request.updated_at, true)}
-              {request.needed_by && ` · needed by ${shortDate(`${request.needed_by}T12:00:00+10:00`)}`}
+              {request.needed_by && ` · needed by ${shortDate(`${request.needed_by}T12:00:00+10:00`)}`} · <RefChip id={request.id} />
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <StatusBadge variant={REQUEST_VARIANT[request.status]}>{REQUEST_STATUSES[request.status].label}</StatusBadge>
@@ -469,6 +470,106 @@ function RequestCard({
       )}
       <Thread messages={messages} files={files} client={client} />
       <ReplyForm memberId={memberId} request={request} onSent={onSent} />
+    </Card>
+  );
+}
+
+/** A request's reference: in a pull request's title, description or branch, its merge delivers this request. */
+function RefChip({ id }: { id: string }) {
+  const [copied, setCopied] = React.useState(false);
+  const ref = requestRef(id);
+  return (
+    <button
+      type="button"
+      title="Put this in a pull request's title, description or branch: when it merges, it can deliver this request"
+      onClick={() => {
+        void navigator.clipboard?.writeText(ref).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        });
+      }}
+      className="font-mono text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-accent))]"
+    >
+      {copied ? "Copied" : ref}
+    </button>
+  );
+}
+
+/** The client's code repositories: their merged pull requests arrive as shipped work to check and publish. */
+function ProjectsPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => void }) {
+  const { account, projects, pendingWork } = member;
+  const [repo, setRepo] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [removing, setRemoving] = React.useState<string | null>(null);
+  const [message, setMessage] = React.useState<string | null>(null);
+
+  async function connect(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setMessage(null);
+    try {
+      const project = await api(`/api/admin/members/${account.id}/projects`, "POST", { repo });
+      setRepo("");
+      setMessage(`Connected ${project.repo}.`);
+      onSaved();
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
+    setSaving(false);
+  }
+
+  async function remove(projectId: string) {
+    if (removing !== projectId) {
+      setRemoving(projectId);
+      return;
+    }
+    setSaving(true);
+    try {
+      await api(`/api/admin/members/${account.id}/projects?project=${projectId}`, "DELETE");
+      setRemoving(null);
+      onSaved();
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
+    setSaving(false);
+  }
+
+  return (
+    <Card className="space-y-4">
+      {projects.length > 0 && (
+        <ul className="space-y-2">
+          {projects.map((project) => (
+            <li key={project.id} className="flex flex-wrap items-center justify-between gap-3">
+              <a href={`https://github.com/${project.repo}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-mono text-sm hover:text-[hsl(var(--color-accent))]">
+                {project.repo} <IconExternal size={12} />
+              </a>
+              <button type="button" disabled={saving} onClick={() => remove(project.id)} className="text-sm text-[hsl(var(--color-foreground-muted))] hover:text-[hsl(var(--color-error))]">
+                {removing === project.id ? "Disconnect: sure?" : "Disconnect"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form onSubmit={connect} className="flex flex-wrap items-center gap-3">
+        <input
+          value={repo}
+          onChange={(event) => setRepo(event.target.value)}
+          placeholder="owner/name or its GitHub address"
+          aria-label="GitHub repository"
+          className={cn(field, "w-auto min-w-[16rem] flex-1 py-1.5 font-mono text-sm")}
+        />
+        <button type="submit" disabled={saving || !repo.trim()} className={primary}>
+          Connect
+        </button>
+        {message && <span className="text-sm text-[hsl(var(--color-foreground-muted))]">{message}</span>}
+      </form>
+      <p className="text-xs leading-relaxed text-[hsl(var(--color-foreground-subtle))]">
+        GitHub sends its pushes and merged pull requests to www.craefto.com/api/github/webhook, signed with the site&apos;s GitHub secret. Each pull request merged into the main branch arrives under{" "}
+        <Link href="/admin/work" className="font-medium text-[hsl(var(--color-accent))] hover:underline">
+          Shipped work{pendingWork ? ` (${pendingWork} waiting)` : ""}
+        </Link>{" "}
+        and on your phone. A request&apos;s reference (R- and 8 characters, on its card) in the title, description or branch links it to that request.
+      </p>
     </Card>
   );
 }
@@ -902,6 +1003,10 @@ export default function MemberPage() {
 
       <Section title="Hours" description="Their studio time this month, and general time (calls, planning) not tied to one request.">
         <HoursPanel key={account.id + (account.monthly_hours ?? "") + account.time_zone + (account.cycle_day ?? 1)} member={member} onSaved={load} />
+      </Section>
+
+      <Section title="Projects" description="Their code repositories: merged pull requests become shipped work to check and publish.">
+        <ProjectsPanel member={member} onSaved={load} />
       </Section>
 
       {subscriptions.length > 0 && (

@@ -3,7 +3,8 @@ import { generateText, Output, type LanguageModel } from "ai";
 import { z } from "zod";
 import { PRIVATE_AI } from "@/lib/ai";
 import { createServerClient } from "@/lib/supabase";
-import { alertOwnerTelegram, telegramConfigured, telegramHtml } from "@/lib/telegram";
+import { telegramConfigured } from "@/lib/telegram";
+import { alertRequestCard } from "./telegram-cards";
 import { allowanceFor, minutesByRequest, usageFor, type Usage } from "./hours";
 import { recordEvent, saveInitialEstimate } from "./workflow";
 import { isOpen, type ClientAccount, type ClientRequest, type ClientRequestEvent, type ClientSubscription, type ClientTimeEntry } from "./types";
@@ -223,12 +224,8 @@ export async function reviewRequest(requestId: string, origin: string, model: La
   if (error) console.error(`Ask Craefto's reply to request ${requestId} wasn't saved:`, error);
 
   if (telegramConfigured()) {
-    const estimate = read ? (sized ? `AI initial estimate ${hours(halfHour(read.low))}–${hours(Math.max(halfHour(read.low), halfHour(read.high)))} h` : "Project-sized: needs splitting or a quote") : "No AI estimate: add one";
-    const used = hours(Math.round(usage.used * 2) / 2);
-    const month = usage.allowance ? ` · ${usage.allowance.hours == null ? `${used} h used this month, no limit` : `${used}/${hours(usage.allowance.hours)} h used this month`}` : "";
-    await alertOwnerTelegram(
-      [`<b>New request · ${telegramHtml(account.company || account.name || account.email)}</b>`, telegramHtml(request.title), `${estimate}${month}`].join("\n"),
-      [{ text: "Open in admin", url: `${origin}/admin/members/${account.id}` }]
-    ).catch((alertError) => console.error("The new-request alert failed:", alertError));
+    // A card with buttons: confirm the estimate, change it, or ask a question, from the phone.
+    const note = read ? (sized ? null : "Project-sized: needs splitting or a quote") : "No AI estimate: set the hours";
+    await alertRequestCard(requestId, origin, { heading: "New request", note }).catch((alertError) => console.error("The new-request alert failed:", alertError));
   }
 }

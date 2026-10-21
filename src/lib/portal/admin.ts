@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase";
 import { planById } from "@/lib/pricing";
 import { allowanceFor, usageFor, type Usage } from "./hours";
 import { OutcomeInputError, outcomeInput } from "./outcome";
+import { projectsOf, type ClientProject } from "./work";
 import {
   isLive,
   isOpen,
@@ -95,12 +96,16 @@ export interface MemberDetail {
   usage: Usage;
   /** The customer in the Stripe dashboard (test or live, matching the key). */
   stripeUrl: string | null;
+  /** Their code repositories, whose merged pull requests become shipped work to publish. */
+  projects: ClientProject[];
+  /** Their shipped work waiting to publish. */
+  pendingWork: number;
 }
 
 export async function memberDetail(id: string): Promise<MemberDetail | null> {
   const { data: account } = await db().from("client_accounts").select("*").eq("id", id).maybeSingle();
   if (!account) return null;
-  const [subscriptions, requests, messages, files, calls, entries] = await Promise.all([
+  const [subscriptions, requests, messages, files, calls, entries, projects, pendingWork] = await Promise.all([
     db().from("client_subscriptions").select("*").eq("account_id", id).order("created_at", { ascending: false }),
     db().from("client_requests").select("*").eq("account_id", id).order("updated_at", { ascending: false }),
     db().from("client_messages").select("*").eq("account_id", id).order("created_at"),
@@ -113,6 +118,8 @@ export async function memberDetail(id: string): Promise<MemberDetail | null> {
       .gte("ends_at", new Date().toISOString())
       .order("starts_at"),
     db().from("client_time_entries").select("*").eq("account_id", id).order("worked_on", { ascending: false }).order("created_at", { ascending: false }),
+    projectsOf(id),
+    db().from("client_work_drafts").select("id", { count: "exact", head: true }).eq("account_id", id).eq("status", "pending"),
   ]);
   const testMode = /^(sk|rk)_test_/.test(process.env.STRIPE_SECRET_KEY ?? "");
   return {
@@ -131,6 +138,8 @@ export async function memberDetail(id: string): Promise<MemberDetail | null> {
     stripeUrl: account.stripe_customer_id
       ? `https://dashboard.stripe.com/${testMode ? "test/" : ""}customers/${account.stripe_customer_id}`
       : null,
+    projects,
+    pendingWork: pendingWork.count ?? 0,
   };
 }
 

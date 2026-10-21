@@ -3,7 +3,8 @@ import { EMAIL_FROM, isEmailEnabled, resend } from "@/lib/resend";
 import { formatPrice, planById } from "@/lib/pricing";
 import * as emails from "@/emails/portal";
 import { formatBytes } from "./file-rules";
-import { alertOwnerTelegram, telegramConfigured, telegramHtml } from "@/lib/telegram";
+import { telegramConfigured } from "@/lib/telegram";
+import { alertClientMessage, alertRequestCard } from "./telegram-cards";
 import { REQUEST_STATUSES, estimateLabel, type ClientAccount, type ClientFile, type ClientMessage, type ClientRequest, type ClientSubscription } from "./types";
 
 // Portal email: to clients from hello@, with replies going to Craefto's inbox,
@@ -154,8 +155,11 @@ export const alertRequest = (account: ClientAccount, request: ClientRequest, fil
     account.email
   );
 
-export const alertMessage = (account: ClientAccount, message: ClientMessage, request: ClientRequest | null, files: ClientFile[], origin: string) =>
-  send(
+export async function alertMessage(account: ClientAccount, message: ClientMessage, request: ClientRequest | null, files: ClientFile[], origin: string) {
+  if (telegramConfigured()) {
+    await alertClientMessage(account, message, request, files, origin).catch((error) => console.error("The message alert failed:", error));
+  }
+  await send(
     CRAEFTO_INBOX,
     emails.alertEmail({
       eyebrow: "New message",
@@ -171,16 +175,15 @@ export const alertMessage = (account: ClientAccount, message: ClientMessage, req
     }),
     account.email
   );
+}
 
 /** The client approved an estimate: the request is in their queue. */
 export async function alertApproved(account: ClientAccount, request: ClientRequest, origin: string) {
   const estimate = estimateLabel(request) ?? "no estimate";
   const place = request.queue_position ? `#${request.queue_position} in their queue` : "in their queue";
   if (telegramConfigured()) {
-    await alertOwnerTelegram(
-      [`<b>Approved · ${telegramHtml(who(account))}</b>`, telegramHtml(request.title), `${telegramHtml(estimate)} · ${place}`].join("\n"),
-      [{ text: "Open in admin", url: adminLink(origin, account) }]
-    ).catch((error) => console.error("The approval alert failed:", error));
+    // With a button to start it from the phone.
+    await alertRequestCard(request.id, origin, { heading: "Approved" }).catch((error) => console.error("The approval alert failed:", error));
   }
   await send(
     CRAEFTO_INBOX,

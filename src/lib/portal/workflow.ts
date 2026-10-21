@@ -1,7 +1,7 @@
 import "server-only";
 import { createServerClient } from "@/lib/supabase";
-import { sydneyToday } from "./hours";
-import type { ClientRequest, ClientRequestEvent, ClientTimeEntry, EstimateState, RequestEventKind, RequestStatus } from "./types";
+import { longHours, sydneyToday } from "./hours";
+import { estimateLabel, type ClientRequest, type ClientRequestEvent, type ClientTimeEntry, type EstimateState, type RequestEventKind, type RequestStatus } from "./types";
 
 // How a request moves, written with the service role (clients can only read
 // these columns and tables): Ask Craefto's initial estimate, Craefto's
@@ -168,4 +168,13 @@ export async function logTime(accountId: string, entry: { requestId: string | nu
 export async function deleteTime(accountId: string, id: string) {
   const { error } = await db().from("client_time_entries").delete().eq("id", id).eq("account_id", accountId);
   if (error) throw error;
+}
+
+/** The delivery email's line on time: "We logged 3.5 hours on it, against an estimate of 3 to 5 hours." Nothing when none was logged. */
+export async function deliveryDetail(request: ClientRequest): Promise<string | undefined> {
+  const { data: entries } = await db().from("client_time_entries").select("minutes").eq("request_id", request.id);
+  const hours = (entries ?? []).reduce((total, entry) => total + entry.minutes, 0) / 60;
+  if (hours <= 0) return undefined;
+  const estimate = estimateLabel(request);
+  return `We logged ${longHours(hours)} on it${estimate ? `, against an estimate of ${estimate}` : ""}.`;
 }

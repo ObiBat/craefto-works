@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { accountById } from "@/lib/portal/accounts";
-import { longHours } from "@/lib/portal/hours";
 import { sendEstimateReady, sendRequestUpdate } from "@/lib/portal/notify";
 import { siteOrigin } from "@/lib/portal/origin";
 import { OutcomeInputError, outcomeInput } from "@/lib/portal/outcome";
-import { WorkflowError, confirmEstimate, moveInQueue, recordEvent, setStatus } from "@/lib/portal/workflow";
-import { estimateLabel, isRequestStatus, type ClientRequest } from "@/lib/portal/types";
+import { WorkflowError, confirmEstimate, deliveryDetail, moveInQueue, recordEvent, setStatus } from "@/lib/portal/workflow";
+import { isRequestStatus, type ClientRequest } from "@/lib/portal/types";
 
 export const dynamic = "force-dynamic";
 
@@ -77,14 +76,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const account = await accountById(id);
     if (account && updated.status !== "received") {
-      let detail: string | undefined;
-      if (updated.status === "delivered") {
-        const { data: entries } = await db.from("client_time_entries").select("minutes").eq("request_id", updated.id);
-        const hours = (entries ?? []).reduce((total, entry) => total + entry.minutes, 0) / 60;
-        const estimate = estimateLabel(updated);
-        if (hours > 0) detail = `We logged ${longHours(hours)} on it${estimate ? `, against an estimate of ${estimate}` : ""}.`;
-      }
-      await sendRequestUpdate(account, updated, origin, detail);
+      await sendRequestUpdate(account, updated, origin, updated.status === "delivered" ? await deliveryDetail(updated) : undefined);
     }
     return NextResponse.json(updated);
   } catch (error) {

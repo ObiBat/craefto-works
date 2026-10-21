@@ -621,6 +621,18 @@ export function IconLinkedIn({ size = 20, className = "" }: IconProps) {
   );
 }
 
+/** A merged branch: shipped work. */
+export function IconGitMerge({ size = 20, className = "" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <circle cx="6" cy="5.5" r="2.25" />
+      <circle cx="6" cy="18.5" r="2.25" />
+      <circle cx="18" cy="12" r="2.25" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 7.75v8.5M6 7.75C6 10.5 8.25 12 11 12h4.75" />
+    </svg>
+  );
+}
+
 // ─── Layout helper: resolves nav icon name to component ─
 
 const NAV_ICON_MAP: Record<string, React.FC<IconProps>> = {
@@ -628,6 +640,7 @@ const NAV_ICON_MAP: Record<string, React.FC<IconProps>> = {
   chart: IconChart,
   command: IconCommand,
   briefcase: IconBriefcase,
+  merge: IconGitMerge,
   users: IconUsers,
   folder: IconFolder,
   dollar: IconDollar,

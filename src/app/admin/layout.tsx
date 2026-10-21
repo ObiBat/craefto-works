@@ -22,7 +22,10 @@ const NAV_GROUPS: Array<{ label: string | null; items: Array<{ href: string; lab
   },
   {
     label: "Do the work",
-    items: [{ href: "/admin/members", label: "Clients", icon: "briefcase", badge: "clients" }],
+    items: [
+      { href: "/admin/members", label: "Clients", icon: "briefcase", badge: "clients" },
+      { href: "/admin/work", label: "Shipped work", icon: "merge", badge: "work" },
+    ],
   },
   {
     label: "Studio",
