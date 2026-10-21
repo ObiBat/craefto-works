@@ -13,6 +13,8 @@ export interface ClientAccount {
   monthly_hours: number | null;
   /** What that arrangement is called, e.g. "JapanoMa monthly hours". */
   engagement: string | null;
+  /** The day of the month their hours refresh (1: calendar months). */
+  cycle_day: number;
   /** Where the client is, for their calendar. */
   time_zone: string;
   /** The Friday effort email. */
@@ -63,8 +65,18 @@ export interface ClientRequest {
   needed_by: string | null;
   approved_at: string | null;
   delivered_at: string | null;
+  /** What was delivered and what it changed, in Craefto's words, for the client's record of past work. */
+  outcome: string | null;
+  /** Links to the delivered work. */
+  outcome_links: OutcomeLink[];
   created_at: string;
   updated_at: string;
+}
+
+/** A link to delivered work: a live page, a design file, a document. */
+export interface OutcomeLink {
+  label: string;
+  url: string;
 }
 
 /** Time Craefto logged, against a request or the account generally. */

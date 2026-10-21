@@ -3,7 +3,9 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { createServerClient as serviceClient } from "@/lib/supabase";
 import { allowanceFor, type Allowance } from "./hours";
+import { viewingAs } from "./preview";
 import { isLive, type ClientAccount, type ClientSubscription } from "./types";
 
 // The client portal's sessions: Supabase Auth in httpOnly cookies, read and
@@ -37,7 +39,8 @@ export async function portalDb(): Promise<SupabaseClient> {
 }
 
 export interface Member {
-  user: User;
+  /** Their login (none while Craefto views as a client who hasn't signed in yet). */
+  user: User | null;
   account: ClientAccount;
   /** Every subscription, newest first, current or not. */
   subscriptions: ClientSubscription[];
@@ -46,10 +49,14 @@ export interface Member {
   /** Their studio time each month (a plan's, or agreed with Craefto directly); null pauses new requests. */
   allowance: Allowance | null;
   db: SupabaseClient;
+  /** Craefto viewing as this client (lib/portal/preview.ts): read only, and actions refuse. */
+  preview: boolean;
 }
 
-/** The signed-in client, or null when signed out or not a client. */
+/** The signed-in client, or null when signed out or not a client; or the client Craefto is viewing as. */
 export async function currentMember(): Promise<Member | null> {
+  const viewing = await viewingAs();
+  if (viewing) return previewMember(viewing);
   const db = await portalDb();
   const {
     data: { user },
@@ -70,6 +77,28 @@ export async function currentMember(): Promise<Member | null> {
     plans: subscriptions.filter(isLive),
     allowance: allowanceFor(account as ClientAccount, subscriptions),
     db,
+    preview: false,
+  };
+}
+
+/**
+ * A client as Craefto views them: read with the service role, which skips RLS,
+ * so every portal query names the account (they all filter by account_id).
+ */
+async function previewMember(id: string): Promise<Member | null> {
+  const db = serviceClient();
+  const { data: account } = await db.from("client_accounts").select("*").eq("id", id).maybeSingle();
+  if (!account) return null;
+  const { data } = await db.from("client_subscriptions").select("*").eq("account_id", id).order("created_at", { ascending: false });
+  const subscriptions = (data ?? []) as ClientSubscription[];
+  return {
+    user: null,
+    account: account as ClientAccount,
+    subscriptions,
+    plans: subscriptions.filter(isLive),
+    allowance: allowanceFor(account as ClientAccount, subscriptions),
+    db,
+    preview: true,
   };
 }
 

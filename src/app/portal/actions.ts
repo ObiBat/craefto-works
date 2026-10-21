@@ -10,6 +10,7 @@ import { reviewRequest } from "@/lib/portal/assistant";
 import { sydneyToday } from "@/lib/portal/hours";
 import { WorkflowError, approveEstimate, recordEvent, withdrawRequest as withdraw } from "@/lib/portal/workflow";
 import { siteOrigin } from "@/lib/portal/origin";
+import { PREVIEW_REFUSAL } from "@/lib/portal/preview";
 import { requireMember } from "@/lib/portal/session";
 import type { ClientMessage, ClientRequest } from "@/lib/portal/types";
 import { billingPortalConfiguration, stripe } from "@/lib/stripe";
@@ -32,6 +33,7 @@ export async function prepareFileUploads(input: {
   files: Array<{ name: string; size: number; type: string }>;
 }): Promise<{ slots?: UploadSlot[]; error?: string }> {
   const member = await requireMember();
+  if (member.preview) return { error: PREVIEW_REFUSAL };
   try {
     return { slots: await prepareUploads(member.account, "client", input.files) };
   } catch (error) {
@@ -68,6 +70,7 @@ export async function createRequest(_: FormState, formData: FormData): Promise<F
   const details = text(formData, "details");
   const neededBy = text(formData, "needed_by");
   const fail = (error: string): FormState => ({ error, values: { title, details, needed_by: neededBy } });
+  if (member.preview) return fail(PREVIEW_REFUSAL);
   if (!member.allowance) return fail("Your plan isn't active, so new requests are paused. Message us if that's unexpected.");
   if (!title) return fail("Give the request a short title.");
   if (neededBy && (!/^\d{4}-\d{2}-\d{2}$/.test(neededBy) || neededBy < sydneyToday())) return fail("Choose a date from today on, or leave “Needed by” empty.");
@@ -99,13 +102,14 @@ export async function createRequest(_: FormState, formData: FormData): Promise<F
 async function ownRequest(formData: FormData) {
   const member = await requireMember();
   const id = text(formData, "request_id");
-  const { data } = id ? await member.db.from("client_requests").select("*").eq("id", id).maybeSingle() : { data: null };
+  const { data } = id ? await member.db.from("client_requests").select("*").eq("id", id).eq("account_id", member.account.id).maybeSingle() : { data: null };
   return { member, request: (data as ClientRequest | null) ?? null };
 }
 
 /** Approve Craefto's confirmed estimate: the request joins the client's queue. */
 export async function approveRequest(_: FormState, formData: FormData): Promise<FormState> {
   const { member, request } = await ownRequest(formData);
+  if (member.preview) return { error: PREVIEW_REFUSAL };
   if (!request) return { error: "That request isn't yours or no longer exists." };
   try {
     const approved = await approveEstimate(request);
@@ -122,6 +126,7 @@ export async function approveRequest(_: FormState, formData: FormData): Promise<
 /** Withdraw a request that hasn't started. */
 export async function withdrawRequest(_: FormState, formData: FormData): Promise<FormState> {
   const { member, request } = await ownRequest(formData);
+  if (member.preview) return { error: PREVIEW_REFUSAL };
   if (!request) return { error: "That request isn't yours or no longer exists." };
   try {
     await withdraw(request);
@@ -146,6 +151,7 @@ export async function sendMessage(_: FormState, formData: FormData): Promise<For
   const body = text(formData, "body");
   const requestId = text(formData, "request_id") || null;
   const fail = (error: string): FormState => ({ error, values: { body } });
+  if (member.preview) return fail(PREVIEW_REFUSAL);
   const ids = fileIds(formData);
   if (!body && ids.length === 0) return fail("Write a message or attach a file.");
   if (body.length > 10000) return fail("Keep a message under 10,000 characters.");
@@ -154,7 +160,7 @@ export async function sendMessage(_: FormState, formData: FormData): Promise<For
 
   let request: ClientRequest | null = null;
   if (requestId) {
-    const { data } = await member.db.from("client_requests").select("*").eq("id", requestId).maybeSingle();
+    const { data } = await member.db.from("client_requests").select("*").eq("id", requestId).eq("account_id", member.account.id).maybeSingle();
     if (!data) return fail("That request isn't yours or no longer exists.");
     request = data as ClientRequest;
   }
@@ -181,6 +187,7 @@ export async function sendMessage(_: FormState, formData: FormData): Promise<For
  */
 export async function openBilling(formData?: FormData): Promise<void> {
   const member = await requireMember();
+  if (member.preview) redirect("/portal/billing");
   const theirs = new Set([member.account.stripe_customer_id, ...member.subscriptions.map((subscription) => subscription.stripe_customer_id)]);
   const asked = String(formData?.get("customer") ?? "");
   const owing = member.subscriptions.find((subscription) => subscription.status === "past_due" || subscription.status === "unpaid");

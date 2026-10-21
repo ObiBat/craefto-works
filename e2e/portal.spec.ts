@@ -4,7 +4,7 @@ import { test, expect } from "./fixtures";
 // and expect refusals (no checkout, no email, no writes), so they are safe to
 // run against production.
 test.describe("client portal", () => {
-  for (const path of ["/portal", "/portal/requests", "/portal/requests/new", "/portal/calendar", "/portal/messages", "/portal/calls", "/portal/billing"]) {
+  for (const path of ["/portal", "/portal/requests", "/portal/requests/new", "/portal/work", "/portal/calendar", "/portal/messages", "/portal/calls", "/portal/billing"]) {
     test(`${path} asks a visitor to sign in`, async ({ page }) => {
       await page.goto(path);
       await page.waitForURL(/\/portal\/login$/);

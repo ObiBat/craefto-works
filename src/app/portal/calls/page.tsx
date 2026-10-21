@@ -14,7 +14,7 @@ const link = "inline-flex items-center text-sm font-medium text-[hsl(var(--color
 
 /** Book a call with Craefto, and see the ones coming up. */
 export default async function CallsPage() {
-  const { account, plans, db } = await requireMember();
+  const { account, plans, db, preview } = await requireMember();
   const { data } = await db
     .from("client_meetings")
     .select("*")
@@ -72,7 +72,12 @@ export default async function CallsPage() {
         )}
 
         <Section title={upcoming.length > 0 ? "Book another call" : "Book a call"}>
-          <CalBooking calLink={CAL_LINK} name={account.name ?? ""} email={account.email} notes={notes} />
+          {preview ? (
+            // The booking is prefilled with the client's details: from here it would book a real call for them.
+            <p className="text-[hsl(var(--color-foreground-subtle))]">Booking is off while you&apos;re viewing as this client. They see the booking calendar here.</p>
+          ) : (
+            <CalBooking calLink={CAL_LINK} name={account.name ?? ""} email={account.email} notes={notes} />
+          )}
         </Section>
       </div>
     </>

@@ -4,6 +4,7 @@ import { accountById } from "@/lib/portal/accounts";
 import { longHours } from "@/lib/portal/hours";
 import { sendEstimateReady, sendRequestUpdate } from "@/lib/portal/notify";
 import { siteOrigin } from "@/lib/portal/origin";
+import { OutcomeInputError, outcomeInput } from "@/lib/portal/outcome";
 import { WorkflowError, confirmEstimate, moveInQueue, recordEvent, setStatus } from "@/lib/portal/workflow";
 import { estimateLabel, isRequestStatus, type ClientRequest } from "@/lib/portal/types";
 
@@ -17,6 +18,9 @@ export const dynamic = "force-dynamic";
  *     it's queued or started from here.
  *   { estimate: { low, high, note?, target_date? } }: confirm it, and ask the client to approve.
  *   { move: "up" | "down" }: its place in the queue.
+ *   { outcome?, outcome_links? }: what was delivered, for the client's Past
+ *     work; given with { status: "delivered" }, it's saved first and goes in
+ *     the delivery email.
  */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string; requestId: string }> }) {
   const { id, requestId } = await params;
@@ -27,6 +31,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const origin = await siteOrigin();
 
   try {
+    let latest = current;
+    if (body && ("outcome" in body || "outcome_links" in body)) {
+      const { data, error } = await db.from("client_requests").update(outcomeInput(body)).eq("id", current.id).select("*").single<ClientRequest>();
+      if (error) throw error;
+      latest = data;
+      if (!("status" in body)) return NextResponse.json(latest);
+    }
+
     if (body?.move === "up" || body?.move === "down") {
       await moveInQueue(current, body.move === "up" ? -1 : 1);
       return NextResponse.json({ moved: true });
@@ -45,15 +57,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     if (!isRequestStatus(body?.status)) return NextResponse.json({ error: "Unknown status" }, { status: 400 });
     if (body.status === "estimated") return NextResponse.json({ error: "Confirm an estimate to send it for approval." }, { status: 400 });
-    if (current.status === body.status) return NextResponse.json(current);
+    if (latest.status === body.status) return NextResponse.json(latest);
 
     // Queued or started here without the client's approval: Craefto approved it for them (say, by email).
-    let request = current;
-    if ((body.status === "queued" || body.status === "in_progress") && current.estimate_state !== "approved" && current.estimate_low != null) {
+    let request = latest;
+    if ((body.status === "queued" || body.status === "in_progress") && latest.estimate_state !== "approved" && latest.estimate_low != null) {
       const { data } = await db
         .from("client_requests")
         .update({ estimate_state: "approved", approved_at: new Date().toISOString() })
-        .eq("id", current.id)
+        .eq("id", latest.id)
         .select("*")
         .single<ClientRequest>();
       if (data) {
@@ -76,7 +88,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
     return NextResponse.json(updated);
   } catch (error) {
-    if (error instanceof WorkflowError) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error instanceof WorkflowError || error instanceof OutcomeInputError) return NextResponse.json({ error: error.message }, { status: 400 });
     console.error("Updating a request failed:", error);
     return NextResponse.json({ error: "Failed to update request" }, { status: 500 });
   }

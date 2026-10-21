@@ -2,6 +2,7 @@ import "server-only";
 import { createServerClient } from "@/lib/supabase";
 import { planById } from "@/lib/pricing";
 import { allowanceFor, usageFor, type Usage } from "./hours";
+import { OutcomeInputError, outcomeInput } from "./outcome";
 import {
   isLive,
   isOpen,
@@ -144,6 +145,7 @@ export interface ClientSettings {
   engagement?: string | null;
   time_zone?: string;
   weekly_email?: boolean;
+  cycle_day?: number;
 }
 
 const validZone = (zone: string) => {
@@ -173,6 +175,11 @@ export function clientSettings(input: Record<string, unknown>): ClientSettings {
     settings.time_zone = zone;
   }
   if ("weekly_email" in input) settings.weekly_email = Boolean(input.weekly_email);
+  if ("cycle_day" in input) {
+    const day = Number(input.cycle_day);
+    if (!(Number.isInteger(day) && day >= 1 && day <= 28)) throw new ClientInputError("Hours refresh on a day from the 1st to the 28th.");
+    settings.cycle_day = day;
+  }
   return settings;
 }
 
@@ -189,10 +196,69 @@ export async function createClient(input: Record<string, unknown>): Promise<Clie
   return data as ClientAccount;
 }
 
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Their settings, and their email. A new email moves the portal to that
+ * address: the old address's login stops opening it, and the next invite
+ * makes a login for the new one (lib/portal/accounts.ts, createSignIn).
+ */
 export async function updateClient(id: string, input: Record<string, unknown>): Promise<ClientAccount | null> {
-  const settings = clientSettings(input);
-  const { data, error } = await db().from("client_accounts").update(settings).eq("id", id).select("*").maybeSingle();
+  const changes: Partial<ClientAccount> = clientSettings(input);
+  if ("email" in input) {
+    const email = typeof input.email === "string" ? input.email.trim().toLowerCase() : "";
+    if (!EMAIL.test(email)) throw new ClientInputError("Enter the client's email address.");
+    const { data: current } = await db().from("client_accounts").select("email").eq("id", id).maybeSingle();
+    if (!current) return null;
+    if (email !== current.email) {
+      const { data: taken } = await db().from("client_accounts").select("id").eq("email", email).neq("id", id).maybeSingle();
+      if (taken) throw new ClientInputError("Another client already has that email.");
+      changes.email = email;
+      changes.user_id = null;
+    }
+  }
+  const { data, error } = await db().from("client_accounts").update(changes).eq("id", id).select("*").maybeSingle();
   if (error) throw error;
   return data as ClientAccount | null;
+}
+
+/**
+ * Work Craefto delivered before the client's portal, recorded as a delivered
+ * request: its outcome and links, and the time it took (logged on the day it
+ * was delivered, so it counts in that month).
+ */
+export async function addPastWork(accountId: string, input: Record<string, unknown>): Promise<ClientRequest> {
+  const title = typeof input.title === "string" ? input.title.trim() : "";
+  if (!title) throw new ClientInputError("Give the work a title.");
+  if (title.length > 200) throw new ClientInputError("Keep the title under 200 characters.");
+  const details = typeof input.details === "string" ? input.details.trim().slice(0, 10000) : "";
+  const deliveredOn = typeof input.delivered_on === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input.delivered_on) ? input.delivered_on : "";
+  if (!deliveredOn || Number.isNaN(Date.parse(`${deliveredOn}T00:00:00Z`))) throw new ClientInputError("Give the day it was delivered.");
+  const hours = input.hours === "" || input.hours == null ? null : Number(input.hours);
+  if (hours !== null && !(hours > 0 && hours <= 400)) throw new ClientInputError("Hours must be between 0.25 and 400, or empty.");
+  let outcome: ReturnType<typeof outcomeInput>;
+  try {
+    outcome = outcomeInput({ outcome: input.outcome ?? null, outcome_links: input.outcome_links ?? [] });
+  } catch (error) {
+    if (error instanceof OutcomeInputError) throw new ClientInputError(error.message);
+    throw error;
+  }
+  // Midday in Sydney on the day, so the date reads the same everywhere.
+  const at = new Date(`${deliveredOn}T02:00:00Z`).toISOString();
+  const { data, error } = await db()
+    .from("client_requests")
+    .insert({ account_id: accountId, title, details, status: "delivered", delivered_at: at, created_at: at, updated_at: at, ...outcome })
+    .select("*")
+    .single();
+  if (error) throw error;
+  const request = data as ClientRequest;
+  const writes = [db().from("client_request_events").insert({ account_id: accountId, request_id: request.id, kind: "delivered", detail: { by: "craefto" }, created_at: at })];
+  if (hours !== null) {
+    writes.push(
+      db().from("client_time_entries").insert({ account_id: accountId, request_id: request.id, minutes: Math.round(hours * 60), note: "Delivered before the portal", worked_on: deliveredOn })
+    );
+  }
+  for (const result of await Promise.all(writes)) if (result.error) throw result.error;
+  return request;
 }
 

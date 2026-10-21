@@ -9,6 +9,7 @@ test.describe("admin API access", () => {
     "/api/admin/leads",
     "/api/admin/leads/00000000-0000-4000-8000-000000000000",
     "/api/admin/members",
+    "/api/admin/members/00000000-0000-4000-8000-000000000000/view",
     "/api/admin/applications",
     "/api/admin/outreach",
     "/api/admin/outreach?view=summary",
@@ -30,6 +31,11 @@ test.describe("admin API access", () => {
       expect(res.status()).toBe(401);
     });
   }
+
+  test("past work can't be added without a session", async ({ request }) => {
+    const res = await request.post("/api/admin/members/00000000-0000-4000-8000-000000000000/requests", { data: { title: "x", delivered_on: "2026-01-01" } });
+    expect(res.status()).toBe(401);
+  });
 
   // Approving outreach authorises sending: every way to change it is refused without a session or the API token.
   test("outreach changes are refused without a session or the token", async ({ request }) => {

@@ -4,8 +4,9 @@ import { isLive, isOpen, type ClientAccount, type ClientRequest, type ClientSubs
 // Studio time: the hours a client has each month, what's been used, and
 // what's already approved in their queue. A client on a Stripe plan has its
 // hours (plans can be combined); a client Craefto agreed hours with directly
-// has the account's monthly_hours instead. Months are calendar months in
-// Sydney, where the work is logged.
+// has the account's monthly_hours instead. A month runs from the day the
+// client's hours refresh (the 1st, or the day agreed with them) to the day
+// before it next month, in Sydney, where the work is logged.
 
 /** Today's date in Sydney, yyyy-mm-dd. */
 export const sydneyToday = (now = new Date()) =>
@@ -20,11 +21,28 @@ export function monthOf(date: string) {
   return { from: `${year}-${pad(month)}-01`, to: `${year}-${pad(month)}-${pad(last)}`, renews: next };
 }
 
+/**
+ * The month of hours a date falls in, when they refresh on `day` (1 to 28) of
+ * each month: its first and last day, and the day it renews.
+ */
+export function periodOf(date: string, day = 1) {
+  if (day <= 1) return monthOf(date);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const [year, month, dayOfMonth] = date.split("-").map(Number);
+  const start = dayOfMonth >= day ? { year, month } : month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
+  const next = start.month === 12 ? { year: start.year + 1, month: 1 } : { year: start.year, month: start.month + 1 };
+  const renews = `${next.year}-${pad(next.month)}-${pad(day)}`;
+  const last = new Date(Date.UTC(next.year, next.month - 1, day - 1)).toISOString().slice(0, 10);
+  return { from: `${start.year}-${pad(start.month)}-${pad(day)}`, to: last, renews };
+}
+
 export interface Allowance {
   /** Hours a month; null when the plan has no hour limit (Partner). */
   hours: number | null;
   /** "Studio plan", "JapanoMa monthly hours" */
   label: string;
+  /** The day of the month the hours refresh. */
+  cycleDay: number;
 }
 
 /**
@@ -32,15 +50,16 @@ export interface Allowance {
  * running, none agreed). A running plan without an hour limit (Partner) gives
  * an allowance with no hours: requests go ahead, and nothing counts down.
  */
-export function allowanceFor(account: Pick<ClientAccount, "monthly_hours" | "engagement">, subscriptions: ClientSubscription[]): Allowance | null {
-  if (account.monthly_hours) return { hours: Number(account.monthly_hours), label: account.engagement || "Monthly hours" };
+export function allowanceFor(account: Pick<ClientAccount, "monthly_hours" | "engagement" | "cycle_day">, subscriptions: ClientSubscription[]): Allowance | null {
+  const cycleDay = account.cycle_day ?? 1;
+  if (account.monthly_hours) return { hours: Number(account.monthly_hours), label: account.engagement || "Monthly hours", cycleDay };
   // Current plans only: a retired plan carries no hours at all (undefined).
   const running = subscriptions.filter(isLive).map((subscription) => planById(subscription.plan)).filter((plan) => plan && plan.hours !== undefined);
   if (running.length === 0) return null;
   const names = running.map((plan) => plan!.name);
   const label = `${names.join(" and ")} plan${names.length > 1 ? "s" : ""}`;
-  if (running.some((plan) => plan!.hours === null)) return { hours: null, label };
-  return { hours: running.reduce((total, plan) => total + (plan!.hours ?? 0), 0), label };
+  if (running.some((plan) => plan!.hours === null)) return { hours: null, label, cycleDay };
+  return { hours: running.reduce((total, plan) => total + (plan!.hours ?? 0), 0), label, cycleDay };
 }
 
 /** Minutes logged against each request. */
@@ -64,7 +83,7 @@ export interface Usage {
 
 /** Where the month stands, from the account's time entries and requests. */
 export function usageFor(allowance: Allowance | null, entries: ClientTimeEntry[], requests: ClientRequest[], today = sydneyToday()): Usage {
-  const month = monthOf(today);
+  const month = periodOf(today, allowance?.cycleDay ?? 1);
   const used = entries.filter((entry) => entry.worked_on >= month.from && entry.worked_on <= month.to).reduce((total, entry) => total + entry.minutes, 0) / 60;
   const logged = minutesByRequest(entries);
   let committedLow = 0;

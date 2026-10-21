@@ -62,6 +62,7 @@ export const sendRequestUpdate = (account: ClientAccount, request: ClientRequest
       title: request.title,
       statusLabel: REQUEST_STATUSES[request.status].label,
       link: `${origin}/portal/requests/${request.id}`,
+      outcome: request.status === "delivered" ? request.outcome : null,
       detail,
     })
   );

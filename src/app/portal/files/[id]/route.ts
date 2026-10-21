@@ -13,7 +13,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const member = await currentMember();
   if (!member) redirect("/portal/login");
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new NextResponse("Not found", { status: 404 });
-  const { data: file } = await member.db.from("client_files").select("path, name").eq("id", id).maybeSingle();
+  const { data: file } = await member.db.from("client_files").select("path, name").eq("id", id).eq("account_id", member.account.id).maybeSingle();
   if (!file) return new NextResponse("Not found", { status: 404 });
   const url = await downloadLink(file);
   if (!url) return new NextResponse("This file isn't available right now.", { status: 503 });

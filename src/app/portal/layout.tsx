@@ -21,6 +21,21 @@ export default async function PortalLayout({ children }: { children: React.React
   return (
     <div className="flex min-h-screen flex-col bg-[hsl(var(--color-background))]">
       <header className="sticky top-0 z-40 bg-[hsl(var(--color-background)/0.92)] backdrop-blur-md">
+        {member?.preview && (
+          <div className="bg-[hsl(var(--color-foreground))] text-[hsl(var(--color-background))]">
+            <Container size="lg">
+              <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 py-2.5 text-sm">
+                <p>
+                  Viewing as <strong className="font-semibold">{member.account.name || member.account.email}</strong>
+                  {member.account.company ? ` · ${member.account.company}` : ""}. Read only: nothing here is sent or changed.
+                </p>
+                <a href="/portal/preview/exit" className="font-semibold underline underline-offset-4">
+                  Exit view
+                </a>
+              </div>
+            </Container>
+          </div>
+        )}
         <Container size="lg">
           <div className="flex h-16 items-center justify-between gap-6">
             <Link href={member ? "/portal" : "/"} className="flex items-center gap-3" aria-label="Craefto client portal">
@@ -37,14 +52,16 @@ export default async function PortalLayout({ children }: { children: React.React
                 <span className="hidden max-w-[14rem] truncate text-sm text-[hsl(var(--color-foreground-subtle))] md:inline">
                   {member.account.email}
                 </span>
-                <form action="/portal/signout" method="post">
-                  <button
-                    type="submit"
-                    className="text-sm font-medium text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-foreground))]"
-                  >
-                    Sign out
-                  </button>
-                </form>
+                {!member.preview && (
+                  <form action="/portal/signout" method="post">
+                    <button
+                      type="submit"
+                      className="text-sm font-medium text-[hsl(var(--color-foreground-muted))] transition-colors hover:text-[hsl(var(--color-foreground))]"
+                    >
+                      Sign out
+                    </button>
+                  </form>
+                )}
               </div>
             ) : (
               <Link

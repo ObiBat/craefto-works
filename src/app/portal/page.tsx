@@ -5,6 +5,7 @@ import { Callout, Empty, Section } from "@/components/portal/blocks";
 import { HoursMeter } from "@/components/portal/hours-meter";
 import { PageTitle } from "@/components/portal/page-title";
 import { PlanSummary } from "@/components/portal/plan-summary";
+import { deliveryFacts } from "@/components/portal/outcome";
 import { RequestList } from "@/components/portal/request-list";
 import { sydneyDate } from "@/components/portal/thread";
 import { calendarEvents, type CalendarEvent } from "@/lib/portal/calendar";
@@ -13,6 +14,15 @@ import { requireMember } from "@/lib/portal/session";
 import { isOwing, isWaitingOnClient, shownPlans, type ClientMeeting, type ClientMessage, type ClientRequest, type ClientTimeEntry } from "@/lib/portal/types";
 import { cn } from "@/lib/utils";
 import { openBilling } from "./actions";
+
+/** An outcome as one plain line for a preview: no markdown marks, no line breaks. */
+const plainText = (text: string) =>
+  text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^\s*(?:[-*•]|\d+\.)\s+/gm, "")
+    .replace(/[*_`#>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
 export const metadata: Metadata = { title: "Overview" };
 
@@ -107,6 +117,10 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
   const estimating = requests.filter((request) => request.status === "received");
   const titles = new Map(requests.map((request) => [request.id, request.title]));
   const toApprove = requests.filter((request) => request.status === "estimated");
+  const recent = requests
+    .filter((request) => request.status === "delivered")
+    .sort((a, b) => (b.delivered_at ?? b.updated_at).localeCompare(a.delivered_at ?? a.updated_at))
+    .slice(0, 3);
 
   const today = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const now = new Date();
@@ -227,6 +241,34 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
               {queue.length > 0 && <RequestList requests={queue.slice(0, 3)} logged={logged} numbered />}
               {queue.length > 3 && <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">And {queue.length - 3} more in your queue.</p>}
               {estimating.length > 0 && <RequestList requests={estimating} logged={logged} />}
+            </Section>
+          )}
+
+          {recent.length > 0 && (
+            <Section
+              title="Recently delivered"
+              action={
+                <Link href="/portal/work" className={`text-sm ${link}`}>
+                  Past work
+                </Link>
+              }
+            >
+              <ul className="flex flex-col gap-2">
+                {recent.map((request) => (
+                  <li key={request.id}>
+                    <Link href={`/portal/requests/${request.id}`} className="group block rounded-2xl bg-[hsl(var(--color-background-subtle))] px-5 py-4">
+                      <span className="block font-medium text-[hsl(var(--color-foreground))] transition-colors group-hover:text-[hsl(var(--color-accent))]">
+                        {request.title}
+                      </span>
+                      <span className="mt-0.5 block text-sm text-[hsl(var(--color-foreground-subtle))]">{deliveryFacts(request, logged.get(request.id) ?? 0).join(" · ")}</span>
+                      {request.outcome && (
+                        // line-clamp sets its own display: no "block" here, or the clamp is lost.
+                        <span className="mt-1.5 line-clamp-2 leading-relaxed text-[hsl(var(--color-foreground-muted))]">{plainText(request.outcome)}</span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </Section>
           )}
 

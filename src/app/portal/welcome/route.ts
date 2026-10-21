@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { NextRequest } from "next/server";
 import { claimWelcome, createSignIn, provisionCheckout } from "@/lib/portal/accounts";
+import { viewingAs } from "@/lib/portal/preview";
 import { CHECKOUT_COOKIE, currentMember, portalDb } from "@/lib/portal/session";
 
 /**
@@ -14,6 +15,8 @@ import { CHECKOUT_COOKIE, currentMember, portalDb } from "@/lib/portal/session";
  * like a second visit or the link opened elsewhere, it goes to sign-in.
  */
 export async function GET(request: NextRequest) {
+  // Craefto viewing as a client has no checkout to finish here.
+  if (await viewingAs()) redirect("/portal");
   const sessionId = request.nextUrl.searchParams.get("session_id");
   if (!sessionId?.startsWith("cs_")) redirect("/portal/login");
 

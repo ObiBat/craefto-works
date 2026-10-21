@@ -56,7 +56,9 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
     db.from("client_meetings").select("*").eq("account_id", account.id).gte("starts_at", `${from}T00:00:00Z`).lte("starts_at", `${to}T23:59:59Z`),
     db.from("client_time_entries").select("*").eq("account_id", account.id).gte("worked_on", from).lte("worked_on", to),
   ]);
-  const firsts = [month, shiftMonth(month, 1)].map((value) => `${value}-01`).filter((first) => first >= from && first <= to);
+  // The days their hours renew, in and around this month.
+  const renewDay = String(account.cycle_day ?? 1).padStart(2, "0");
+  const firsts = [shiftMonth(month, -1), month, shiftMonth(month, 1)].map((value) => `${value}-${renewDay}`).filter((first) => first >= from && first <= to);
   const events = calendarEvents({
     requests: (requestRows ?? []) as ClientRequest[],
     meetings: (meetingRows ?? []) as ClientMeeting[],

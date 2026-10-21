@@ -43,12 +43,15 @@ export function requestUpdateEmail({
   title,
   statusLabel,
   link,
+  outcome,
   detail,
 }: {
   name: string | null;
   title: string;
   statusLabel: string;
   link: string;
+  /** What was delivered, as Craefto wrote it for the client's Past work. */
+  outcome?: string | null;
   /** A line more, e.g. the hours logged on a delivered request. */
   detail?: string;
 }): Email {
@@ -60,6 +63,7 @@ export function requestUpdateEmail({
       body:
         paragraph(hello(name)) +
         paragraph(`Your request is now <strong>${escapeHtml(statusLabel.toLowerCase())}</strong>.`) +
+        (outcome ? quote(outcome) : "") +
         (detail ? paragraph(escapeHtml(detail)) : ""),
       action: { label: "View request", href: link },
     }),

@@ -4,6 +4,7 @@ import { AssistantPending } from "@/components/portal/assistant-pending";
 import { BackLink, Callout, Section } from "@/components/portal/blocks";
 import { EstimateCard } from "@/components/portal/estimate-card";
 import { MessageForm } from "@/components/portal/forms";
+import { Outcome } from "@/components/portal/outcome";
 import { PageTitle } from "@/components/portal/page-title";
 import { RequestHistory } from "@/components/portal/request-history";
 import { RequestStatusPill } from "@/components/portal/status-pill";
@@ -122,6 +123,7 @@ export default async function RequestPage({
 
       <div className="mb-12 flex flex-col gap-6">
         <Progress status={request.status} />
+        {request.status === "delivered" && <Outcome request={request} minutes={loggedMinutes} />}
         {sent && (
           <Callout title="Request sent">
             Ask Craefto replies below with an initial estimate in a moment. Craefto Works then confirms it, you approve it, and it joins your queue. We&apos;ll email

@@ -18,6 +18,7 @@ import {
   type RequestStatus,
 } from "@/lib/portal/types";
 import { shortHours } from "@/lib/portal/hours";
+import { linkLines, linksOf, parseLinkLines } from "@/lib/portal/outcome";
 import { AttachButton, DropOverlay, UploadList, useAttachments, useFileDrop, type PrepareUploads } from "@/components/portal/attachments";
 import { FileList } from "@/components/portal/file-list";
 import { RichText } from "@/components/assistant/rich-text";
@@ -463,8 +464,220 @@ function RequestCard({
         <EstimatePanel key={`${request.id}:${request.updated_at}`} memberId={memberId} request={request} onSaved={onChanged} />
         <TimePanel memberId={memberId} requestId={request.id} entries={entries} onSaved={onChanged} />
       </div>
+      {(request.status === "in_progress" || request.status === "needs_info" || request.status === "delivered") && (
+        <OutcomePanel key={`outcome:${request.id}:${request.updated_at}`} memberId={memberId} request={request} onSaved={onChanged} />
+      )}
       <Thread messages={messages} files={files} client={client} />
       <ReplyForm memberId={memberId} request={request} onSent={onSent} />
+    </Card>
+  );
+}
+
+/** What was delivered, for the client's Past work. Written before delivering, it also goes in the delivery email. */
+function OutcomePanel({ memberId, request, onSaved }: { memberId: string; request: ClientRequest; onSaved: () => void }) {
+  const [outcome, setOutcome] = React.useState(request.outcome ?? "");
+  const [links, setLinks] = React.useState(linkLines(linksOf(request)));
+  const [saving, setSaving] = React.useState(false);
+  const [message, setMessage] = React.useState<string | null>(null);
+  const delivered = request.status === "delivered";
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setMessage(null);
+    try {
+      await api(`/api/admin/members/${memberId}/requests/${request.id}`, "PATCH", { outcome, outcome_links: parseLinkLines(links) });
+      setMessage(delivered ? "Saved. It's on their Past work." : "Saved. They'll see it once it's delivered.");
+      onSaved();
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
+    setSaving(false);
+  }
+
+  return (
+    <form onSubmit={save} className="space-y-3 rounded-xl bg-[hsl(var(--color-accent-subtle))]/60 p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-sm font-semibold">Outcome</p>
+        <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">{delivered ? "On their Past work" : "Shown once delivered, and in the delivery email"}</p>
+      </div>
+      <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+        What we delivered, and what it changed for them
+        <textarea
+          value={outcome}
+          onChange={(event) => setOutcome(event.target.value)}
+          rows={4}
+          maxLength={4000}
+          placeholder="The event registration page is live and linked from the events list. Sign-ups arrive in the team inbox with the guest's details, so nothing is typed up by hand."
+          className={cn(field, "text-sm")}
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+        Links, one a line: Label | https://…
+        <textarea
+          value={links}
+          onChange={(event) => setLinks(event.target.value)}
+          rows={2}
+          placeholder={"Live page | https://japanoma.com/events\nDesign | https://www.figma.com/…"}
+          className={cn(field, "font-mono text-xs")}
+        />
+      </label>
+      <div className="flex items-center gap-3">
+        <button type="submit" disabled={saving} className={primary}>
+          {saving ? "Saving…" : "Save outcome"}
+        </button>
+        {message && <span className="text-sm text-[hsl(var(--color-foreground-muted))]">{message}</span>}
+      </div>
+    </form>
+  );
+}
+
+/** Who they are, and the address their portal opens for. */
+function AccountPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => void }) {
+  const { account } = member;
+  const [name, setName] = React.useState(account.name ?? "");
+  const [company, setCompany] = React.useState(account.company ?? "");
+  const [email, setEmail] = React.useState(account.email);
+  const [saving, setSaving] = React.useState(false);
+  const [message, setMessage] = React.useState<string | null>(null);
+  const moving = email.trim().toLowerCase() !== account.email;
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setMessage(null);
+    try {
+      await api(`/api/admin/members/${account.id}`, "PATCH", { name, company, email });
+      setMessage(moving ? `Saved. Their portal now opens for ${email.trim().toLowerCase()}: send them an invite.` : "Saved.");
+      onSaved();
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
+    setSaving(false);
+  }
+
+  return (
+    <Card>
+      <form onSubmit={save} className="space-y-3">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+            Name
+            <input value={name} onChange={(event) => setName(event.target.value)} maxLength={120} className={cn(field, "py-1.5 text-sm")} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+            Company
+            <input value={company} onChange={(event) => setCompany(event.target.value)} maxLength={120} className={cn(field, "py-1.5 text-sm")} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+            Email (their sign-in)
+            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required className={cn(field, "py-1.5 text-sm")} />
+          </label>
+        </div>
+        {moving && (
+          <p className="text-sm text-[hsl(var(--color-warning))]">
+            Saving moves their portal to this address{account.user_id ? ": the old one stops opening it" : ""}. Then send them an invite.
+          </p>
+        )}
+        <div className="flex items-center gap-3">
+          <button type="submit" disabled={saving} className={primary}>
+            {saving ? "Saving…" : "Save"}
+          </button>
+          {message && <span className="text-sm text-[hsl(var(--color-foreground-muted))]">{message}</span>}
+        </div>
+      </form>
+    </Card>
+  );
+}
+
+/** Work delivered before the portal, so their Past work starts complete. Saved as delivered, with no email. */
+function PastWorkForm({ memberId, onSaved }: { memberId: string; onSaved: () => void }) {
+  const [open, setOpen] = React.useState(false);
+  const [title, setTitle] = React.useState("");
+  const [day, setDay] = React.useState(today());
+  const [hoursValue, setHoursValue] = React.useState("");
+  const [outcome, setOutcome] = React.useState("");
+  const [links, setLinks] = React.useState("");
+  const [details, setDetails] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [message, setMessage] = React.useState<string | null>(null);
+
+  async function add(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setMessage(null);
+    try {
+      await api(`/api/admin/members/${memberId}/requests`, "POST", {
+        title,
+        delivered_on: day,
+        hours: hoursValue,
+        outcome,
+        outcome_links: parseLinkLines(links),
+        details,
+      });
+      setTitle("");
+      setHoursValue("");
+      setOutcome("");
+      setLinks("");
+      setDetails("");
+      setMessage(`Added “${title.trim()}” to their Past work.`);
+      onSaved();
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
+    setSaving(false);
+  }
+
+  if (!open) {
+    return (
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" onClick={() => setOpen(true)} className={secondary}>
+          Add past work
+        </button>
+        {message && <span className="text-sm text-[hsl(var(--color-foreground-muted))]">{message}</span>}
+      </div>
+    );
+  }
+  return (
+    <Card>
+      <form onSubmit={add} className="space-y-3">
+        <p className="text-sm font-semibold">Add past work</p>
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_11rem_8rem]">
+          <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+            What it was
+            <input value={title} onChange={(event) => setTitle(event.target.value)} required maxLength={200} placeholder="Event registration page" className={cn(field, "py-1.5 text-sm")} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+            Delivered on
+            <input type="date" value={day} onChange={(event) => setDay(event.target.value)} required className={cn(field, "py-1.5 text-sm")} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+            Hours (optional)
+            <input type="number" min="0.25" max="400" step="0.25" value={hoursValue} onChange={(event) => setHoursValue(event.target.value)} className={cn(field, "py-1.5 text-sm")} />
+          </label>
+        </div>
+        <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+          Outcome: what we delivered, and what it changed for them
+          <textarea value={outcome} onChange={(event) => setOutcome(event.target.value)} rows={4} maxLength={4000} className={cn(field, "text-sm")} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+          Links, one a line: Label | https://…
+          <textarea value={links} onChange={(event) => setLinks(event.target.value)} rows={2} className={cn(field, "font-mono text-xs")} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+          What they asked for (optional)
+          <textarea value={details} onChange={(event) => setDetails(event.target.value)} rows={2} className={cn(field, "text-sm")} />
+        </label>
+        <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">The hours count in the month of the date, so this month&apos;s count against their allowance.</p>
+        <div className="flex items-center gap-3">
+          <button type="submit" disabled={saving} className={primary}>
+            {saving ? "Adding…" : "Add to Past work"}
+          </button>
+          <button type="button" onClick={() => setOpen(false)} className="text-sm text-[hsl(var(--color-foreground-muted))]">
+            Done
+          </button>
+          {message && <span className="text-sm text-[hsl(var(--color-foreground-muted))]">{message}</span>}
+        </div>
+      </form>
     </Card>
   );
 }
@@ -476,6 +689,7 @@ function HoursPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => 
   const [engagement, setEngagement] = React.useState(account.engagement ?? "");
   const [zone, setZone] = React.useState(account.time_zone);
   const [weekly, setWeekly] = React.useState(account.weekly_email);
+  const [cycleDay, setCycleDay] = React.useState(String(account.cycle_day ?? 1));
   const [saving, setSaving] = React.useState(false);
   const [message, setMessage] = React.useState<string | null>(null);
   const allowance = usage.allowance;
@@ -485,7 +699,13 @@ function HoursPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => 
     setSaving(true);
     setMessage(null);
     try {
-      await api(`/api/admin/members/${account.id}`, "PATCH", { monthly_hours: hoursValue === "" ? null : Number(hoursValue), engagement, time_zone: zone, weekly_email: weekly });
+      await api(`/api/admin/members/${account.id}`, "PATCH", {
+        monthly_hours: hoursValue === "" ? null : Number(hoursValue),
+        engagement,
+        time_zone: zone,
+        weekly_email: weekly,
+        cycle_day: Number(cycleDay),
+      });
       setMessage("Saved.");
       onSaved();
     } catch (error) {
@@ -529,6 +749,10 @@ function HoursPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => 
             <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
               What it&apos;s called
               <input value={engagement} onChange={(event) => setEngagement(event.target.value)} maxLength={120} placeholder="JapanoMa monthly hours" className={cn(field, "py-1.5 text-sm")} />
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+              Hours refresh on day (1 to 28)
+              <input type="number" min="1" max="28" step="1" value={cycleDay} onChange={(event) => setCycleDay(event.target.value)} className={cn(field, "py-1.5 text-sm")} />
             </label>
             <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
               Their time zone
@@ -651,6 +875,14 @@ export default function MemberPage() {
         subtitle={`${account.email} · client since ${shortDate(account.created_at)}${account.time_zone !== "Australia/Sydney" ? ` · ${account.time_zone}` : ""}`}
         actions={
           <>
+            <a
+              href={`/api/admin/members/${account.id}/view`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-[hsl(var(--color-border))] px-4 py-2 text-sm font-medium hover:bg-[hsl(var(--color-background-subtle))]"
+            >
+              View as client <IconExternal size={14} />
+            </a>
             <InviteButton memberId={account.id} email={account.email} />
             <a href={`mailto:${account.email}`} className="inline-flex items-center gap-2 rounded-xl border border-[hsl(var(--color-border))] px-4 py-2 text-sm font-medium hover:bg-[hsl(var(--color-background-subtle))]">
               <IconMail size={16} /> Email
@@ -664,8 +896,12 @@ export default function MemberPage() {
         }
       />
 
+      <Section title="Client" description="Who they are, and the email their portal opens for.">
+        <AccountPanel key={account.id + account.email + (account.name ?? "") + (account.company ?? "")} member={member} onSaved={load} />
+      </Section>
+
       <Section title="Hours" description="Their studio time this month, and general time (calls, planning) not tied to one request.">
-        <HoursPanel key={account.id + (account.monthly_hours ?? "") + account.time_zone} member={member} onSaved={load} />
+        <HoursPanel key={account.id + (account.monthly_hours ?? "") + account.time_zone + (account.cycle_day ?? 1)} member={member} onSaved={load} />
       </Section>
 
       {subscriptions.length > 0 && (
@@ -720,6 +956,7 @@ export default function MemberPage() {
             )}
           </div>
         )}
+        <PastWorkForm memberId={account.id} onSaved={load} />
       </Section>
 
       <Section title="Messages" description="The general conversation, outside any one request.">

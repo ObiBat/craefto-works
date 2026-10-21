@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/portal", label: "Overview" },
   { href: "/portal/requests", label: "Requests" },
+  { href: "/portal/work", label: "Past work" },
   { href: "/portal/calendar", label: "Calendar" },
   { href: "/portal/messages", label: "Messages" },
   { href: "/portal/calls", label: "Calls" },
