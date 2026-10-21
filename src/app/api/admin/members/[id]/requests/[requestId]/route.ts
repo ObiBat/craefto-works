@@ -12,7 +12,8 @@ export const dynamic = "force-dynamic";
 /**
  * PATCH /api/admin/members/[id]/requests/[requestId] - Move a request on
  * Body, one of:
- *   { status }: the client is emailed unless it moves back to "received". An
+ *   { status }: the client is emailed only when it needs them or it's done
+ *     (Needs your input, Delivered, Withdrawn: types.ts emailsClient). An
  *     estimate the client hasn't approved counts as approved by Craefto when
  *     it's queued or started from here.
  *   { estimate: { low, high, note?, target_date? } }: confirm it, and ask the client to approve.
@@ -75,9 +76,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const updated = await setStatus(request, body.status);
 
     const account = await accountById(id);
-    if (account && updated.status !== "received") {
-      await sendRequestUpdate(account, updated, origin, updated.status === "delivered" ? await deliveryDetail(updated) : undefined);
-    }
+    if (account) await sendRequestUpdate(account, updated, origin, updated.status === "delivered" ? await deliveryDetail(updated) : undefined);
     return NextResponse.json(updated);
   } catch (error) {
     if (error instanceof WorkflowError || error instanceof OutcomeInputError) return NextResponse.json({ error: error.message }, { status: 400 });

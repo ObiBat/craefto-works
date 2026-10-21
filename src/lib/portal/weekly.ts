@@ -6,10 +6,11 @@ import { sendWeekly } from "./notify";
 import { estimateLabel, isOpen, type ClientAccount, type ClientRequest, type ClientSubscription, type ClientTimeEntry } from "./types";
 
 // The Friday effort email (vercel.json → /api/cron/portal-weekly): for each
-// client who has it on, the week's studio time and what it went into, the
-// month against their hours, what's in progress and next, and anything
-// waiting on them. A quiet week (no time, nothing delivered, nothing waiting)
-// sends nothing. Once a week per client (client_accounts.weekly_sent_on).
+// client who has it on and has been invited to their portal, the week's
+// studio time and what it went into, the month against their hours, what's in
+// progress and next, and anything waiting on them. A quiet week (no time,
+// nothing delivered, nothing waiting) sends nothing. Once a week per client
+// (client_accounts.weekly_sent_on).
 
 type Db = ReturnType<typeof createServerClient>;
 
@@ -63,6 +64,8 @@ export async function sendWeeklySummaries(db: Db, origin: string, now = new Date
   let sent = 0;
   for (const account of (accounts ?? []) as ClientAccount[]) {
     if (account.weekly_sent_on === today) continue;
+    // Not before they've been invited: no summary of a portal they don't know about yet.
+    if (!account.user_id) continue;
     const [{ data: subscriptions }, { data: requests }, { data: entries }] = await Promise.all([
       db.from("client_subscriptions").select("*").eq("account_id", account.id),
       db.from("client_requests").select("*").eq("account_id", account.id),

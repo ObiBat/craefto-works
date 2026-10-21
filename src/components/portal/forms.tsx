@@ -92,7 +92,7 @@ export function NewRequestForm({ email, today }: { email: string; today: string 
           Send request
         </Submit>
         <p className={hint}>
-          We&apos;ll email you at <span className="font-medium text-[hsl(var(--color-foreground))]">{email}</span> whenever there&apos;s an update.
+          We&apos;ll email you at <span className="font-medium text-[hsl(var(--color-foreground))]">{email}</span> when there&apos;s an estimate to approve, a question for you, or it&apos;s delivered.
         </p>
       </div>
     </form>

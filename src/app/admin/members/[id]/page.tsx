@@ -8,6 +8,7 @@ import { Card, EmptyState, PageContainer, PageHeader, Section, StatusBadge } fro
 import { IconArrowLeft, IconExternal, IconMail } from "@/components/admin/icons";
 import {
   REQUEST_STATUSES,
+  emailsClient,
   estimateLabel,
   isOpen,
   subscriptionLabel,
@@ -391,7 +392,7 @@ function RequestCard({
     setNote(null);
     try {
       await api(`/api/admin/members/${memberId}/requests/${request.id}`, "PATCH", { status });
-      setNote(status === "received" ? "Saved." : "Saved. The client has been emailed.");
+      setNote(emailsClient(status) ? "Saved. The client has been emailed." : "Saved. It shows in their portal, with no email.");
       onChanged();
     } catch (error) {
       setNote((error as Error).message);

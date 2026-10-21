@@ -140,7 +140,7 @@ async function requestButton(verb: string, id: string, first: string | undefined
       const started = await setStatus(request, "in_progress");
       await sendRequestUpdate(account, started, origin);
       await redrawRequest(card, started.id, origin);
-      return `Started. ${who} has been emailed.`;
+      return "Started. It shows in their portal, with no email.";
     }
     case "l":
       await ask(card, "log", request.id, `Time on ${title}: reply like 1.5, 90m or 1h30, then what you did.`, "1.5 what you did");

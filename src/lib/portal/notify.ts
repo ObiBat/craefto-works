@@ -5,7 +5,7 @@ import * as emails from "@/emails/portal";
 import { formatBytes } from "./file-rules";
 import { telegramConfigured } from "@/lib/telegram";
 import { alertClientMessage, alertRequestCard } from "./telegram-cards";
-import { REQUEST_STATUSES, estimateLabel, type ClientAccount, type ClientFile, type ClientMessage, type ClientRequest, type ClientSubscription } from "./types";
+import { REQUEST_STATUSES, emailsClient, estimateLabel, type ClientAccount, type ClientFile, type ClientMessage, type ClientRequest, type ClientSubscription } from "./types";
 
 // Portal email: to clients from hello@, with replies going to Craefto's inbox,
 // and every alert to that inbox. `origin` is the site the request came in on,
@@ -55,8 +55,10 @@ export const sendWelcome = (account: ClientAccount, subscription: ClientSubscrip
 export const sendSignInLink = (account: ClientAccount, link: string) =>
   send(account.email, emails.signInEmail({ name: account.name, link }));
 
-export const sendRequestUpdate = (account: ClientAccount, request: ClientRequest, origin: string, detail?: string) =>
-  send(
+/** A request moved on: emailed only when it needs them or it's done (types.ts emailsClient). */
+export async function sendRequestUpdate(account: ClientAccount, request: ClientRequest, origin: string, detail?: string) {
+  if (!emailsClient(request.status)) return;
+  await send(
     account.email,
     emails.requestUpdateEmail({
       name: account.name,
@@ -67,6 +69,7 @@ export const sendRequestUpdate = (account: ClientAccount, request: ClientRequest
       detail,
     })
   );
+}
 
 /** "Thursday 15 October" for a yyyy-mm-dd date. */
 const dayLabel = (date: string | null) =>

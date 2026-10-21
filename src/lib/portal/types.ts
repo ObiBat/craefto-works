@@ -152,6 +152,13 @@ export const REQUEST_STATUSES: Record<RequestStatus, { label: string; tone: "qui
   withdrawn: { label: "Withdrawn", tone: "quiet", hint: "Not going ahead." },
 };
 
+/**
+ * The moves that email the client: when they need to act, or it's delivered
+ * or not going ahead. Queued and In progress show in their portal and the
+ * Friday summary instead, and an estimate has its own email.
+ */
+export const emailsClient = (status: RequestStatus) => status === "needs_info" || status === "delivered" || status === "withdrawn";
+
 /** Requests still on the go (not delivered or withdrawn). */
 export const isOpen = (request: Pick<ClientRequest, "status">) => request.status !== "delivered" && request.status !== "withdrawn";
 
