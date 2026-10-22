@@ -388,7 +388,8 @@ async function hoursSummary(filter: string) {
     );
     const used = allowance.hours == null ? `${quarter(usage.used)} h used, no limit` : `${quarter(usage.used)} of ${quarter(allowance.hours)} h used, ${quarter(Math.max(0, usage.left ?? 0))} left`;
     const coming = usage.committedHigh > 0 ? ` · ${range(Math.round(usage.committedLow * 2) / 2, Math.round(usage.committedHigh * 2) / 2)} approved to come` : "";
-    lines.push(`<b>${html(clientName(account))}</b>: ${used}${coming} · renews ${dayLabel(usage.month.renews)}`);
+    const month = allowance.hours == null ? `since ${dayLabel(usage.month.from)}` : `renews ${dayLabel(usage.month.renews)}`;
+    lines.push(`<b>${html(clientName(account))}</b>: ${used}${coming} · ${month}`);
   }
   if (lines.length) return lines.join("\n");
   return filter ? `No client with hours matches “${html(filter)}”.` : "No clients with monthly hours yet.";

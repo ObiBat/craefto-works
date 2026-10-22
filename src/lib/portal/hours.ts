@@ -47,11 +47,14 @@ export interface Allowance {
 
 /**
  * The hours the client has this month, or null when they have none (no plan
- * running, none agreed). A running plan without an hour limit (Partner) gives
- * an allowance with no hours: requests go ahead, and nothing counts down.
+ * running, none agreed). No hour limit, agreed directly or on a plan
+ * (Partner), gives an allowance with no hours: requests go ahead, and
+ * nothing counts down.
  */
-export function allowanceFor(account: Pick<ClientAccount, "monthly_hours" | "engagement" | "cycle_day">, subscriptions: ClientSubscription[]): Allowance | null {
+export function allowanceFor(account: Pick<ClientAccount, "monthly_hours" | "engagement" | "cycle_day" | "no_hour_limit">, subscriptions: ClientSubscription[]): Allowance | null {
   const cycleDay = account.cycle_day ?? 1;
+  // Agreed with Craefto: no limit, whatever's set (a long-standing partner's arrangement).
+  if (account.no_hour_limit) return { hours: null, label: account.engagement || "Studio time", cycleDay };
   if (account.monthly_hours) return { hours: Number(account.monthly_hours), label: account.engagement || "Monthly hours", cycleDay };
   // Current plans only: a retired plan carries no hours at all (undefined).
   const running = subscriptions.filter(isLive).map((subscription) => planById(subscription.plan)).filter((plan) => plan && plan.hours !== undefined);

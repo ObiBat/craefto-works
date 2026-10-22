@@ -11,8 +11,10 @@ export interface ClientAccount {
   created_by_checkout: string | null;
   /** Hours a month Craefto agreed outside the Stripe plans (null: the running plans' hours). */
   monthly_hours: number | null;
-  /** What that arrangement is called, e.g. "JapanoMa monthly hours". */
+  /** What that arrangement is called, e.g. "JapanoMa partnership". */
   engagement: string | null;
+  /** Agreed directly with no hour limit: they see the hours used, never a balance (as on the Partner plan). */
+  no_hour_limit: boolean;
   /** The day of the month their hours refresh (1: calendar months). */
   cycle_day: number;
   /** Where the client is, for their calendar. */

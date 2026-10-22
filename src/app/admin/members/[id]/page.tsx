@@ -788,6 +788,7 @@ function PastWorkForm({ memberId, onSaved }: { memberId: string; onSaved: () => 
 function HoursPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => void }) {
   const { account, usage } = member;
   const [hoursValue, setHoursValue] = React.useState(account.monthly_hours != null ? String(account.monthly_hours) : "");
+  const [noLimit, setNoLimit] = React.useState(account.no_hour_limit);
   const [engagement, setEngagement] = React.useState(account.engagement ?? "");
   const [zone, setZone] = React.useState(account.time_zone);
   const [weekly, setWeekly] = React.useState(account.weekly_email);
@@ -802,7 +803,8 @@ function HoursPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => 
     setMessage(null);
     try {
       await api(`/api/admin/members/${account.id}`, "PATCH", {
-        monthly_hours: hoursValue === "" ? null : Number(hoursValue),
+        monthly_hours: noLimit || hoursValue === "" ? null : Number(hoursValue),
+        no_hour_limit: noLimit,
         engagement,
         time_zone: zone,
         weekly_email: weekly,
@@ -846,14 +848,24 @@ function HoursPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => 
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
               Monthly hours (empty: the plan&apos;s)
-              <input type="number" min="0.5" max="400" step="0.5" value={hoursValue} onChange={(event) => setHoursValue(event.target.value)} className={cn(field, "py-1.5 text-sm")} />
+              <input
+                type="number"
+                min="0.5"
+                max="400"
+                step="0.5"
+                value={noLimit ? "" : hoursValue}
+                disabled={noLimit}
+                placeholder={noLimit ? "No limit" : undefined}
+                onChange={(event) => setHoursValue(event.target.value)}
+                className={cn(field, "py-1.5 text-sm disabled:opacity-60")}
+              />
             </label>
             <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
               What it&apos;s called
               <input value={engagement} onChange={(event) => setEngagement(event.target.value)} maxLength={120} placeholder="JapanoMa monthly hours" className={cn(field, "py-1.5 text-sm")} />
             </label>
             <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
-              Hours refresh on day (1 to 28)
+              {noLimit ? "Their month starts on day (1 to 28)" : "Hours refresh on day (1 to 28)"}
               <input type="number" min="1" max="28" step="1" value={cycleDay} onChange={(event) => setCycleDay(event.target.value)} className={cn(field, "py-1.5 text-sm")} />
             </label>
             <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
@@ -865,6 +877,12 @@ function HoursPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => 
               Friday effort email
             </label>
           </div>
+          <label className="flex items-start gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
+            <input type="checkbox" checked={noLimit} onChange={(event) => setNoLimit(event.target.checked)} className="mt-0.5 size-4 accent-[hsl(var(--color-accent))]" />
+            <span>
+              No hour limit: they see the hours used, never a balance or a renewal. Time still counts, to show the effort and plan priorities.
+            </span>
+          </label>
           <div className="flex items-center gap-3">
             <button type="submit" disabled={saving} className={primary}>
               {saving ? "Saving…" : "Save"}
@@ -1003,7 +1021,7 @@ export default function MemberPage() {
       </Section>
 
       <Section title="Hours" description="Their studio time this month, and general time (calls, planning) not tied to one request.">
-        <HoursPanel key={account.id + (account.monthly_hours ?? "") + account.time_zone + (account.cycle_day ?? 1)} member={member} onSaved={load} />
+        <HoursPanel key={account.id + (account.monthly_hours ?? "") + account.no_hour_limit + account.time_zone + (account.cycle_day ?? 1)} member={member} onSaved={load} />
       </Section>
 
       <Section title="Projects" description="Their code repositories: merged pull requests become shipped work to check and publish.">

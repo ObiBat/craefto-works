@@ -151,6 +151,7 @@ export interface ClientSettings {
   name?: string | null;
   company?: string | null;
   monthly_hours?: number | null;
+  no_hour_limit?: boolean;
   engagement?: string | null;
   time_zone?: string;
   weekly_email?: boolean;
@@ -182,6 +183,11 @@ export function clientSettings(input: Record<string, unknown>): ClientSettings {
     const zone = typeof input.time_zone === "string" ? input.time_zone.trim() : "";
     if (!validZone(zone)) throw new ClientInputError("That time zone isn't one we know. Use a name like Asia/Tokyo or Australia/Sydney.");
     settings.time_zone = zone;
+  }
+  if ("no_hour_limit" in input) {
+    settings.no_hour_limit = input.no_hour_limit === true;
+    // No limit means no number either, so none shows anywhere.
+    if (settings.no_hour_limit) settings.monthly_hours = null;
   }
   if ("weekly_email" in input) settings.weekly_email = Boolean(input.weekly_email);
   if ("cycle_day" in input) {

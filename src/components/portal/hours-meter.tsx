@@ -22,7 +22,7 @@ export function HoursMeter({ usage, className }: { usage: Usage; className?: str
     );
   }
   if (allowance.hours == null) {
-    // A plan without an hour limit (Partner): what's gone in and what's queued, nothing counting down.
+    // No hour limit (agreed directly, or the Partner plan): what's gone in and what's queued, nothing counting down or renewing.
     return (
       <section aria-label="Your hours this month" className={cn("rounded-3xl bg-[hsl(var(--color-background-subtle))] p-6 md:p-7", className)}>
         <div className="flex items-baseline justify-between gap-4">
@@ -42,10 +42,13 @@ export function HoursMeter({ usage, className }: { usage: Usage; className?: str
             <dd className="mt-0.5 font-medium tabular-nums">{committedHigh > 0 ? range(committedLow, committedHigh) : "None"}</dd>
           </div>
           <div>
-            <dt className="text-[hsl(var(--color-foreground-subtle))]">Renews</dt>
-            <dd className="mt-0.5 font-medium">{renewsLabel(month.renews)}</dd>
+            <dt className="text-[hsl(var(--color-foreground-subtle))]">Counted from</dt>
+            <dd className="mt-0.5 font-medium">{renewsLabel(month.from)}</dd>
           </div>
         </dl>
+        <p className="mt-4 text-sm leading-relaxed text-[hsl(var(--color-foreground-muted))]">
+          We log our time to show the effort going in and to plan priorities, never to cap the work.
+        </p>
       </section>
     );
   }

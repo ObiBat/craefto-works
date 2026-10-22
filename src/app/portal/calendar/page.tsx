@@ -42,7 +42,7 @@ function Chip({ event }: { event: CalendarEvent }) {
 
 /** The client's month: calls, the dates their requests aim for or need, deliveries, work logged and when hours renew. */
 export default async function CalendarPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
-  const { account, db } = await requireMember();
+  const { account, allowance, db } = await requireMember();
   const timeZone = account.time_zone || "Australia/Sydney";
   const today = todayIn(timeZone);
   const asked = (await searchParams).month;
@@ -56,9 +56,10 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
     db.from("client_meetings").select("*").eq("account_id", account.id).gte("starts_at", `${from}T00:00:00Z`).lte("starts_at", `${to}T23:59:59Z`),
     db.from("client_time_entries").select("*").eq("account_id", account.id).gte("worked_on", from).lte("worked_on", to),
   ]);
-  // The days their hours renew, in and around this month.
+  // The days their hours renew, in and around this month (none without an hour limit).
   const renewDay = String(account.cycle_day ?? 1).padStart(2, "0");
-  const firsts = [shiftMonth(month, -1), month, shiftMonth(month, 1)].map((value) => `${value}-${renewDay}`).filter((first) => first >= from && first <= to);
+  const firsts =
+    allowance?.hours != null ? [shiftMonth(month, -1), month, shiftMonth(month, 1)].map((value) => `${value}-${renewDay}`).filter((first) => first >= from && first <= to) : [];
   const events = calendarEvents({
     requests: (requestRows ?? []) as ClientRequest[],
     meetings: (meetingRows ?? []) as ClientMeeting[],
@@ -155,7 +156,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       </div>
 
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-        {(Object.keys(KINDS) as CalendarKind[]).map((kind) => (
+        {(Object.keys(KINDS) as CalendarKind[]).filter((kind) => kind !== "renews" || allowance?.hours != null).map((kind) => (
           <span key={kind} className="flex items-center gap-2 text-sm text-[hsl(var(--color-foreground-muted))]">
             <span aria-hidden="true" className={cn("size-2 rounded-full", KINDS[kind].dot)} />
             {KINDS[kind].label}

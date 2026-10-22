@@ -125,7 +125,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
   const today = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const now = new Date();
   const fortnight = new Date(now.getTime() + 14 * 86_400_000).toISOString().slice(0, 10);
-  const upcoming = calendarEvents({ requests, meetings: (callRows ?? []) as ClientMeeting[], entries: [], timeZone, months: [usage.month.renews] })
+  const upcoming = calendarEvents({ requests, meetings: (callRows ?? []) as ClientMeeting[], entries: [], timeZone, months: usage.allowance?.hours != null ? [usage.month.renews] : [] })
     .filter((event) => event.date >= today && event.date <= fortnight && event.kind !== "delivered")
     .slice(0, 5);
 

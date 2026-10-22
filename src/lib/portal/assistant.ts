@@ -80,7 +80,7 @@ export function acknowledgement(account: ClientAccount, read: Reading | null, us
     const projected = Math.round((used + committedHigh + high) * 2) / 2;
     if (allowance.hours == null) {
       // A plan without an hour limit: what's gone in, with nothing to count down from.
-      lines.push(`This month you've used ${hours(Math.round(used * 2) / 2)} hours${queued}. Your plan has no monthly hour limit.`);
+      lines.push(`This month you've used ${hours(Math.round(used * 2) / 2)} hours${queued}. There's no monthly hour limit.`);
     } else {
       const after =
         projected <= allowance.hours
