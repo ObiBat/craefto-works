@@ -2,12 +2,14 @@ import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { accountByCustomer, claimWelcomeEmails, latestSubscription, provisionCheckout, syncSubscription } from "@/lib/portal/accounts";
+import { recordCardPayment } from "@/lib/portal/invoices";
 import { alertBilling, alertNewSubscriber, sendWelcome } from "@/lib/portal/notify";
 import { siteOrigin } from "@/lib/portal/origin";
 
 /**
  * Stripe's webhook. It sets clients up when they subscribe, keeps their plans
- * in step (plan changes, cancelling, ending) and emails Craefto about each.
+ * in step (plan changes, cancelling, ending) and emails Craefto about each,
+ * and marks an invoice paid when a client pays it by card in the portal.
  * The endpoint (scripts/stripe-setup.mjs creates it) listens for:
  * checkout.session.completed, customer.subscription.updated,
  * customer.subscription.deleted and invoice.payment_failed.
@@ -34,6 +36,11 @@ export async function POST(request: NextRequest) {
   try {
     switch (event.type) {
       case "checkout.session.completed": {
+        // An invoice paid by card from the portal.
+        if (event.data.object.mode === "payment") {
+          await recordCardPayment(event.data.object.id, origin);
+          break;
+        }
         if (event.data.object.mode !== "subscription") break;
         const result = await provisionCheckout(event.data.object.id);
         if (!result || !(await claimWelcomeEmails(result.sync.subscription.id))) break;

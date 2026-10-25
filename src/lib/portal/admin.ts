@@ -1,7 +1,10 @@
 import "server-only";
 import { createServerClient } from "@/lib/supabase";
 import { planById } from "@/lib/pricing";
+import { chargesGst } from "@/lib/stripe";
 import { allowanceFor, usageFor, type Usage } from "./hours";
+import { parseMoney } from "./invoice-rules";
+import { cardPayments, currentIssuer, invoicesOf } from "./invoices";
 import { OutcomeInputError, outcomeInput } from "./outcome";
 import { projectsOf, type ClientProject } from "./work";
 import {
@@ -10,6 +13,7 @@ import {
   isWaitingOnClient,
   type ClientAccount,
   type ClientFile,
+  type ClientInvoice,
   type ClientMeeting,
   type ClientMessage,
   type ClientRequest,
@@ -100,12 +104,16 @@ export interface MemberDetail {
   projects: ClientProject[];
   /** Their shipped work waiting to publish. */
   pendingWork: number;
+  /** Invoices, drafts included, newest first. */
+  invoices: ClientInvoice[];
+  /** What Craefto's invoices need that isn't set (Vercel environment variables), whether clients can pay by card, and whether GST is charged. */
+  billing: { missing: string[]; card: boolean; gst: boolean };
 }
 
 export async function memberDetail(id: string): Promise<MemberDetail | null> {
   const { data: account } = await db().from("client_accounts").select("*").eq("id", id).maybeSingle();
   if (!account) return null;
-  const [subscriptions, requests, messages, files, calls, entries, projects, pendingWork] = await Promise.all([
+  const [subscriptions, requests, messages, files, calls, entries, projects, pendingWork, invoices] = await Promise.all([
     db().from("client_subscriptions").select("*").eq("account_id", id).order("created_at", { ascending: false }),
     db().from("client_requests").select("*").eq("account_id", id).order("updated_at", { ascending: false }),
     db().from("client_messages").select("*").eq("account_id", id).order("created_at"),
@@ -120,6 +128,7 @@ export async function memberDetail(id: string): Promise<MemberDetail | null> {
     db().from("client_time_entries").select("*").eq("account_id", id).order("worked_on", { ascending: false }).order("created_at", { ascending: false }),
     projectsOf(id),
     db().from("client_work_drafts").select("id", { count: "exact", head: true }).eq("account_id", id).eq("status", "pending"),
+    invoicesOf(id),
   ]);
   const testMode = /^(sk|rk)_test_/.test(process.env.STRIPE_SECRET_KEY ?? "");
   return {
@@ -140,12 +149,16 @@ export async function memberDetail(id: string): Promise<MemberDetail | null> {
       : null,
     projects,
     pendingWork: pendingWork.count ?? 0,
+    invoices,
+    billing: { missing: currentIssuer().missing, card: cardPayments(), gst: chargesGst() },
   };
 }
 
 // ── Clients Craefto adds directly ─────────────────────────────────────────
 
 export class ClientInputError extends Error {}
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface ClientSettings {
   name?: string | null;
@@ -156,6 +169,10 @@ export interface ClientSettings {
   time_zone?: string;
   weekly_email?: boolean;
   cycle_day?: number;
+  billing_name?: string | null;
+  billing_address?: string | null;
+  billing_email?: string | null;
+  monthly_fee?: number | null;
 }
 
 const validZone = (zone: string) => {
@@ -195,6 +212,24 @@ export function clientSettings(input: Record<string, unknown>): ClientSettings {
     if (!(Number.isInteger(day) && day >= 1 && day <= 28)) throw new ClientInputError("Hours refresh on a day from the 1st to the 28th.");
     settings.cycle_day = day;
   }
+  // Who invoices are made out to, and the fee each month's is drafted at.
+  if ("billing_name" in input) settings.billing_name = text(input.billing_name, 200);
+  if ("billing_address" in input) {
+    const lines = typeof input.billing_address === "string" ? input.billing_address.split("\n").map((line) => line.trim()).filter(Boolean).join("\n") : "";
+    if (lines.length > 500) throw new ClientInputError("Keep the address under 500 characters.");
+    settings.billing_address = lines || null;
+  }
+  if ("billing_email" in input) {
+    const email = text(input.billing_email, 320)?.toLowerCase() ?? null;
+    if (email && !EMAIL.test(email)) throw new ClientInputError("That invoices email doesn't look right. Leave it empty to use their own.");
+    settings.billing_email = email;
+  }
+  if ("monthly_fee" in input) {
+    const empty = input.monthly_fee === null || input.monthly_fee === "";
+    const fee = empty ? null : parseMoney(input.monthly_fee);
+    if (!empty && !(fee !== null && fee > 0 && fee <= 100_000_000)) throw new ClientInputError("Give the monthly fee in dollars, like 3000, or leave it empty.");
+    settings.monthly_fee = fee;
+  }
   return settings;
 }
 
@@ -210,8 +245,6 @@ export async function createClient(input: Record<string, unknown>): Promise<Clie
   if (error) throw error;
   return data as ClientAccount;
 }
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Their settings, and their email. A new email moves the portal to that

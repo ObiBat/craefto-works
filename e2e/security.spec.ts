@@ -10,6 +10,7 @@ test.describe("admin API access", () => {
     "/api/admin/leads/00000000-0000-4000-8000-000000000000",
     "/api/admin/members",
     "/api/admin/members/00000000-0000-4000-8000-000000000000/view",
+    "/api/admin/members/00000000-0000-4000-8000-000000000000/invoices/00000000-0000-4000-8000-000000000000/pdf",
     "/api/admin/applications",
     "/api/admin/outreach",
     "/api/admin/outreach?view=summary",
@@ -32,6 +33,12 @@ test.describe("admin API access", () => {
       expect(res.status()).toBe(401);
     });
   }
+
+  test("invoices can't be drafted or issued without a session", async ({ request }) => {
+    const member = "/api/admin/members/00000000-0000-4000-8000-000000000000";
+    expect((await request.post(`${member}/invoices`, { data: { kind: "retainer" } })).status()).toBe(401);
+    expect((await request.patch(`${member}/invoices/00000000-0000-4000-8000-000000000000`, { data: { action: "issue", email: true } })).status()).toBe(401);
+  });
 
   test("past work can't be added without a session", async ({ request }) => {
     const res = await request.post("/api/admin/members/00000000-0000-4000-8000-000000000000/requests", { data: { title: "x", delivered_on: "2026-01-01" } });

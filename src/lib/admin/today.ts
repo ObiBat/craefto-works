@@ -4,11 +4,13 @@ import { createServerClient } from "@/lib/supabase";
 import { sendingStatus } from "@/lib/outreach/sender";
 import type { SendingMode } from "@/lib/outreach/types";
 import { allowanceFor, minutesByRequest, shortHours, sydneyToday, usageFor } from "@/lib/portal/hours";
+import { formatMoney, invoiceDate, periodLabel, retainerMonth } from "@/lib/portal/invoice-rules";
 import {
   isLive,
   isOpen,
   isWaitingOnClient,
   type ClientAccount,
+  type ClientInvoice,
   type ClientMeeting,
   type ClientMessage,
   type ClientRequest,
@@ -17,13 +19,13 @@ import {
 } from "@/lib/portal/types";
 
 // The admin's Today screen: everything that needs Obi across the systems
-// (portal clients, enquiries, outreach replies, Ask Craefto, applications),
+// (portal clients and their invoices, enquiries, outreach replies, Ask Craefto, applications),
 // what's coming up, and how the month and the site are going. Service role;
 // the admin API is guarded by src/proxy.ts.
 
 const DAY = 86_400_000;
 
-export type NeedKind = "client-message" | "estimate" | "overrun" | "work" | "reply" | "enquiry" | "handoff" | "application" | "drafts";
+export type NeedKind = "client-message" | "estimate" | "overrun" | "invoice" | "work" | "reply" | "enquiry" | "handoff" | "application" | "drafts";
 
 export interface Need {
   id: string;
@@ -235,6 +237,7 @@ export async function today(): Promise<Today> {
     visits,
     enquiries,
     shipped,
+    invoices,
   ] = await Promise.all([
     freshLeads(db),
     openReplies(db),
@@ -254,6 +257,7 @@ export async function today(): Promise<Today> {
     visitsSince(db, weekAgo),
     db.from("leads").select("id", { count: "exact", head: true }).gte("created_at", monthAgo),
     db.from("client_work_drafts").select("id, account_id, title, merged_at").eq("status", "pending").order("merged_at", { ascending: false }),
+    db.from("client_invoices").select("id, account_id, number, status, total, due_date, period_start").neq("status", "void"),
   ]);
 
   const accountRows = (accounts.data ?? []) as ClientAccount[];
@@ -305,6 +309,34 @@ export async function today(): Promise<Today> {
       detail: `${account ? clientName(account) : "A client"} · ${shortHours(hours)} logged of up to ${shortHours(Number(request.estimate_high))}. Talk it through with them`,
       href: requestHref(request),
       at: request.updated_at,
+    });
+  }
+
+  // Invoices: unpaid past their due date, then retainers whose month ahead isn't invoiced yet.
+  const invoiceRows = (invoices.data ?? []) as Array<Pick<ClientInvoice, "id" | "account_id" | "number" | "status" | "total" | "due_date" | "period_start">>;
+  const todayDate = sydneyToday(now);
+  for (const invoice of invoiceRows.filter((row) => row.status === "issued" && row.due_date < todayDate)) {
+    const account = accountById.get(invoice.account_id);
+    needs.push({
+      id: `invoice-${invoice.id}`,
+      kind: "invoice",
+      title: `${invoice.number} is overdue`,
+      detail: `${account ? clientName(account) : "A client"} · ${formatMoney(invoice.total)} was due ${invoiceDate(invoice.due_date, true)}. Mark it paid if it's arrived, or send a reminder`,
+      href: `/admin/members/${invoice.account_id}#billing`,
+      at: null,
+    });
+  }
+  for (const account of accountRows.filter((row) => row.monthly_fee != null)) {
+    const month = retainerMonth(todayDate, account.cycle_day ?? 1);
+    const invoice = invoiceRows.find((row) => row.account_id === account.id && row.period_start === month.start);
+    if (invoice && invoice.status !== "draft") continue;
+    needs.push({
+      id: `retainer-${account.id}-${month.start}`,
+      kind: "invoice",
+      title: `${invoice ? "Issue" : "Invoice"} ${clientName(account)}'s ${periodLabel(month.start, month.end, true)}`,
+      detail: `${formatMoney(account.monthly_fee!)} retainer, billed in advance · ${invoice ? "drafted, not issued yet" : "not drafted yet: one click under Billing"}`,
+      href: `/admin/members/${account.id}#billing`,
+      at: null,
     });
   }
 
@@ -441,7 +473,6 @@ export async function today(): Promise<Today> {
       });
     }
   }
-  const todayDate = sydneyToday(now);
   const lastDate = sydneyToday(fortnightOn);
   for (const request of requestRows.filter(isOpen)) {
     const account = accountById.get(request.account_id);

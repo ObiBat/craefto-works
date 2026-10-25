@@ -7,11 +7,13 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/admin/members/[id]/view - Open their portal as they see it, read only
  * (lib/portal/preview.ts). Admin only, like all of /api/admin (src/proxy.ts).
+ * ?invoice=<id> opens that invoice in their Billing.
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!UUID.test(id) || !(await accountById(id))) return NextResponse.json({ error: "Member not found" }, { status: 404 });
-  const response = NextResponse.redirect(new URL("/portal", request.nextUrl.origin));
+  const invoice = request.nextUrl.searchParams.get("invoice");
+  const response = NextResponse.redirect(new URL(invoice && UUID.test(invoice) ? `/portal/billing/${invoice}` : "/portal", request.nextUrl.origin));
   response.cookies.set(VIEW_COOKIE, id, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

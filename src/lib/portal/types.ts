@@ -22,6 +22,13 @@ export interface ClientAccount {
   /** The Friday effort email. */
   weekly_email: boolean;
   weekly_sent_on: string | null;
+  /** Who their invoices are made out to: the business, and its address a line each. */
+  billing_name: string | null;
+  billing_address: string | null;
+  /** Where invoices go, if not their own email (an accounts inbox). */
+  billing_email: string | null;
+  /** The fee agreed each month, in cents before GST: it drafts the month's invoice. */
+  monthly_fee: number | null;
   created_at: string;
 }
 
@@ -127,6 +134,73 @@ export interface ClientFile {
   path: string;
   status: "pending" | "attached";
   created_at: string;
+}
+
+/** A line on an invoice. */
+export interface InvoiceItem {
+  description: string;
+  /** More about it, a line each; lines starting "- " read as a list. */
+  detail: string;
+  quantity: number;
+  /** Cents, before GST. */
+  unit_amount: number;
+}
+
+/** A delivered request, as an invoice lists it. */
+export interface InvoiceWork {
+  request_id: string;
+  title: string;
+  /** The day it was delivered, in Sydney. */
+  delivered_on: string;
+}
+
+/** Who an invoice is from, as it was when issued. */
+export interface InvoiceIssuer {
+  name: string;
+  abn: string;
+  address: string[];
+  email: string;
+  gst_registered: boolean;
+  bank: { name: string; account_name: string; bsb: string; account_number: string } | null;
+}
+
+export type InvoiceStatus = "draft" | "issued" | "paid" | "void";
+
+/** An invoice Craefto issues from admin (supabase/migrations/033_client_invoices.sql). Amounts in cents. */
+export interface ClientInvoice {
+  id: string;
+  account_id: string;
+  /** "INV-2026-011", once issued. */
+  number: string | null;
+  status: InvoiceStatus;
+  bill_to_name: string;
+  bill_to_address: string;
+  bill_to_email: string;
+  /** Null on a draft: it's from whoever Craefto is when it's issued. */
+  issuer: InvoiceIssuer | null;
+  issue_date: string;
+  due_date: string;
+  /** The month a retainer covers. */
+  period_start: string | null;
+  period_end: string | null;
+  items: InvoiceItem[];
+  subtotal: number;
+  gst: number;
+  total: number;
+  currency: "aud";
+  notes: string;
+  /** The window of delivered work it lists, and the work itself once issued. */
+  work_start: string | null;
+  work_end: string | null;
+  work: InvoiceWork[];
+  sent_at: string | null;
+  paid_at: string | null;
+  paid_via: "bank_transfer" | "card" | "other" | null;
+  payment_reference: string | null;
+  stripe_checkout_session: string | null;
+  voided_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ClientMeeting {

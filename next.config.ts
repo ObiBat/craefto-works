@@ -38,6 +38,12 @@ const nextConfig: NextConfig = {
   },
   // Let phones on the local network use the dev server (hostnames, not URLs).
   allowedDevOrigins: ["192.168.1.*"],
+  // The invoice PDF's fonts, read from disk (lib/portal/invoice-pdf.tsx) by
+  // the routes that make one: admin's, and the portal's download.
+  outputFileTracingIncludes: {
+    "/api/admin/members/**": ["./src/lib/portal/invoice-fonts/*"],
+    "/portal/billing/**": ["./src/lib/portal/invoice-fonts/*"],
+  },
   async redirects() {
     return [
       // The client portal has been retired; its subdomain sends people to the

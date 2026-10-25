@@ -89,4 +89,8 @@ export function facts(rows: Array<[string, string | null | undefined]>): string 
   return `<table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 0 8px;">${cells}</table>`;
 }
 
+/** A note to the reader set apart above an email (what a preview is, say). */
+export const aside = (text: string) =>
+  `<div style="margin: 0 0 20px; padding: 12px 16px; border: 1px dashed ${MUTED}; border-radius: 12px; font-size: 13px; line-height: 1.55; color: ${MUTED};">${escapeHtml(text)}</div>`;
+
 export const hello = (name: string | null) => `Hi ${escapeHtml(name?.split(" ")[0] || "there")},`;

@@ -27,26 +27,14 @@ import { callTime } from "@/lib/portal/call-times";
 import { requestRef } from "@/lib/portal/work-rules";
 import type { MemberDetail } from "@/lib/portal/admin";
 import { REQUEST_VARIANT, planName, planVariant, shortDate } from "../shared";
+import { BillingSection } from "./billing";
+import { api, field, primary, secondary, today } from "./controls";
 import { cn } from "@/lib/utils";
 
 // "Estimate ready" is set by confirming an estimate (which emails the client), never picked here.
 const STATUSES = (Object.keys(REQUEST_STATUSES) as RequestStatus[]).filter((status) => status !== "estimated");
-const field =
-  "w-full px-4 py-2 bg-[hsl(var(--color-background-subtle))] border border-[hsl(var(--color-border))] rounded-xl text-[hsl(var(--color-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))]/50";
-const primary =
-  "px-4 py-2 bg-[hsl(var(--color-accent))] text-white text-sm font-medium rounded-xl hover:bg-[hsl(var(--color-accent-hover))] transition-colors disabled:opacity-50";
 const adminFileHref = (file: ClientFile) => `/api/admin/members/files/${file.id}`;
-const secondary =
-  "px-3 py-1.5 text-sm font-medium rounded-xl bg-[hsl(var(--color-background-muted))] text-[hsl(var(--color-foreground))] hover:bg-[hsl(var(--color-accent-subtle))] transition-colors disabled:opacity-50";
-const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 const hours = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(1));
-
-async function api(url: string, method: string, body?: unknown) {
-  const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.error ?? "That didn't save. Try again.");
-  return data;
-}
 
 function Thread({ messages, files, client }: { messages: ClientMessage[]; files: ClientFile[]; client: string }) {
   if (messages.length === 0) return <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">No messages yet.</p>;
@@ -942,10 +930,10 @@ export default function MemberPage() {
   }, [id]);
   React.useEffect(load, [load]);
 
-  // Today links straight to a request (#request-…): bring it into view once the page has loaded.
+  // Today links straight to a request (#request-…) or their billing: bring it into view once the page has loaded.
   const loaded = member !== null;
   React.useEffect(() => {
-    if (!loaded || !window.location.hash.startsWith("#request-")) return;
+    if (!loaded || !(window.location.hash.startsWith("#request-") || window.location.hash === "#billing")) return;
     document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: "start" });
   }, [loaded]);
 
@@ -1022,6 +1010,10 @@ export default function MemberPage() {
 
       <Section title="Hours" description="Their studio time this month, and general time (calls, planning) not tied to one request.">
         <HoursPanel key={account.id + (account.monthly_hours ?? "") + account.no_hour_limit + account.time_zone + (account.cycle_day ?? 1)} member={member} onSaved={load} />
+      </Section>
+
+      <Section id="billing" title="Billing" description="Their invoices, and who they're made out to. A draft is yours alone until it's issued." className="scroll-mt-24">
+        <BillingSection member={member} onSaved={load} />
       </Section>
 
       <Section title="Projects" description="Their code repositories: merged pull requests become shipped work to check and publish.">

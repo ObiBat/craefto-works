@@ -1,11 +1,12 @@
 import { escapeHtml } from "./_escape";
-import { hello, layout, paragraph, quote, facts, type Email } from "./layout";
+import { aside, hello, layout, paragraph, quote, facts, type Email } from "./layout";
 
 export type { Email } from "./layout";
 
 // Emails for the client portal: to clients (welcome, sign-in, request
-// updates, replies) and to Craefto (new subscribers, requests, messages and
-// billing changes), in the shared layout (./layout.ts).
+// updates, replies, invoices and receipts) and to Craefto (new subscribers,
+// requests, messages, billing changes and payments), in the shared layout
+// (./layout.ts).
 
 // ── To clients ────────────────────────────────────────────────────────────
 
@@ -119,6 +120,81 @@ export function inviteEmail({ name, engagement, link }: { name: string | null; e
         paragraph("This button signs you in. Next time, sign in with your email address and we'll send you a fresh link, so there's no password to remember."),
       action: { label: "Open your portal", href: link },
       footnote: "This link works once and expires in an hour.",
+    }),
+  };
+}
+
+/** An invoice issued: what it's for, what's due and how to pay. The PDF is attached. */
+export function invoiceEmail({
+  name,
+  from,
+  number,
+  amount,
+  due,
+  summary,
+  bank,
+  card,
+  message,
+  link,
+  preview,
+}: {
+  name: string | null;
+  /** Craefto's name on the invoice: "Craefto Works" */
+  from: string;
+  number: string;
+  /** "$3,000.00" */
+  amount: string;
+  /** "25 October 2026" */
+  due: string;
+  /** What it's for: its line, or its period. */
+  summary: string;
+  bank: { name: string; account_name: string; bsb: string; account_number: string } | null;
+  /** Whether it can be paid by card in the portal. */
+  card: boolean;
+  /** A note from Craefto, above the invoice's details. */
+  message?: string;
+  link: string;
+  /** When Craefto sends it to themselves before issuing: what the preview is, above it all. */
+  preview?: string;
+}): Email {
+  return {
+    subject: `${preview ? "Preview: " : ""}Invoice ${number} from ${from}: ${amount}`,
+    html: layout({
+      eyebrow: `Invoice ${number}`,
+      heading: `${amount} due ${due}`,
+      body:
+        (preview ? aside(preview) : "") +
+        paragraph(hello(name)) +
+        (message ? quote(message) : "") +
+        paragraph(`Here's invoice ${escapeHtml(number)}: ${escapeHtml(summary)}. The PDF is attached.`) +
+        facts([
+          ["Amount", amount],
+          ["Due", due],
+          ["Bank", bank?.name],
+          ["Account name", bank?.account_name],
+          ["BSB", bank?.bsb],
+          ["Account", bank?.account_number],
+          ["Reference", number],
+        ]) +
+        paragraph(card ? "Pay by bank transfer with the details above, or by card from your portal." : "Pay by bank transfer with the details above."),
+      action: { label: "View invoice", href: link },
+      footnote: "Questions about this invoice? Just reply to this email.",
+    }),
+  };
+}
+
+/** A payment arrived: the client's receipt. */
+export function paymentReceivedEmail({ name, number, amount, paidOn, via, link }: { name: string | null; number: string; amount: string; paidOn: string; via: string | null; link: string }): Email {
+  return {
+    subject: `Payment received: invoice ${number}`,
+    html: layout({
+      eyebrow: "Payment received",
+      heading: "Thank you",
+      body:
+        paragraph(hello(name)) +
+        paragraph(`We've received your payment of <strong>${escapeHtml(amount)}</strong> for invoice ${escapeHtml(number)}${via ? ` by ${escapeHtml(via.toLowerCase())}` : ""}, on ${escapeHtml(paidOn)}.`) +
+        paragraph("It's marked paid in your portal, where the invoice is ready to download any time."),
+      action: { label: "View invoice", href: link },
     }),
   };
 }

@@ -8,16 +8,18 @@ import { FileRuleError, attachUploads, prepareUploads, readyUploads, type Upload
 import { alertApproved, alertMessage, alertRequest, sendSignInLink } from "@/lib/portal/notify";
 import { reviewRequest } from "@/lib/portal/assistant";
 import { sydneyToday } from "@/lib/portal/hours";
+import { cardCheckoutUrl } from "@/lib/portal/invoices";
 import { WorkflowError, approveEstimate, recordEvent, withdrawRequest as withdraw } from "@/lib/portal/workflow";
 import { siteOrigin } from "@/lib/portal/origin";
 import { PREVIEW_REFUSAL } from "@/lib/portal/preview";
 import { requireMember } from "@/lib/portal/session";
-import type { ClientMessage, ClientRequest } from "@/lib/portal/types";
+import type { ClientInvoice, ClientMessage, ClientRequest } from "@/lib/portal/types";
 import { billingPortalConfiguration, stripe } from "@/lib/stripe";
 
 // The portal's forms. Requests and messages are written as the signed-in
 // client (through RLS); Craefto hears about each by email. Files are uploaded
-// first (prepareFileUploads) and sent with the form as their ids.
+// first (prepareFileUploads) and sent with the form as their ids. Billing
+// opens Stripe: its billing portal for a plan, Checkout to pay an invoice.
 
 export interface FormState {
   error?: string;
@@ -209,4 +211,21 @@ export async function openBilling(formData?: FormData): Promise<void> {
     console.error("Opening the billing portal failed:", error);
   }
   redirect(url ?? "/portal/billing?unavailable=1");
+}
+
+/** Pay one of Craefto's invoices by card: off to Stripe Checkout, then back to the invoice (the webhook marks it paid). */
+export async function payInvoice(formData: FormData): Promise<void> {
+  const member = await requireMember();
+  const id = String(formData.get("invoice_id") ?? "");
+  const { data } = await member.db.from("client_invoices").select("*").eq("id", id).eq("account_id", member.account.id).neq("status", "draft").maybeSingle();
+  if (!data) redirect("/portal/billing");
+  const invoice = data as ClientInvoice;
+  if (member.preview || invoice.status !== "issued") redirect(`/portal/billing/${invoice.id}`);
+  let url: string | null = null;
+  try {
+    url = await cardCheckoutUrl(invoice, member.account, await siteOrigin());
+  } catch (error) {
+    console.error("Opening card checkout for an invoice failed:", error);
+  }
+  redirect(url ?? `/portal/billing/${invoice.id}?unavailable=1`);
 }

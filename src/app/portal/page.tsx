@@ -11,7 +11,8 @@ import { sydneyDate } from "@/components/portal/thread";
 import { calendarEvents, type CalendarEvent } from "@/lib/portal/calendar";
 import { minutesByRequest, shortHours, usageFor } from "@/lib/portal/hours";
 import { requireMember } from "@/lib/portal/session";
-import { isOwing, isWaitingOnClient, shownPlans, type ClientMeeting, type ClientMessage, type ClientRequest, type ClientTimeEntry } from "@/lib/portal/types";
+import { formatMoney, invoiceDate, invoiceSummary } from "@/lib/portal/invoice-rules";
+import { isOwing, isWaitingOnClient, shownPlans, type ClientInvoice, type ClientMeeting, type ClientMessage, type ClientRequest, type ClientTimeEntry } from "@/lib/portal/types";
 import { cn } from "@/lib/utils";
 import { openBilling } from "./actions";
 
@@ -100,11 +101,13 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
   const welcome = Boolean((await searchParams).welcome);
   const timeZone = account.time_zone || "Australia/Sydney";
 
-  const [{ data: requestRows }, { data: replyRows }, { data: callRows }, { data: entryRows }] = await Promise.all([
+  const [{ data: requestRows }, { data: replyRows }, { data: callRows }, { data: entryRows }, { data: invoiceRows }] = await Promise.all([
     db.from("client_requests").select("*").eq("account_id", account.id).order("updated_at", { ascending: false }),
     db.from("client_messages").select("*").eq("account_id", account.id).eq("author", "craefto").order("created_at", { ascending: false }).limit(3),
     db.from("client_meetings").select("*").eq("account_id", account.id).eq("status", "booked").gte("ends_at", new Date().toISOString()).order("starts_at").limit(5),
     db.from("client_time_entries").select("*").eq("account_id", account.id),
+    // Invoices waiting for payment, soonest due first.
+    db.from("client_invoices").select("*").eq("account_id", account.id).eq("status", "issued").order("due_date"),
   ]);
   const requests = (requestRows ?? []) as ClientRequest[];
   const replies = (replyRows ?? []) as ClientMessage[];
@@ -117,6 +120,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
   const estimating = requests.filter((request) => request.status === "received");
   const titles = new Map(requests.map((request) => [request.id, request.title]));
   const toApprove = requests.filter((request) => request.status === "estimated");
+  const unpaid = (invoiceRows ?? []) as ClientInvoice[];
   const recent = requests
     .filter((request) => request.status === "delivered")
     .sort((a, b) => (b.delivered_at ?? b.updated_at).localeCompare(a.delivered_at ?? a.updated_at))
@@ -184,6 +188,25 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
             }
           >
             {toApprove.length === 1 ? `“${toApprove[0].title}”: approve it and it joins your queue.` : "Approve each one and it joins your queue."} Nothing starts before you do.
+          </Callout>
+        )}
+        {unpaid.length > 0 && (
+          <Callout
+            tone={unpaid[0].due_date < today ? "attention" : "accent"}
+            title={
+              unpaid.length === 1
+                ? `Invoice ${unpaid[0].number} ${unpaid[0].due_date < today ? "was" : "is"} due ${invoiceDate(unpaid[0].due_date)}`
+                : `${unpaid.length} invoices are waiting for payment`
+            }
+            action={
+              <Button asChild>
+                <Link href={unpaid.length === 1 ? `/portal/billing/${unpaid[0].id}` : "/portal/billing"}>{unpaid.length === 1 ? "View and pay" : "See them"}</Link>
+              </Button>
+            }
+          >
+            {unpaid.length === 1
+              ? `${formatMoney(unpaid[0].total)} for ${invoiceSummary(unpaid[0])}.`
+              : `${formatMoney(unpaid.reduce((sum, invoice) => sum + invoice.total, 0))} in all.`}
           </Callout>
         )}
         {!allowance && subscriptions[0]?.status === "canceled" && (

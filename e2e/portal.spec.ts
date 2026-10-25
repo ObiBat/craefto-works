@@ -4,13 +4,21 @@ import { test, expect } from "./fixtures";
 // and expect refusals (no checkout, no email, no writes), so they are safe to
 // run against production.
 test.describe("client portal", () => {
-  for (const path of ["/portal", "/portal/requests", "/portal/requests/new", "/portal/work", "/portal/calendar", "/portal/messages", "/portal/calls", "/portal/billing"]) {
+  // An invoice that may or may not exist: either way, a visitor is asked to sign in first.
+  const invoice = "/portal/billing/00000000-0000-4000-8000-000000000000";
+  for (const path of ["/portal", "/portal/requests", "/portal/requests/new", "/portal/work", "/portal/calendar", "/portal/messages", "/portal/calls", "/portal/billing", invoice]) {
     test(`${path} asks a visitor to sign in`, async ({ page }) => {
       await page.goto(path);
       await page.waitForURL(/\/portal\/login$/);
       await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
     });
   }
+
+  test("an invoice's PDF is only for its client", async ({ request }) => {
+    const response = await request.get(`${invoice}/pdf`, { maxRedirects: 0 });
+    expect(response.status()).toBe(307);
+    expect(response.headers()["location"]).toMatch(/\/portal\/login$/);
+  });
 
   test("the sign-in page stays out of search and works without errors", async ({ page, consoleErrors }) => {
     await page.goto("/portal/login");

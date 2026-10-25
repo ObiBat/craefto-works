@@ -14,7 +14,7 @@ const LINKS = [
   { href: "/portal/billing", label: "Billing" },
 ];
 
-/** The portal's sections; the current one sits on a soft tint. Billing only for clients who pay through Stripe. */
+/** The portal's sections; the current one sits on a soft tint. Billing only for clients who pay Craefto (a plan, a fee or an invoice). */
 export function PortalNav({ billing = true }: { billing?: boolean }) {
   const pathname = usePathname();
   return (

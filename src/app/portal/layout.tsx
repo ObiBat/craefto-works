@@ -18,6 +18,12 @@ export const metadata: Metadata = {
  */
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const member = await currentMember();
+  // Billing for clients who pay through Stripe, have a monthly fee agreed, or have been sent an invoice.
+  let billing = Boolean(member && (member.account.stripe_customer_id || member.subscriptions.length || member.account.monthly_fee != null));
+  if (member && !billing) {
+    const { count } = await member.db.from("client_invoices").select("id", { count: "exact", head: true }).eq("account_id", member.account.id).neq("status", "draft");
+    billing = Boolean(count);
+  }
   return (
     <div className="flex min-h-screen flex-col bg-[hsl(var(--color-background))]">
       <header className="sticky top-0 z-40 bg-[hsl(var(--color-background)/0.92)] backdrop-blur-md">
@@ -74,7 +80,7 @@ export default async function PortalLayout({ children }: { children: React.React
           </div>
           {member && (
             <div className="pb-3">
-              <PortalNav billing={Boolean(member.account.stripe_customer_id || member.subscriptions.length)} />
+              <PortalNav billing={billing} />
             </div>
           )}
         </Container>
@@ -87,7 +93,7 @@ export default async function PortalLayout({ children }: { children: React.React
       <footer className="py-10">
         <Container size="lg">
           <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">
-            Questions about your plan?{" "}
+            Questions about your plan or an invoice?{" "}
             <a href={`mailto:${CRAEFTO_INBOX}`} className="font-medium text-[hsl(var(--color-accent))] hover:underline">
               {CRAEFTO_INBOX}
             </a>
