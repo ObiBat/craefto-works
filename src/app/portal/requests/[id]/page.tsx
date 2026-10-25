@@ -104,8 +104,8 @@ export default async function RequestPage({
   const { sent, approved } = await searchParams;
   const loggedMinutes = entries.reduce((total, entry) => total + entry.minutes, 0);
   const replied = messages.some((message) => message.author === "assistant");
-  // A new request's reply is a few seconds behind the page; an old one without a reply isn't coming.
-  const awaitingReply = !replied && new Date().getTime() - new Date(request.created_at).getTime() < 3 * 60_000;
+  // A new request's reply is a few seconds behind the page; an old one without a reply isn't coming, nor one Craefto added.
+  const awaitingReply = request.added_by === "client" && !replied && new Date().getTime() - new Date(request.created_at).getTime() < 3 * 60_000;
   const open = request.status !== "delivered" && request.status !== "withdrawn";
 
   return (
@@ -116,7 +116,9 @@ export default async function RequestPage({
         {open && request.queue_position != null && (
           <span className="text-sm font-medium text-[hsl(var(--color-foreground))]">#{request.queue_position} in your queue</span>
         )}
-        <span className="text-sm text-[hsl(var(--color-foreground-subtle))]">Sent {sydneyDate(request.created_at)}</span>
+        <span className="text-sm text-[hsl(var(--color-foreground-subtle))]">
+          {request.added_by === "craefto" ? "Added for you by Craefto Works" : "Sent"} {sydneyDate(request.created_at)}
+        </span>
         {open && request.needed_by && <span className="text-sm text-[hsl(var(--color-foreground-subtle))]">Needed by {day(request.needed_by)}</span>}
       </div>
       <PageTitle title={request.title} />
@@ -144,7 +146,7 @@ export default async function RequestPage({
 
       <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12">
         <div className="flex min-w-0 flex-col gap-14">
-          <Section title="What you asked for">
+          <Section title={request.added_by === "craefto" ? "What it's for" : "What you asked for"}>
             {request.details ? (
               <p className="whitespace-pre-wrap leading-relaxed text-[hsl(var(--color-foreground))]">{request.details}</p>
             ) : (

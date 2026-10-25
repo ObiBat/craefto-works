@@ -43,6 +43,8 @@ export interface Allowance {
   label: string;
   /** The day of the month the hours refresh. */
   cycleDay: number;
+  /** Agreed with Craefto directly rather than a plan bought online. */
+  agreed: boolean;
 }
 
 /**
@@ -54,15 +56,15 @@ export interface Allowance {
 export function allowanceFor(account: Pick<ClientAccount, "monthly_hours" | "engagement" | "cycle_day" | "no_hour_limit">, subscriptions: ClientSubscription[]): Allowance | null {
   const cycleDay = account.cycle_day ?? 1;
   // Agreed with Craefto: no limit, whatever's set (a long-standing partner's arrangement).
-  if (account.no_hour_limit) return { hours: null, label: account.engagement || "Studio time", cycleDay };
-  if (account.monthly_hours) return { hours: Number(account.monthly_hours), label: account.engagement || "Monthly hours", cycleDay };
+  if (account.no_hour_limit) return { hours: null, label: account.engagement || "Studio time", cycleDay, agreed: true };
+  if (account.monthly_hours) return { hours: Number(account.monthly_hours), label: account.engagement || "Monthly hours", cycleDay, agreed: true };
   // Current plans only: a retired plan carries no hours at all (undefined).
   const running = subscriptions.filter(isLive).map((subscription) => planById(subscription.plan)).filter((plan) => plan && plan.hours !== undefined);
   if (running.length === 0) return null;
   const names = running.map((plan) => plan!.name);
   const label = `${names.join(" and ")} plan${names.length > 1 ? "s" : ""}`;
-  if (running.some((plan) => plan!.hours === null)) return { hours: null, label, cycleDay };
-  return { hours: running.reduce((total, plan) => total + (plan!.hours ?? 0), 0), label, cycleDay };
+  if (running.some((plan) => plan!.hours === null)) return { hours: null, label, cycleDay, agreed: false };
+  return { hours: running.reduce((total, plan) => total + (plan!.hours ?? 0), 0), label, cycleDay, agreed: false };
 }
 
 /** Minutes logged against each request. */

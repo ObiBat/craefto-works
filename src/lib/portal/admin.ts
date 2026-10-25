@@ -5,8 +5,10 @@ import { chargesGst } from "@/lib/stripe";
 import { allowanceFor, usageFor, type Usage } from "./hours";
 import { parseMoney } from "./invoice-rules";
 import { cardPayments, currentIssuer, invoicesOf } from "./invoices";
+import { CRAEFTO_INBOX, sendEstimateReady } from "./notify";
 import { OutcomeInputError, outcomeInput } from "./outcome";
 import { projectsOf, type ClientProject } from "./work";
+import { confirmEstimate, recordEvent } from "./workflow";
 import {
   isLive,
   isOpen,
@@ -107,7 +109,8 @@ export interface MemberDetail {
   /** Invoices, drafts included, newest first. */
   invoices: ClientInvoice[];
   /** What Craefto's invoices need that isn't set (Vercel environment variables), whether clients can pay by card, and whether GST is charged. */
-  billing: { missing: string[]; card: boolean; gst: boolean };
+  /** What invoices need set (env), and where a draft's preview goes unless told otherwise. */
+  billing: { missing: string[]; card: boolean; gst: boolean; inbox: string };
 }
 
 export async function memberDetail(id: string): Promise<MemberDetail | null> {
@@ -150,7 +153,7 @@ export async function memberDetail(id: string): Promise<MemberDetail | null> {
     projects,
     pendingWork: pendingWork.count ?? 0,
     invoices,
-    billing: { missing: currentIssuer().missing, card: cardPayments(), gst: chargesGst() },
+    billing: { missing: currentIssuer().missing, card: cardPayments(), gst: chargesGst(), inbox: CRAEFTO_INBOX },
   };
 }
 
@@ -275,6 +278,35 @@ export async function updateClient(id: string, input: Record<string, unknown>): 
  * request: its outcome and links, and the time it took (logged on the day it
  * was delivered, so it counts in that month).
  */
+/**
+ * A request Craefto adds to a client's portal for them, to save them writing
+ * it up. With an estimate it waits for their approval (and they're emailed);
+ * without one it's received, to estimate from its card. Theirs from then on
+ * to approve, order or withdraw. Whether the email went, when there was one.
+ */
+export async function addRequest(accountId: string, input: Record<string, unknown>, origin: string): Promise<{ request: ClientRequest; emailed: boolean | null }> {
+  const title = typeof input.title === "string" ? input.title.trim() : "";
+  if (!title) throw new ClientInputError("Give the request a title.");
+  if (title.length > 200) throw new ClientInputError("Keep the title under 200 characters.");
+  const details = typeof input.details === "string" ? input.details.trim().slice(0, 10000) : "";
+  const given = (value: unknown) => value !== "" && value != null;
+  const estimated = given(input.estimate_low) || given(input.estimate_high);
+  const low = Number(input.estimate_low);
+  const high = Number(input.estimate_high);
+  if (estimated && !(low >= 0.5 && high >= low && high <= 400)) throw new ClientInputError("Give the estimate in hours, low to high (0.5 to 400), or leave both empty.");
+  const target = typeof input.target_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input.target_date) ? input.target_date : null;
+  const note = typeof input.estimate_note === "string" ? input.estimate_note.trim() : "";
+  const { data, error } = await db().from("client_requests").insert({ account_id: accountId, title, details, added_by: "craefto" }).select("*").single();
+  if (error) throw error;
+  const request = data as ClientRequest;
+  await recordEvent(request, "sent", { by: "craefto" });
+  if (!estimated) return { request, emailed: null };
+  const ready = await confirmEstimate(request, { low, high, note: note || null, targetDate: target });
+  const { data: account } = await db().from("client_accounts").select("*").eq("id", accountId).single();
+  const emailed = await sendEstimateReady(account as ClientAccount, ready, origin);
+  return { request: ready, emailed };
+}
+
 export async function addPastWork(accountId: string, input: Record<string, unknown>): Promise<ClientRequest> {
   const title = typeof input.title === "string" ? input.title.trim() : "";
   if (!title) throw new ClientInputError("Give the work a title.");

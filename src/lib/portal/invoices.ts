@@ -226,15 +226,16 @@ export async function issueInvoice(accountId: string, id: string, options: { ema
 }
 
 /**
- * Before issuing: the email a draft will go out with, sent to Craefto alone,
- * its PDF as it will be issued (dated today, with the number it should get)
- * and the note as written. The draft doesn't change. Whether it went.
+ * Before issuing: the email a draft will go out with, sent to Craefto alone
+ * (the inbox, or another address of theirs), its PDF as it will be issued
+ * (dated today, with the number it should get) and the note as written. The
+ * draft doesn't change. Whether it went.
  */
-export async function previewInvoice(accountId: string, id: string, { message, origin }: { message?: string; origin: string }): Promise<boolean> {
+export async function previewInvoice(accountId: string, id: string, { message, origin, to }: { message?: string; origin: string; to: string }): Promise<boolean> {
   const draft = await own(accountId, id);
   const { issuer, fields } = await issuedFields(draft);
   const invoice: ClientInvoice = { ...draft, ...fields, status: "issued", number: await nextNumber(fields.issue_date), issuer };
-  return sendInvoicePreview(await accountOf(accountId), invoice, await invoicePdf(invoice), origin, message?.trim().slice(0, 2000) || undefined);
+  return sendInvoicePreview(to, await accountOf(accountId), invoice, await invoicePdf(invoice), origin, message?.trim().slice(0, 2000) || undefined);
 }
 
 /** The number the next invoice issued on a day gets, unless another is issued first (issue_client_invoice gives it for real). */

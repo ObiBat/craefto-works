@@ -79,6 +79,7 @@ export function estimateEmail({
   note,
   targetDate,
   link,
+  addedForThem = false,
 }: {
   name: string | null;
   title: string;
@@ -88,18 +89,26 @@ export function estimateEmail({
   /** "Thursday 15 October" */
   targetDate: string | null;
   link: string;
+  /** Craefto added the request to their portal for them. */
+  addedForThem?: boolean;
 }): Email {
   return {
-    subject: `Estimate ready: ${title}`,
+    subject: addedForThem ? `Added for you to approve: ${title}` : `Estimate ready: ${title}`,
     html: layout({
-      eyebrow: "Estimate ready",
+      eyebrow: addedForThem ? "Added for you" : "Estimate ready",
       heading: title,
       body:
         paragraph(hello(name)) +
-        paragraph(`Craefto Works has confirmed the estimate for this request: <strong>${escapeHtml(estimate)}</strong> of studio time.`) +
+        (addedForThem
+          ? paragraph(`We've added this request to your portal to save you writing it up. Our estimate is <strong>${escapeHtml(estimate)}</strong> of studio time.`)
+          : paragraph(`Craefto Works has confirmed the estimate for this request: <strong>${escapeHtml(estimate)}</strong> of studio time.`)) +
         (note ? quote(note) : "") +
         (targetDate ? paragraph(`Once it's approved, Craefto Works aims to deliver it by ${escapeHtml(targetDate)}.`) : "") +
-        paragraph("Approve it in your portal and it joins your queue. Nothing starts before you do."),
+        paragraph(
+          addedForThem
+            ? "Approve it in your portal and it joins your queue, where you choose its place. If it isn't needed, withdraw it. Nothing starts before you approve."
+            : "Approve it in your portal and it joins your queue. Nothing starts before you do."
+        ),
       action: { label: "Review and approve", href: link },
     }),
   };

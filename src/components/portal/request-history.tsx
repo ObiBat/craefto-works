@@ -10,7 +10,7 @@ function eventText(event: ClientRequestEvent) {
   const range = low != null && high != null ? (low === high ? `${hours(low)} h` : `${hours(low)}–${hours(high)} h`) : null;
   switch (event.kind) {
     case "sent":
-      return "You sent the request";
+      return event.detail.by === "craefto" ? "Craefto Works added the request for you" : "You sent the request";
     case "estimated":
       return range ? `Ask Craefto gave an initial estimate of ${range}` : "Ask Craefto read the request and passed it to Craefto Works to estimate";
     case "confirmed":

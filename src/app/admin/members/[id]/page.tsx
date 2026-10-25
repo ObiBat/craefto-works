@@ -417,7 +417,7 @@ function RequestCard({
           <div className="min-w-0 space-y-1">
             <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold tracking-tight">{request.title}</h3>
             <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">
-              Sent {shortDate(request.created_at, true)} · updated {shortDate(request.updated_at, true)}
+              {request.added_by === "craefto" ? "Added by you" : "Sent"} {shortDate(request.created_at, true)} · updated {shortDate(request.updated_at, true)}
               {request.needed_by && ` · needed by ${shortDate(`${request.needed_by}T12:00:00+10:00`)}`} · <RefChip id={request.id} />
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
@@ -772,6 +772,127 @@ function PastWorkForm({ memberId, onSaved }: { memberId: string; onSaved: () => 
   );
 }
 
+/**
+ * A request added to their portal for them, so they needn't write it up.
+ * With an estimate it goes straight to them to approve (emailed); without,
+ * it waits on its card here for one. Either way it's theirs to approve,
+ * order or withdraw.
+ */
+function NewRequestForm({ memberId, client, onSaved }: { memberId: string; client: string; onSaved: () => void }) {
+  const [open, setOpen] = React.useState(false);
+  const [title, setTitle] = React.useState("");
+  const [details, setDetails] = React.useState("");
+  const [low, setLow] = React.useState("");
+  const [high, setHigh] = React.useState("");
+  const [target, setTarget] = React.useState("");
+  const [note, setNote] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [message, setMessage] = React.useState<string | null>(null);
+  const estimated = Boolean(low || high);
+
+  async function add(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setMessage(null);
+    try {
+      const result = await api(`/api/admin/members/${memberId}/requests`, "POST", {
+        kind: "request",
+        title,
+        details,
+        estimate_low: low,
+        estimate_high: high,
+        estimate_note: note,
+        target_date: target || null,
+      });
+      const added = `Added “${title.trim()}”`;
+      setMessage(
+        result.emailed === null
+          ? `${added}. Confirm its estimate on its card when you're ready.`
+          : result.emailed
+            ? `${added}. ${client} has been emailed to approve the estimate.`
+            : `${added}, waiting for ${client} to approve. The email didn't go: let them know.`
+      );
+      setTitle("");
+      setDetails("");
+      setLow("");
+      setHigh("");
+      setTarget("");
+      setNote("");
+      setOpen(false);
+      onSaved();
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
+    setSaving(false);
+  }
+
+  if (!open) {
+    return (
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" onClick={() => setOpen(true)} className={primary}>
+          Add a request for them
+        </button>
+        {message && <span className="text-sm text-[hsl(var(--color-foreground-muted))]">{message}</span>}
+      </div>
+    );
+  }
+  return (
+    <Card>
+      <form onSubmit={add} className="space-y-3">
+        <div>
+          <p className="text-sm font-semibold">Add a request for {client}</p>
+          <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">It shows in their portal as added by Craefto. They approve the estimate, choose its place in their queue, or withdraw it.</p>
+        </div>
+        <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+          What it is
+          <input value={title} onChange={(event) => setTitle(event.target.value)} required maxLength={200} placeholder="Weekly property sync: run on Mondays" className={cn(field, "py-1.5 text-sm")} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+          What it&apos;s for, in their terms (optional)
+          <textarea value={details} onChange={(event) => setDetails(event.target.value)} rows={3} maxLength={10000} className={cn(field, "text-sm")} />
+        </label>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+            Estimate low (h)
+            <input type="number" min="0.5" max="400" step="0.5" value={low} onChange={(event) => setLow(event.target.value)} required={Boolean(high)} className={cn(field, "w-28 py-1.5 text-sm")} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+            High (h)
+            <input type="number" min="0.5" max="400" step="0.5" value={high} onChange={(event) => setHigh(event.target.value)} required={Boolean(low)} className={cn(field, "w-28 py-1.5 text-sm")} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-[hsl(var(--color-foreground-muted))]">
+            Target date
+            <input type="date" value={target} onChange={(event) => setTarget(event.target.value)} disabled={!estimated} className={cn(field, "w-40 py-1.5 text-sm")} />
+          </label>
+        </div>
+        {estimated && (
+          <textarea
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            rows={2}
+            maxLength={2000}
+            placeholder="What the estimate covers and assumes; one point per line or separated by semicolons."
+            aria-label="What the estimate covers"
+            className={cn(field, "text-sm")}
+          />
+        )}
+        <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">
+          {estimated ? "They're emailed to approve it. Nothing starts until they do." : "No email yet: it waits here for an estimate, which they then approve."}
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="submit" disabled={saving || !title.trim()} className={primary}>
+            {saving ? "Adding…" : estimated ? "Add and send for approval" : "Add, estimate later"}
+          </button>
+          <button type="button" onClick={() => setOpen(false)} className="text-sm text-[hsl(var(--color-foreground-muted))]">
+            Cancel
+          </button>
+          {message && <span className="text-sm text-[hsl(var(--color-foreground-muted))]">{message}</span>}
+        </div>
+      </form>
+    </Card>
+  );
+}
+
 /** The client's month and their arrangement: hours set here for clients outside the Stripe plans. */
 function HoursPanel({ member, onSaved }: { member: MemberDetail; onSaved: () => void }) {
   const { account, usage } = member;
@@ -1059,6 +1180,7 @@ export default function MemberPage() {
       )}
 
       <Section title="Requests" description={`${open.length} open, in queue order · ${closed.length} delivered or withdrawn`}>
+        <NewRequestForm memberId={account.id} client={account.name?.split(" ")[0] || client} onSaved={load} />
         {requests.length === 0 ? (
           <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">No requests yet.</p>
         ) : (

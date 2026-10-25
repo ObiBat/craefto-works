@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Empty, Section } from "@/components/portal/blocks";
 import { HoursMeter } from "@/components/portal/hours-meter";
 import { PageTitle } from "@/components/portal/page-title";
-import { RequestList } from "@/components/portal/request-list";
+import { QueueBoard } from "@/components/portal/queue-board";
+import { RequestList, requestFacts } from "@/components/portal/request-list";
 import { RequestStatusPill } from "@/components/portal/status-pill";
 import { minutesByRequest, usageFor } from "@/lib/portal/hours";
 import { requireMember } from "@/lib/portal/session";
@@ -15,7 +16,7 @@ export const metadata: Metadata = { title: "Requests" };
 const byQueue = (a: ClientRequest, b: ClientRequest) => (a.queue_position ?? 999) - (b.queue_position ?? 999);
 
 export default async function RequestsPage() {
-  const { account, allowance, db } = await requireMember();
+  const { account, allowance, db, preview } = await requireMember();
   const [{ data }, { data: entryRows }] = await Promise.all([
     db.from("client_requests").select("*").eq("account_id", account.id).order("updated_at", { ascending: false }),
     db.from("client_time_entries").select("*").eq("account_id", account.id),
@@ -26,8 +27,8 @@ export default async function RequestsPage() {
   const usage = usageFor(allowance, entries, requests);
 
   const waiting = requests.filter(isWaitingOnClient);
-  const working = requests.filter((request) => request.status === "in_progress").sort(byQueue);
-  const queue = requests.filter((request) => request.status === "queued").sort(byQueue);
+  // Approved and open, whatever stage it's at: the queue, in the order the client set.
+  const queue = requests.filter((request) => request.queue_position != null && ["queued", "in_progress", "needs_info"].includes(request.status)).sort(byQueue);
   const estimating = requests.filter((request) => request.status === "received");
   const delivered = requests.filter((request) => request.status === "delivered");
   const withdrawn = requests.filter((request) => request.status === "withdrawn");
@@ -58,15 +59,17 @@ export default async function RequestsPage() {
                 <RequestList requests={waiting} logged={logged} />
               </Section>
             )}
-            {working.length > 0 && (
-              <Section title={`In progress · ${working.length}`}>
-                <RequestList requests={working} logged={logged} numbered />
-              </Section>
-            )}
             {queue.length > 0 && (
-              <Section title={`Your queue · ${queue.length}`}>
-                <p className="-mt-1 text-sm text-[hsl(var(--color-foreground-subtle))]">Approved and waiting their turn, in the order we&apos;ll take them.</p>
-                <RequestList requests={queue} logged={logged} numbered />
+              <Section title={`Your priorities · ${queue.length}`}>
+                <p className="-mt-1 max-w-2xl text-sm leading-relaxed text-[hsl(var(--color-foreground-subtle))]">
+                  {queue.length > 1
+                    ? "Everything you've approved, in the order we'll take it. Drag a request by its handle to change what matters most; we work from the top."
+                    : "Everything you've approved, in the order we'll take it. As more are approved, drag them into the order that matters to you."}
+                </p>
+                <QueueBoard
+                  items={queue.map((request) => ({ id: request.id, title: request.title, facts: requestFacts(request, logged.get(request.id) ?? 0), status: request.status }))}
+                  readOnly={preview}
+                />
               </Section>
             )}
             {estimating.length > 0 && (

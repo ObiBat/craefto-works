@@ -7,10 +7,12 @@ export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ id: string; invoiceId: string }> };
 
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /**
  * PATCH /api/admin/members/[id]/invoices/[invoiceId] - Change an invoice
  * Body, one of:
- *   { action: "preview", message? }                email Craefto the email a draft will go out with, before issuing it
+ *   { action: "preview", message?, to? }           email Craefto the email a draft will go out with, before issuing it (to the inbox, or `to`)
  *   { action: "issue", email: boolean, message? }  number it; it shows in their portal, and is emailed with its PDF if asked
  *   { action: "send", message? }                   email an issued invoice (again)
  *   { action: "paid", paid_on, via: "bank_transfer" | "other", reference?, receipt: boolean }
@@ -25,8 +27,11 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const message = typeof body.message === "string" ? body.message : undefined;
   try {
     switch (body.action) {
-      case "preview":
-        return NextResponse.json({ emailed: await previewInvoice(id, invoiceId, { message, origin: await siteOrigin() }), to: CRAEFTO_INBOX });
+      case "preview": {
+        const to = typeof body.to === "string" && body.to.trim() ? body.to.trim().toLowerCase() : CRAEFTO_INBOX;
+        if (!EMAIL.test(to)) return NextResponse.json({ error: "That email address doesn't look right." }, { status: 400 });
+        return NextResponse.json({ emailed: await previewInvoice(id, invoiceId, { message, origin: await siteOrigin(), to }), to });
+      }
       case "issue":
         return NextResponse.json(await issueInvoice(id, invoiceId, { email: body.email === true, message, origin: await siteOrigin() }));
       case "send":

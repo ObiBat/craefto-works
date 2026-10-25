@@ -49,6 +49,18 @@ export function HoursMeter({ usage, className }: { usage: Usage; className?: str
         <p className="mt-4 text-sm leading-relaxed text-[hsl(var(--color-foreground-muted))]">
           We log our time to show the effort going in and to plan priorities, never to cap the work.
         </p>
+        {allowance.agreed && (
+          <p className="mt-4 border-t border-[hsl(var(--color-border))] pt-3 text-xs leading-relaxed text-[hsl(var(--color-foreground-subtle))]">
+            Agreed with you directly, outside our published plans.{" "}
+            <a href="/services#plans" target="_blank" rel="noopener" className="inline-flex items-center gap-1 font-medium text-[hsl(var(--color-accent))] hover:underline">
+              See the plans new clients choose from
+              <svg aria-hidden="true" className="size-3" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14 4h6m0 0v6m0-6L10 14M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4" />
+              </svg>
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          </p>
+        )}
       </section>
     );
   }

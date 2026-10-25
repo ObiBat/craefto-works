@@ -104,7 +104,11 @@ export function EstimateCard({ request, loggedMinutes }: { request: ClientReques
       {waiting && (
         <div className="mt-7">
           <ApproveEstimate requestId={request.id} />
-          <p className="mt-3 text-sm text-[hsl(var(--color-foreground-muted))]">Nothing starts before you approve. Once you do, it joins your queue.</p>
+          <p className="mt-3 text-sm leading-relaxed text-[hsl(var(--color-foreground-muted))]">
+            {request.added_by === "craefto"
+              ? "We added this one for you. Nothing starts before you approve; once you do, it joins your queue, and you choose where it sits. Not needed? Withdraw it."
+              : "Nothing starts before you approve. Once you do, it joins your queue, and you choose where it sits."}
+          </p>
         </div>
       )}
       {withdrawable && (

@@ -147,6 +147,25 @@ export async function moveInQueue(request: ClientRequest, direction: -1 | 1) {
   await compactQueue(request.account_id);
 }
 
+/**
+ * The client's own order for their queue (dragged on Requests): every open,
+ * approved request, first to last. Refused if the queue changed meanwhile.
+ * The request now first, when that changed; otherwise null.
+ */
+export async function reorderQueue(accountId: string, ids: string[]): Promise<ClientRequest | null> {
+  const queue = await queueOf(accountId);
+  const same = ids.length === queue.length && new Set(ids).size === ids.length && queue.every((request) => ids.includes(request.id));
+  if (!same) throw new WorkflowError("Your queue changed just now. Have another look.");
+  const results = await Promise.all(
+    ids.map((id, index) =>
+      queue.find((request) => request.id === id)!.queue_position === index + 1 ? null : db().from("client_requests").update({ queue_position: index + 1 }).eq("id", id).eq("account_id", accountId)
+    )
+  );
+  const failed = results.find((result) => result?.error);
+  if (failed?.error) throw failed.error;
+  return queue[0]?.id === ids[0] ? null : queue.find((request) => request.id === ids[0])!;
+}
+
 /** Log time against a request (or the account generally). */
 export async function logTime(accountId: string, entry: { requestId: string | null; minutes: number; note: string; workedOn?: string | null }) {
   const minutes = Math.round(entry.minutes);

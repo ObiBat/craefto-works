@@ -7,9 +7,10 @@ import { sydneyDate } from "./thread";
 const hours = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(1));
 const day = (date: string) => new Date(`${date}T12:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "short", timeZone: "UTC" });
 
-/** A request's facts in a line: its estimate, the time logged, and the date that matters. */
-function facts(request: ClientRequest, minutes: number) {
+/** A request's facts in a line: who added it if it wasn't them, its estimate, the time logged, and the date that matters. */
+export function requestFacts(request: ClientRequest, minutes: number) {
   const parts: string[] = [];
+  if (request.added_by === "craefto") parts.push("Added by Craefto");
   if (request.status === "delivered" && request.delivered_at) parts.push(`Delivered ${sydneyDate(request.delivered_at)}`);
   else parts.push(`Updated ${sydneyDate(request.updated_at)}`);
   if (request.estimate_low != null && request.estimate_high != null) {
@@ -47,7 +48,7 @@ export function RequestList({ requests, logged, numbered = false }: { requests: 
             <span className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
               <span className="min-w-0">
                 <span className="block truncate font-medium text-[hsl(var(--color-foreground))] group-hover:text-[hsl(var(--color-accent))]">{request.title}</span>
-                <span className="mt-0.5 block text-sm text-[hsl(var(--color-foreground-subtle))]">{facts(request, logged?.get(request.id) ?? 0)}</span>
+                <span className="mt-0.5 block text-sm text-[hsl(var(--color-foreground-subtle))]">{requestFacts(request, logged?.get(request.id) ?? 0)}</span>
               </span>
               <span className="self-start sm:self-auto">
                 <RequestStatusPill status={request.status} />

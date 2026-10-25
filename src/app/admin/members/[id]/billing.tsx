@@ -134,6 +134,7 @@ function DraftEditor({ member, invoice, onSaved, onNotice, onDeleted }: { member
   const [issuing, setIssuing] = React.useState(false);
   const [emailIt, setEmailIt] = React.useState(true);
   const [note, setNote] = React.useState("");
+  const [previewTo, setPreviewTo] = React.useState(member.billing.inbox);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -207,7 +208,7 @@ function DraftEditor({ member, invoice, onSaved, onNotice, onDeleted }: { member
   const sendPreview = () =>
     run(async () => {
       await api(url, "PATCH", body());
-      const result = await api(url, "PATCH", { action: "preview", message: note });
+      const result = await api(url, "PATCH", { action: "preview", message: note, to: previewTo });
       onSaved();
       return result.emailed ? `A preview is in ${result.to}. Nothing went to them, and it's still a draft.` : "The preview didn't go. Try again in a moment.";
     });
@@ -341,9 +342,13 @@ function DraftEditor({ member, invoice, onSaved, onNotice, onDeleted }: { member
               {busy ? "Issuing…" : emailIt ? "Issue and email" : "Issue"}
             </button>
             {emailIt && (
-              <button type="button" disabled={busy || member.billing.missing.length > 0} onClick={sendPreview} className={secondary}>
-                Send me a preview
-              </button>
+              <span className="flex flex-wrap items-center gap-2">
+                <button type="button" disabled={busy || member.billing.missing.length > 0 || !previewTo.trim()} onClick={sendPreview} className={secondary}>
+                  Send me a preview
+                </button>
+                <span className={quiet}>at</span>
+                <input type="email" value={previewTo} onChange={(event) => setPreviewTo(event.target.value)} aria-label="Send the preview to" className={cn(field, "w-56 py-1.5 text-sm")} />
+              </span>
             )}
             <button type="button" onClick={() => setIssuing(false)} className={quiet}>
               Cancel

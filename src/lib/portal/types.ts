@@ -78,6 +78,8 @@ export interface ClientRequest {
   outcome: string | null;
   /** Links to the delivered work. */
   outcome_links: OutcomeLink[];
+  /** Who put it in the portal: the client, or Craefto for them (still theirs to approve, order or withdraw). */
+  added_by: "client" | "craefto";
   created_at: string;
   updated_at: string;
 }
@@ -221,7 +223,7 @@ export interface ClientMeeting {
 export const REQUEST_STATUSES: Record<RequestStatus, { label: string; tone: "quiet" | "active" | "attention" | "done"; hint: string }> = {
   received: { label: "Received", tone: "quiet", hint: "It's with the team. An initial estimate follows within a minute, and Craefto confirms it." },
   estimated: { label: "Estimate ready", tone: "attention", hint: "Approve the confirmed estimate and it joins your queue. Nothing starts before you do." },
-  queued: { label: "Queued", tone: "quiet", hint: "Approved, and waiting its turn in your queue." },
+  queued: { label: "Queued", tone: "quiet", hint: "Approved, and waiting its turn in your queue, in the order you choose." },
   in_progress: { label: "In progress", tone: "active", hint: "We're working on it. The time we log shows here as it goes." },
   needs_info: { label: "Needs your input", tone: "attention", hint: "We need something from you to keep going." },
   delivered: { label: "Delivered", tone: "done", hint: "Done and handed over." },

@@ -5,13 +5,13 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { accountByEmail, createSignIn, takeSignInSlot } from "@/lib/portal/accounts";
 import { FileRuleError, attachUploads, prepareUploads, readyUploads, type UploadSlot } from "@/lib/portal/files";
-import { alertApproved, alertMessage, alertRequest, sendSignInLink } from "@/lib/portal/notify";
+import { alertApproved, alertMessage, alertNewTop, alertRequest, sendSignInLink } from "@/lib/portal/notify";
 import { reviewRequest } from "@/lib/portal/assistant";
 import { sydneyToday } from "@/lib/portal/hours";
 import { cardCheckoutUrl } from "@/lib/portal/invoices";
-import { WorkflowError, approveEstimate, recordEvent, withdrawRequest as withdraw } from "@/lib/portal/workflow";
+import { WorkflowError, approveEstimate, recordEvent, reorderQueue as reorder, withdrawRequest as withdraw } from "@/lib/portal/workflow";
 import { siteOrigin } from "@/lib/portal/origin";
-import { PREVIEW_REFUSAL } from "@/lib/portal/preview";
+import { PREVIEW_REFUSAL, UUID } from "@/lib/portal/preview";
 import { requireMember } from "@/lib/portal/session";
 import type { ClientInvoice, ClientMessage, ClientRequest } from "@/lib/portal/types";
 import { billingPortalConfiguration, stripe } from "@/lib/stripe";
@@ -146,6 +146,23 @@ export async function withdrawRequest(_: FormState, formData: FormData): Promise
   );
   revalidatePath("/portal", "layout");
   redirect(`/portal/requests/${request.id}`);
+}
+
+/** The client's order for their queue, from dragging it on Requests: every open, approved request, first to last. */
+export async function reorderQueue(ids: string[]): Promise<{ error?: string }> {
+  const member = await requireMember();
+  if (member.preview) return { error: PREVIEW_REFUSAL };
+  if (!Array.isArray(ids) || ids.length > 200 || !ids.every((id) => typeof id === "string" && UUID.test(id))) return { error: "That order couldn't be read. Reload and try again." };
+  try {
+    const top = await reorder(member.account.id, ids);
+    if (top) await alertNewTop(member.account, top, await siteOrigin());
+  } catch (error) {
+    if (error instanceof WorkflowError) return { error: error.message };
+    console.error("Reordering a queue failed:", error);
+    return { error: "That didn't save. Please try again." };
+  }
+  revalidatePath("/portal", "layout");
+  return {};
 }
 
 export async function sendMessage(_: FormState, formData: FormData): Promise<FormState> {

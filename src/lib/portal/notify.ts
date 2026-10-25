@@ -104,6 +104,7 @@ export const sendEstimateReady = (account: ClientAccount, request: ClientRequest
       note: request.estimate_note,
       targetDate: dayLabel(request.target_date),
       link: `${origin}/portal/requests/${request.id}`,
+      addedForThem: request.added_by === "craefto",
     })
   );
 
@@ -168,10 +169,10 @@ export function sendInvoice(account: ClientAccount, invoice: ClientInvoice, atta
  * previewInvoice). Its link opens the draft in view as client, as the
  * portal's link to it doesn't work until it's issued.
  */
-export function sendInvoicePreview(account: ClientAccount, invoice: ClientInvoice, attachment: { pdf: Buffer; filename: string }, origin: string, message?: string) {
+export function sendInvoicePreview(to: string, account: ClientAccount, invoice: ClientInvoice, attachment: { pdf: Buffer; filename: string }, origin: string, message?: string) {
   const recipients = invoiceRecipients(account, invoice).join(" and ");
   return send(
-    CRAEFTO_INBOX,
+    to,
     emails.invoiceEmail({
       ...invoiceDetails(account, invoice, message),
       link: `${origin}/api/admin/members/${account.id}/view?invoice=${invoice.id}`,
@@ -291,6 +292,31 @@ export async function alertMessage(account: ClientAccount, message: ClientMessag
 }
 
 /** The client approved an estimate: the request is in their queue. */
+/** The client put a different request at the top of their queue: what to work on next. On the phone, or by email without it. */
+export async function alertNewTop(account: ClientAccount, request: ClientRequest, origin: string) {
+  if (telegramConfigured()) {
+    await alertOwnerTelegram(`↕️ <b>${telegramHtml(who(account))}</b> put “${telegramHtml(request.title)}” at the top of their queue.`, [
+      { text: "Open in admin", url: adminLink(origin, account) },
+    ]).catch((error) => console.error("The queue alert failed:", error));
+    return;
+  }
+  await send(
+    CRAEFTO_INBOX,
+    emails.alertEmail({
+      eyebrow: "New priority",
+      subject: `${who(account)} moved “${request.title}” to the top of their queue`,
+      heading: request.title,
+      rows: [
+        ["From", who(account)],
+        ["Queue", "#1, from now"],
+      ],
+      text: "They reordered their queue in the portal. Work from the top.",
+      link: adminLink(origin, account),
+    }),
+    account.email
+  );
+}
+
 export async function alertApproved(account: ClientAccount, request: ClientRequest, origin: string) {
   const estimate = estimateLabel(request) ?? "no estimate";
   const place = request.queue_position ? `#${request.queue_position} in their queue` : "in their queue";
