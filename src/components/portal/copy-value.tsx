@@ -12,7 +12,7 @@ export function CopyValue({ value, label }: { value: string; label: string }) {
         type="button"
         aria-label={`Copy ${label}`}
         onClick={() => {
-          // Spaces in "082 356" are for reading; banking apps want the digits.
+          // Spaces in "062 000" are for reading; banking apps want the digits.
           void navigator.clipboard?.writeText(/^[\d\s]+$/.test(value) ? value.replace(/\s/g, "") : value).then(() => {
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
