@@ -8,7 +8,7 @@ import { alertDraftById, clientName, firstName, range, redrawDraft, redrawReques
 import { WorkError, dismissDraft, editDraft, publishDraft, undoDraft, type PublishMode, type WorkDraft } from "./work";
 import { minutesLabel, parseEstimate, splitDuration } from "./work-rules";
 import { WorkflowError, confirmEstimate, deliveryDetail, logTime, setStatus } from "./workflow";
-import { REQUEST_STATUSES, estimateLabel, isOpen, type ClientAccount, type ClientMessage, type ClientRequest, type ClientSubscription, type ClientTimeEntry } from "./types";
+import { NOT_INVITED, REQUEST_STATUSES, estimateLabel, isInvited, isOpen, type ClientAccount, type ClientMessage, type ClientRequest, type ClientSubscription, type ClientTimeEntry } from "./types";
 
 // Acting on the portal from Obi's phone. The cards' buttons
 // (lib/portal/telegram-cards.ts) either act at once (confirm an estimate,
@@ -62,6 +62,9 @@ async function accountById(id: string) {
   const { data } = await db().from("client_accounts").select("*").eq("id", id).maybeSingle<ClientAccount>();
   return data ?? null;
 }
+
+/** How a message reaches them: by email too once they're invited, otherwise in their portal alone. */
+const byEmail = (account: ClientAccount) => (isInvited(account) ? ", by email too" : " (in their portal only: no email until they're invited)");
 
 /** A request and its client, or a refusal when either has gone. */
 async function requestAndAccount(id: string) {
@@ -124,13 +127,13 @@ async function requestButton(verb: string, id: string, first: string | undefined
       const saved = await confirmEstimate(request, { low, high, note: request.estimate_note, targetDate: request.target_date });
       if (saved.status === "estimated") await sendEstimateReady(account, saved, origin);
       await redrawRequest(card, saved.id, origin);
-      return `Confirmed ${range(Number(saved.estimate_low), Number(saved.estimate_high))}. ${who} has been emailed to approve it.`;
+      return `Confirmed ${range(Number(saved.estimate_low), Number(saved.estimate_high))}. ${isInvited(account) ? `${who} has been emailed to approve it.` : NOT_INVITED}`;
     }
     case "e":
       await ask(card, "estimate", request.id, `Hours for ${title}: reply like 3-5 or 2. A note on what it covers can follow the hours.`, "3-5 what it covers");
       return "Reply with the hours.";
     case "a":
-      await ask(card, "reply", request.id, `Your message to ${html(who)} about ${title}: reply here and it goes to them from Craefto Works, by email too.`, `Message to ${who}`);
+      await ask(card, "reply", request.id, `Your message to ${html(who)} about ${title}: reply here and it goes to them from Craefto Works${byEmail(account)}.`, `Message to ${who}`);
       return "Write your message.";
     case "s": {
       if (request.status !== "queued") {
@@ -167,13 +170,13 @@ async function messageButton(verb: string, id: string, card: CardMessage): Promi
   if (verb === "r") {
     const { request, account } = await requestAndAccount(id);
     const who = firstName(account);
-    await ask(card, "reply", request.id, `Your reply to ${html(who)} about <b>${html(request.title)}</b>: it goes to them from Craefto Works, by email too.`, `Reply to ${who}`);
+    await ask(card, "reply", request.id, `Your reply to ${html(who)} about <b>${html(request.title)}</b>: it goes to them from Craefto Works${byEmail(account)}.`, `Reply to ${who}`);
     return "Write your reply.";
   }
   const account = await accountById(id);
   if (!account) throw new WorkError("That client no longer exists.");
   const who = firstName(account);
-  await ask(card, "reply_general", account.id, `Your reply to ${html(who)}: it goes to them from Craefto Works, by email too.`, `Reply to ${who}`);
+  await ask(card, "reply_general", account.id, `Your reply to ${html(who)}: it goes to them from Craefto Works${byEmail(account)}.`, `Reply to ${who}`);
   return "Write your reply.";
 }
 
@@ -187,7 +190,10 @@ async function workButton(verb: string, id: string, first: string | undefined, c
     const { draft, request } = await publishDraft(id, { mode, minutes }, origin);
     await redrawDraft(card, draft.id, origin);
     const logged = minutes ? ` with ${minutesLabel(minutes)} logged` : "";
-    if (mode === "deliver") return `Delivered${logged}. They've been emailed.`;
+    if (mode === "deliver") {
+      const account = await accountById(draft.account_id);
+      return `Delivered${logged}. ${account && !isInvited(account) ? NOT_INVITED : "They've been emailed."}`;
+    }
     if (mode === "time") return `Logged ${minutesLabel(minutes)}${request ? ` on “${request.title}”` : ""}.`;
     return `Published to their Past work${logged}.`;
   }
@@ -271,7 +277,7 @@ async function applyReply(prompt: Prompt, text: string, card: CardMessage | null
       if (card) await redrawRequest(card, saved.id, origin);
       const hours = range(Number(saved.estimate_low), Number(saved.estimate_high));
       return saved.status === "estimated"
-        ? `Confirmed ${hours} for <b>${html(saved.title)}</b>. ${html(firstName(account))} has been emailed to approve it.`
+        ? `Confirmed ${hours} for <b>${html(saved.title)}</b>. ${isInvited(account) ? `${html(firstName(account))} has been emailed to approve it.` : NOT_INVITED}`
         : `Changed to ${hours} for <b>${html(saved.title)}</b>. It's under way, so it stands as approved.`;
     }
     case "reply":
@@ -287,7 +293,7 @@ async function applyReply(prompt: Prompt, text: string, card: CardMessage | null
       if (error || !message) throw error ?? new Error("The message wasn't saved");
       if (request) await db().from("client_requests").update({ updated_at: now() }).eq("id", request.id);
       await sendReply(account, message as ClientMessage, request, [], origin);
-      return `Sent to ${html(firstName(account))}${request ? ` about <b>${html(request.title)}</b>` : ""}, by email too.`;
+      return `Sent to ${html(firstName(account))}${request ? ` about <b>${html(request.title)}</b>` : ""}${byEmail(account)}.`;
     }
     case "log": {
       const parsed = splitDuration(text);
@@ -312,7 +318,7 @@ async function applyReply(prompt: Prompt, text: string, card: CardMessage | null
       const delivered = await setStatus(fresh!, "delivered");
       await sendRequestUpdate(account, delivered, origin, await deliveryDetail(delivered));
       if (card) await redrawRequest(card, delivered.id, origin);
-      return `Delivered <b>${html(delivered.title)}</b>. ${html(firstName(account))} has been emailed${withOutcome ? " with what we delivered" : ""}.`;
+      return `Delivered <b>${html(delivered.title)}</b>. ${isInvited(account) ? `${html(firstName(account))} has been emailed${withOutcome ? " with what we delivered" : ""}.` : NOT_INVITED}`;
     }
     case "draft_time": {
       const parsed = splitDuration(text);
@@ -371,7 +377,7 @@ const matching = (accounts: ClientAccount[], word: string) =>
 /** Each client with hours: used, left, what's approved to come, and when they renew. */
 async function hoursSummary(filter: string) {
   const [{ data: accounts }, { data: subscriptions }, { data: entries }, { data: requests }] = await Promise.all([
-    db().from("client_accounts").select("*").order("created_at"),
+    db().from("client_accounts").select("*").is("archived_at", null).order("created_at"),
     db().from("client_subscriptions").select("*"),
     db().from("client_time_entries").select("*"),
     db().from("client_requests").select("*").in("status", ["queued", "in_progress", "needs_info"]),
@@ -397,7 +403,7 @@ async function hoursSummary(filter: string) {
 
 /** "/log kaz 1.5 what you did": general time today, for the client named (or the only one with hours). */
 async function logGeneral(args: string[]) {
-  const { data } = await db().from("client_accounts").select("*").order("created_at");
+  const { data } = await db().from("client_accounts").select("*").is("archived_at", null).order("created_at");
   const accounts = (data ?? []) as ClientAccount[];
   let account: ClientAccount | undefined;
   let rest = args;

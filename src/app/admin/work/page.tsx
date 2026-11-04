@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AdminLoader } from "@/components/admin/AdminLoader";
 import { Card, EmptyState, PageContainer, PageHeader, Section, StatusBadge } from "@/components/admin/ui";
 import { IconExternal } from "@/components/admin/icons";
-import { REQUEST_STATUSES, isOpen } from "@/lib/portal/types";
+import { NOT_INVITED, REQUEST_STATUSES, isOpen } from "@/lib/portal/types";
 import { linkLines, parseLinkLines } from "@/lib/portal/outcome";
 import { minutesLabel, requestRef } from "@/lib/portal/work-rules";
 import type { DraftView, PublishMode } from "@/lib/portal/work";
@@ -72,7 +72,7 @@ function DraftCard({ draft, onChanged }: { draft: DraftView; onChanged: () => vo
       if (!(Number.isFinite(minutes) && minutes >= 0)) throw new Error("Give the time in hours, like 1.5.");
       if (dirty) await api(`/api/admin/work/${draft.id}`, "PATCH", edits);
       await api(`/api/admin/work/${draft.id}`, "PATCH", { action: "publish", mode, minutes });
-    }, mode === "deliver" ? "Delivered, and the client has been emailed." : mode === "time" ? "Time logged." : "Published to their Past work.");
+    }, mode === "deliver" ? (draft.invited ? "Delivered, and the client has been emailed." : `Delivered. ${NOT_INVITED}`) : mode === "time" ? "Time logged." : "Published to their Past work.");
 
   return (
     <Card id={`draft-${draft.id}`} className="scroll-mt-24 space-y-4">

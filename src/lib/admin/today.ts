@@ -181,21 +181,25 @@ async function visitsSince(db: ReturnType<typeof createServerClient>, since: str
 export async function todayCounts(): Promise<TodayCounts> {
   const db = createServerClient();
   const since = new Date(Date.now() - 7 * DAY).toISOString();
-  const [leads, replies, handoffs, received, messages, applications, work] = await Promise.all([
+  const [leads, replies, handoffs, received, messages, applications, work, archived] = await Promise.all([
     freshLeads(db),
     db.from("outreach_replies").select("id", { count: "exact", head: true }).is("handled_at", null).eq("mode", "live").in("label", OPEN_LABELS),
     db.from("assistant_chats").select("id", { count: "exact", head: true }).eq("status", "handoff").is("lead_id", null).gte("updated_at", since),
-    db.from("client_requests").select("id", { count: "exact", head: true }).eq("status", "received"),
+    db.from("client_requests").select("account_id").eq("status", "received"),
     db.from("client_messages").select("account_id, request_id, author").order("created_at", { ascending: false }).limit(500),
     db.from("job_applications").select("id", { count: "exact", head: true }).eq("status", "new"),
-    db.from("client_work_drafts").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    db.from("client_work_drafts").select("account_id").eq("status", "pending"),
+    db.from("client_accounts").select("id").not("archived_at", "is", null),
   ]);
+  // Archived accounts are put away: nothing of theirs needs Craefto.
+  const put = new Set((archived.data ?? []).map((row) => row.id));
+  const live = <T extends { account_id: string }>(rows: T[] | null) => (rows ?? []).filter((row) => !put.has(row.account_id));
   return {
     leads: leads.length,
     outreach: replies.count ?? 0,
     chats: handoffs.count ?? 0,
-    clients: (received.count ?? 0) + awaitingThreads((messages.data ?? []) as ClientMessage[]).length,
-    work: work.count ?? 0,
+    clients: live(received.data).length + awaitingThreads(live(messages.data as ClientMessage[] | null)).length,
+    work: live(work.data).length,
     applications: applications.count ?? 0,
   };
 }
@@ -245,7 +249,7 @@ export async function today(): Promise<Today> {
     sendingStatus(),
     db.from("assistant_chats").select("id, page, status, lead_id, gaps, messages, created_at, updated_at").gte("updated_at", weekAgo).order("updated_at", { ascending: false }),
     db.from("job_applications").select("id, full_name, role_title, created_at").eq("status", "new").order("created_at", { ascending: false }).limit(20),
-    db.from("client_accounts").select("*"),
+    db.from("client_accounts").select("*").is("archived_at", null),
     db.from("client_subscriptions").select("*"),
     db.from("client_requests").select("*"),
     db.from("client_messages").select("id, account_id, request_id, author, body, created_at").order("created_at", { ascending: false }).limit(500),
@@ -262,14 +266,16 @@ export async function today(): Promise<Today> {
 
   const accountRows = (accounts.data ?? []) as ClientAccount[];
   const accountById = new Map(accountRows.map((account) => [account.id, account]));
-  const requestRows = (requests.data ?? []) as ClientRequest[];
+  // Only accounts still in use (archived ones aren't read above): a test account's work needs no one.
+  const live = <T extends { account_id: string }>(rows: T[] | null) => (rows ?? []).filter((row) => accountById.has(row.account_id));
+  const requestRows = live(requests.data as ClientRequest[] | null);
   const requestById = new Map(requestRows.map((request) => [request.id, request]));
-  const entryRows = (entries.data ?? []) as ClientTimeEntry[];
+  const entryRows = live(entries.data as ClientTimeEntry[] | null);
   const logged = minutesByRequest(entryRows);
   const needs: Need[] = [];
 
   // Clients first: they're paying for the time.
-  for (const message of awaitingThreads((messages.data ?? []) as ClientMessage[])) {
+  for (const message of awaitingThreads(live(messages.data as ClientMessage[] | null))) {
     const account = accountById.get(message.account_id);
     if (!account) continue;
     const request = message.request_id ? requestById.get(message.request_id) : null;
@@ -313,7 +319,7 @@ export async function today(): Promise<Today> {
   }
 
   // Invoices: unpaid past their due date, then retainers whose month ahead isn't invoiced yet.
-  const invoiceRows = (invoices.data ?? []) as Array<Pick<ClientInvoice, "id" | "account_id" | "number" | "status" | "total" | "due_date" | "period_start">>;
+  const invoiceRows = live(invoices.data as Array<Pick<ClientInvoice, "id" | "account_id" | "number" | "status" | "total" | "due_date" | "period_start">> | null);
   const todayDate = sydneyToday(now);
   for (const invoice of invoiceRows.filter((row) => row.status === "issued" && row.due_date < todayDate)) {
     const account = accountById.get(invoice.account_id);
@@ -341,7 +347,7 @@ export async function today(): Promise<Today> {
   }
 
   // Shipped work: merged pull requests, drafted for the client's Past work and hours.
-  const shippedRows = (shipped.data ?? []) as Array<{ id: string; account_id: string; title: string; merged_at: string }>;
+  const shippedRows = live(shipped.data as Array<{ id: string; account_id: string; title: string; merged_at: string }> | null);
   if (shippedRows.length > 0) {
     const [newest] = shippedRows;
     const clients = [...new Set(shippedRows.map((row) => accountById.get(row.account_id)).filter(Boolean).map((account) => clientName(account!)))];
@@ -437,7 +443,7 @@ export async function today(): Promise<Today> {
 
   // Coming up in the next fortnight: calls first, then delivery dates.
   const upcoming: Upcoming[] = [];
-  for (const meeting of (meetings.data ?? []) as ClientMeeting[]) {
+  for (const meeting of live(meetings.data as ClientMeeting[] | null)) {
     const account = accountById.get(meeting.account_id);
     upcoming.push({
       id: `meeting-${meeting.id}`,

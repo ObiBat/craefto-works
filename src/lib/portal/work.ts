@@ -10,7 +10,7 @@ import { OutcomeInputError, outcomeInput } from "./outcome";
 import { alertDraft } from "./telegram-cards";
 import { calibrationOf, cleanBody, commitHint, commitNote, linksIn, quarterHours, refsIn, repoName, type CommitHint, type WorkCalibration } from "./work-rules";
 import { deliveryDetail, logTime, setStatus } from "./workflow";
-import { isOpen, type ClientAccount, type ClientRequest, type OutcomeLink } from "./types";
+import { isInvited, isOpen, type ClientAccount, type ClientRequest, type OutcomeLink } from "./types";
 
 // Work shipped in a client's code repository, into their portal. GitHub tells
 // the site about pushes (their commits' times, a hint at how long a change
@@ -554,6 +554,8 @@ export async function pendingWork() {
 
 export interface DraftView extends WorkDraft {
   client: string;
+  /** Whether delivering it emails them (not before they're invited). */
+  invited: boolean;
   repo: string | null;
   request: Pick<ClientRequest, "id" | "title" | "status"> | null;
 }
@@ -575,10 +577,10 @@ export async function workOverview(): Promise<{ pending: DraftView[]; recent: Dr
   const accountIds = [...new Set(drafts.map((draft) => draft.account_id))];
   const requestIds = [...new Set(drafts.flatMap((draft) => [draft.request_id, draft.published_request_id]).filter((id): id is string => Boolean(id)))];
   const [{ data: accounts }, { data: requests }] = await Promise.all([
-    accountIds.length ? db().from("client_accounts").select("id, name, company, email").in("id", accountIds) : Promise.resolve({ data: [] }),
+    accountIds.length ? db().from("client_accounts").select("id, name, company, email, user_id").in("id", accountIds) : Promise.resolve({ data: [] }),
     requestIds.length ? db().from("client_requests").select("id, title, status").in("id", requestIds) : Promise.resolve({ data: [] }),
   ]);
-  const accountById = new Map(((accounts ?? []) as Array<Pick<ClientAccount, "id" | "name" | "company" | "email">>).map((account) => [account.id, account]));
+  const accountById = new Map(((accounts ?? []) as Array<Pick<ClientAccount, "id" | "name" | "company" | "email" | "user_id">>).map((account) => [account.id, account]));
   const requestById = new Map(((requests ?? []) as Array<Pick<ClientRequest, "id" | "title" | "status">>).map((request) => [request.id, request]));
   const repoById = new Map(((projects.data ?? []) as Array<Pick<ClientProject, "id" | "repo">>).map((project) => [project.id, project.repo]));
   const view = (draft: WorkDraft): DraftView => {
@@ -586,6 +588,7 @@ export async function workOverview(): Promise<{ pending: DraftView[]; recent: Dr
     return {
       ...draft,
       client: account ? account.company || account.name || account.email : "A client",
+      invited: account ? isInvited(account) : false,
       repo: draft.project_id ? (repoById.get(draft.project_id) ?? null) : null,
       request: requestById.get(draft.request_id ?? draft.published_request_id ?? "") ?? null,
     };

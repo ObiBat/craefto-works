@@ -29,6 +29,8 @@ export interface ClientAccount {
   billing_email: string | null;
   /** The fee agreed each month, in cents before GST: it drafts the month's invoice. */
   monthly_fee: number | null;
+  /** Put away by Craefto: kept, but out of Today, the Clients list, the weekly email and Telegram's lists. */
+  archived_at: string | null;
   created_at: string;
 }
 
@@ -236,6 +238,16 @@ export const REQUEST_STATUSES: Record<RequestStatus, { label: string; tone: "qui
  * Friday summary instead, and an estimate has its own email.
  */
 export const emailsClient = (status: RequestStatus) => status === "needs_info" || status === "delivered" || status === "withdrawn";
+
+/**
+ * Invited to their portal (an account added in admin isn't, until Craefto
+ * sends the invite). Until then nothing about their work is emailed to them:
+ * it's all in a portal they don't know about yet.
+ */
+export const isInvited = (account: Pick<ClientAccount, "user_id">) => account.user_id != null;
+
+/** What admin says instead of "they've been emailed", for a client not invited yet. */
+export const NOT_INVITED = "Nothing was emailed: they aren't invited to the portal yet.";
 
 /** Requests still on the go (not delivered or withdrawn). */
 export const isOpen = (request: Pick<ClientRequest, "status">) => request.status !== "delivered" && request.status !== "withdrawn";

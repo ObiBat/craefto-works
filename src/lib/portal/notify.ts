@@ -11,6 +11,7 @@ import {
   REQUEST_STATUSES,
   emailsClient,
   estimateLabel,
+  isInvited,
   type ClientAccount,
   type ClientFile,
   type ClientInvoice,
@@ -20,7 +21,9 @@ import {
 } from "./types";
 
 // Portal email: to clients from hello@, with replies going to Craefto's inbox,
-// and every alert to that inbox. `origin` is the site the request came in on,
+// and every alert to that inbox. Nothing about their work goes to a client
+// before they're invited (types.ts isInvited); invoices are emailed only when
+// Craefto asks, each time. `origin` is the site the request came in on,
 // so links work locally as well as on www.craefto.com.
 
 /** Where portal alerts go, and where clients' replies land. */
@@ -76,7 +79,7 @@ export const sendSignInLink = (account: ClientAccount, link: string) =>
 
 /** A request moved on: emailed only when it needs them or it's done (types.ts emailsClient). */
 export async function sendRequestUpdate(account: ClientAccount, request: ClientRequest, origin: string, detail?: string) {
-  if (!emailsClient(request.status)) return;
+  if (!emailsClient(request.status) || !isInvited(account)) return;
   await send(
     account.email,
     emails.requestUpdateEmail({
@@ -94,7 +97,8 @@ export async function sendRequestUpdate(account: ClientAccount, request: ClientR
 const dayLabel = (date: string | null) =>
   date ? new Date(`${date}T12:00:00Z`).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }) : null;
 
-export const sendEstimateReady = (account: ClientAccount, request: ClientRequest, origin: string) =>
+export const sendEstimateReady = async (account: ClientAccount, request: ClientRequest, origin: string) =>
+  isInvited(account) &&
   send(
     account.email,
     emails.estimateEmail({
@@ -114,7 +118,7 @@ export const sendInvite = (account: ClientAccount, link: string) =>
 export const sendWeekly = (account: ClientAccount, email: emails.Email) => send(account.email, email);
 
 /** Craefto's reply; `statusChanged` when it also moved the request on (one email, not two). */
-export const sendReply = (
+export const sendReply = async (
   account: ClientAccount,
   message: ClientMessage,
   request: ClientRequest | null,
@@ -122,6 +126,7 @@ export const sendReply = (
   origin: string,
   statusChanged = false
 ) =>
+  isInvited(account) &&
   send(
     account.email,
     emails.replyEmail({

@@ -11,13 +11,14 @@ import { isLive, subscriptionLabel } from "@/lib/portal/types";
 import type { MembersOverview, MemberSummary } from "@/lib/portal/admin";
 import { planName, planVariant, shortDate } from "./shared";
 
-type Filter = "all" | "attention" | "active" | "ended";
+type Filter = "all" | "attention" | "active" | "ended" | "archived";
 
 const FILTERS: Array<{ id: Filter; label: string }> = [
   { id: "all", label: "All" },
   { id: "attention", label: "Needs you" },
   { id: "active", label: "Active" },
   { id: "ended", label: "Ended" },
+  { id: "archived", label: "Archived" },
 ];
 
 const needsYou = (member: MemberSummary) => member.awaitingReply || member.fresh > 0;
@@ -25,6 +26,8 @@ const needsYou = (member: MemberSummary) => member.awaitingReply || member.fresh
 const isActive = (member: MemberSummary) => member.subscriptions.some(isLive) || member.account.monthly_hours != null;
 
 function matches(member: MemberSummary, filter: Filter, query: string) {
+  // Archived accounts (put away) show under their own filter, and nowhere else.
+  if ((filter === "archived") !== Boolean(member.account.archived_at)) return false;
   const live = isActive(member);
   if (filter === "attention" && !needsYou(member)) return false;
   if (filter === "active" && !live) return false;
@@ -116,8 +119,10 @@ export default function MembersPage() {
   if (failed) return <EmptyState title="Clients didn't load" description="Refresh the page to try again." />;
   if (!data) return <AdminLoader message="Loading members..." />;
 
-  const { members, monthly } = data;
-  const shown = members.filter((member) => matches(member, filter, query));
+  const { monthly } = data;
+  const members = data.members.filter((member) => !member.account.archived_at);
+  const archived = data.members.length - members.length;
+  const shown = data.members.filter((member) => matches(member, filter, query));
 
   return (
     <PageContainer>
@@ -147,9 +152,9 @@ export default function MembersPage() {
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <FilterBar>
-          {FILTERS.map(({ id, label }) => (
+          {FILTERS.filter(({ id }) => id !== "archived" || archived > 0 || filter === "archived").map(({ id, label }) => (
             <FilterChip key={id} active={filter === id} onClick={() => setFilter(id)}>
-              {label}
+              {id === "archived" ? `${label} (${archived})` : label}
             </FilterChip>
           ))}
         </FilterBar>
@@ -159,8 +164,8 @@ export default function MembersPage() {
       {shown.length === 0 ? (
         <EmptyState
           icon={<IconUsers size={48} />}
-          title={members.length ? "No clients match" : "No clients yet"}
-          description={members.length ? "Try another filter or search." : "Clients appear here once they subscribe to a plan."}
+          title={data.members.length ? "No clients match" : "No clients yet"}
+          description={data.members.length ? "Try another filter or search." : "Clients appear here once they subscribe to a plan."}
         />
       ) : (
         <ul className="space-y-3">

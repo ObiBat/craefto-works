@@ -7,9 +7,11 @@ import { AdminLoader } from "@/components/admin/AdminLoader";
 import { Card, EmptyState, PageContainer, PageHeader, Section, StatusBadge } from "@/components/admin/ui";
 import { IconArrowLeft, IconExternal, IconMail } from "@/components/admin/icons";
 import {
+  NOT_INVITED,
   REQUEST_STATUSES,
   emailsClient,
   estimateLabel,
+  isInvited,
   isOpen,
   subscriptionLabel,
   type ClientFile,
@@ -74,10 +76,13 @@ function Thread({ messages, files, client }: { messages: ClientMessage[]; files:
 function ReplyForm({
   memberId,
   request,
+  invited,
   onSent,
 }: {
   memberId: string;
   request?: ClientRequest;
+  /** Emailed as well as in their portal (not before they're invited). */
+  invited: boolean;
   onSent: (message: ClientMessage, request: ClientRequest | null, files: ClientFile[]) => void;
 }) {
   const [body, setBody] = React.useState("");
@@ -125,7 +130,7 @@ function ReplyForm({
         onChange={(event) => setBody(event.target.value)}
         rows={3}
         maxLength={10000}
-        placeholder="Reply as Craefto. The client gets it by email and in their portal."
+        placeholder={invited ? "Reply as Craefto. The client gets it by email and in their portal." : "Reply as Craefto. It shows in their portal; no email until they're invited."}
         aria-label="Reply"
         className={field}
       />
@@ -168,7 +173,7 @@ function ReplyForm({
 }
 
 /** The estimate: Ask Craefto's first read to confirm, or Craefto's own, sent to the client for approval. */
-function EstimatePanel({ memberId, request, onSaved }: { memberId: string; request: ClientRequest; onSaved: () => void }) {
+function EstimatePanel({ memberId, request, invited, onSaved }: { memberId: string; request: ClientRequest; invited: boolean; onSaved: () => void }) {
   const [low, setLow] = React.useState(request.estimate_low != null ? String(request.estimate_low) : "");
   const [high, setHigh] = React.useState(request.estimate_high != null ? String(request.estimate_high) : "");
   const [note, setNote] = React.useState(request.estimate_note ?? "");
@@ -192,7 +197,7 @@ function EstimatePanel({ memberId, request, onSaved }: { memberId: string; reque
     setMessage(null);
     try {
       await api(`/api/admin/members/${memberId}/requests/${request.id}`, "PATCH", { estimate: { low: Number(low), high: Number(high), note, target_date: target || null } });
-      setMessage(request.status === "in_progress" || request.status === "needs_info" ? "Saved." : "Sent. The client has been emailed to approve it.");
+      setMessage(request.status === "in_progress" || request.status === "needs_info" ? "Saved." : invited ? "Sent. The client has been emailed to approve it." : `Sent to their portal to approve. ${NOT_INVITED}`);
       onSaved();
     } catch (error) {
       setMessage((error as Error).message);
@@ -351,6 +356,7 @@ function TimePanel({ memberId, requestId, entries, onSaved }: { memberId: string
 function RequestCard({
   memberId,
   client,
+  invited,
   request,
   messages,
   files,
@@ -361,6 +367,8 @@ function RequestCard({
 }: {
   memberId: string;
   client: string;
+  /** Their emails go (they're invited to the portal). */
+  invited: boolean;
   request: ClientRequest;
   messages: ClientMessage[];
   /** This request's files: its brief's, and those sent in its conversation. */
@@ -380,7 +388,7 @@ function RequestCard({
     setNote(null);
     try {
       await api(`/api/admin/members/${memberId}/requests/${request.id}`, "PATCH", { status });
-      setNote(emailsClient(status) ? "Saved. The client has been emailed." : "Saved. It shows in their portal, with no email.");
+      setNote(!emailsClient(status) ? "Saved. It shows in their portal, with no email." : invited ? "Saved. The client has been emailed." : `Saved. ${NOT_INVITED}`);
       onChanged();
     } catch (error) {
       setNote((error as Error).message);
@@ -451,14 +459,14 @@ function RequestCard({
       )}
       <FileList files={files.filter((file) => !file.message_id)} href={adminFileHref} />
       <div className="grid gap-3 lg:grid-cols-2">
-        <EstimatePanel key={`${request.id}:${request.updated_at}`} memberId={memberId} request={request} onSaved={onChanged} />
+        <EstimatePanel key={`${request.id}:${request.updated_at}`} memberId={memberId} request={request} invited={invited} onSaved={onChanged} />
         <TimePanel memberId={memberId} requestId={request.id} entries={entries} onSaved={onChanged} />
       </div>
       {(request.status === "in_progress" || request.status === "needs_info" || request.status === "delivered") && (
         <OutcomePanel key={`outcome:${request.id}:${request.updated_at}`} memberId={memberId} request={request} onSaved={onChanged} />
       )}
       <Thread messages={messages} files={files} client={client} />
-      <ReplyForm memberId={memberId} request={request} onSent={onSent} />
+      <ReplyForm memberId={memberId} request={request} invited={invited} onSent={onSent} />
     </Card>
   );
 }
@@ -778,7 +786,7 @@ function PastWorkForm({ memberId, onSaved }: { memberId: string; onSaved: () => 
  * it waits on its card here for one. Either way it's theirs to approve,
  * order or withdraw.
  */
-function NewRequestForm({ memberId, client, onSaved }: { memberId: string; client: string; onSaved: () => void }) {
+function NewRequestForm({ memberId, client, invited, onSaved }: { memberId: string; client: string; invited: boolean; onSaved: () => void }) {
   const [open, setOpen] = React.useState(false);
   const [title, setTitle] = React.useState("");
   const [details, setDetails] = React.useState("");
@@ -810,7 +818,9 @@ function NewRequestForm({ memberId, client, onSaved }: { memberId: string; clien
           ? `${added}. Confirm its estimate on its card when you're ready.`
           : result.emailed
             ? `${added}. ${client} has been emailed to approve the estimate.`
-            : `${added}, waiting for ${client} to approve. The email didn't go: let them know.`
+            : !invited
+              ? `${added}, waiting for ${client} to approve in their portal. ${NOT_INVITED}`
+              : `${added}, waiting for ${client} to approve. The email didn't go: let them know.`
       );
       setTitle("");
       setDetails("");
@@ -877,7 +887,11 @@ function NewRequestForm({ memberId, client, onSaved }: { memberId: string; clien
           />
         )}
         <p className="text-xs text-[hsl(var(--color-foreground-subtle))]">
-          {estimated ? "They're emailed to approve it. Nothing starts until they do." : "No email yet: it waits here for an estimate, which they then approve."}
+          {estimated
+            ? invited
+              ? "They're emailed to approve it. Nothing starts until they do."
+              : "It waits in their portal for them to approve (no email until they're invited). Nothing starts until they do."
+            : "No email yet: it waits here for an estimate, which they then approve."}
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <button type="submit" disabled={saving || !title.trim()} className={primary}>
@@ -1037,6 +1051,49 @@ function InviteButton({ memberId, email }: { memberId: string; email: string }) 
   );
 }
 
+/**
+ * Put the account away (a test account, a client who's moved on), after a
+ * second press, or bring it back. Nothing is deleted: it leaves Today, the
+ * Clients list, the Friday email and Telegram's lists until it's unarchived.
+ */
+function ArchiveButton({ memberId, archived, onSaved }: { memberId: string; archived: boolean; onSaved: () => void }) {
+  const [stage, setStage] = React.useState<"idle" | "sure" | "saving" | "failed">("idle");
+  async function save() {
+    setStage("saving");
+    try {
+      await api(`/api/admin/members/${memberId}`, "PATCH", { archived: !archived });
+      setStage("idle");
+      onSaved();
+    } catch {
+      setStage("failed");
+    }
+  }
+  const button = "inline-flex items-center gap-2 rounded-xl border border-[hsl(var(--color-border))] px-4 py-2 text-sm font-medium hover:bg-[hsl(var(--color-background-subtle))] disabled:opacity-50";
+  if (archived)
+    return (
+      <button type="button" onClick={save} disabled={stage === "saving"} className={button}>
+        {stage === "saving" ? "Unarchiving…" : stage === "failed" ? "Didn't save: try again" : "Unarchive"}
+      </button>
+    );
+  if (stage === "sure" || stage === "saving")
+    return (
+      <span className="inline-flex items-center gap-2">
+        <span className="text-sm text-[hsl(var(--color-foreground-muted))]">Hide them from Today, Clients and the weekly email?</span>
+        <button type="button" onClick={save} disabled={stage === "saving"} className={primary}>
+          {stage === "saving" ? "Archiving…" : "Archive"}
+        </button>
+        <button type="button" onClick={() => setStage("idle")} className="text-sm text-[hsl(var(--color-foreground-muted))]">
+          Cancel
+        </button>
+      </span>
+    );
+  return (
+    <button type="button" onClick={() => setStage("sure")} className={button}>
+      {stage === "failed" ? "Didn't save: try again" : "Archive"}
+    </button>
+  );
+}
+
 /** One member: their hours, each request with its estimate, time and conversation, and the general conversation. */
 export default function MemberPage() {
   const { id } = useParams<{ id: string }>();
@@ -1071,6 +1128,7 @@ export default function MemberPage() {
 
   const { account, subscriptions, requests, messages, files, upcomingCalls, stripeUrl, entries } = member;
   const client = account.name || account.email;
+  const invited = isInvited(account);
   const byQueue = (a: ClientRequest, b: ClientRequest) => (a.queue_position ?? 999) - (b.queue_position ?? 999);
   const open = requests.filter(isOpen).sort(byQueue);
   const closed = requests.filter((request) => !isOpen(request));
@@ -1081,6 +1139,7 @@ export default function MemberPage() {
       key={request.id}
       memberId={account.id}
       client={client}
+      invited={invited}
       request={request}
       messages={threadOf(request.id)}
       files={files.filter((file) => file.request_id === request.id)}
@@ -1101,7 +1160,7 @@ export default function MemberPage() {
         }
         eyebrow={account.company ?? undefined}
         title={client}
-        subtitle={`${account.email} · client since ${shortDate(account.created_at)}${account.time_zone !== "Australia/Sydney" ? ` · ${account.time_zone}` : ""}`}
+        subtitle={`${account.email} · client since ${shortDate(account.created_at)}${account.time_zone !== "Australia/Sydney" ? ` · ${account.time_zone}` : ""}${account.archived_at ? ` · archived ${shortDate(account.archived_at)}` : ""}${invited ? "" : " · not invited yet: nothing is emailed to them"}`}
         actions={
           <>
             <a
@@ -1121,6 +1180,7 @@ export default function MemberPage() {
                 Stripe <IconExternal size={14} />
               </a>
             )}
+            <ArchiveButton key={account.archived_at ?? "live"} memberId={account.id} archived={Boolean(account.archived_at)} onSaved={load} />
           </>
         }
       />
@@ -1180,7 +1240,7 @@ export default function MemberPage() {
       )}
 
       <Section title="Requests" description={`${open.length} open, in queue order · ${closed.length} delivered or withdrawn`}>
-        <NewRequestForm memberId={account.id} client={account.name?.split(" ")[0] || client} onSaved={load} />
+        <NewRequestForm memberId={account.id} client={account.name?.split(" ")[0] || client} invited={invited} onSaved={load} />
         {requests.length === 0 ? (
           <p className="text-sm text-[hsl(var(--color-foreground-subtle))]">No requests yet.</p>
         ) : (
@@ -1200,7 +1260,7 @@ export default function MemberPage() {
       <Section title="Messages" description="The general conversation, outside any one request.">
         <Card className="space-y-5">
           <Thread messages={threadOf(null)} files={files.filter((file) => !file.request_id)} client={client} />
-          <ReplyForm memberId={account.id} onSent={addMessage} />
+          <ReplyForm memberId={account.id} invited={invited} onSent={addMessage} />
         </Card>
       </Section>
     </PageContainer>

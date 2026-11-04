@@ -20,7 +20,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 /**
  * PATCH /api/admin/members/[id] - Their settings
- * Body: any of { name, company, email, monthly_hours, engagement, time_zone, weekly_email, cycle_day }.
+ * Body: any of { name, company, email, monthly_hours, engagement, time_zone, weekly_email, cycle_day, archived }.
  * A new email moves their portal to that address: send them a fresh invite.
  */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

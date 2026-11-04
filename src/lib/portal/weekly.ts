@@ -59,7 +59,7 @@ export function weeklySummary(account: ClientAccount, subscriptions: ClientSubsc
 /** Send this Friday's summaries: each claimed before sending, so a retried run never sends one twice. */
 export async function sendWeeklySummaries(db: Db, origin: string, now = new Date()) {
   const today = sydneyToday(now);
-  const { data: accounts, error } = await db.from("client_accounts").select("*").eq("weekly_email", true);
+  const { data: accounts, error } = await db.from("client_accounts").select("*").eq("weekly_email", true).is("archived_at", null);
   if (error) throw error;
   let sent = 0;
   for (const account of (accounts ?? []) as ClientAccount[]) {

@@ -69,7 +69,7 @@ export async function membersOverview(): Promise<MembersOverview> {
     const own = ((subscriptions.data ?? []) as ClientSubscription[]).filter((row) => row.account_id === account.id);
     const theirRequests = (requests.data ?? []).filter((row) => row.account_id === account.id);
     const threads = [...latest].filter(([thread]) => thread.startsWith(`${account.id}:`)).map(([, message]) => message);
-    for (const running of own.filter(isLive)) monthly += planById(running.plan)?.price ?? 0;
+    if (!account.archived_at) for (const running of own.filter(isLive)) monthly += planById(running.plan)?.price ?? 0;
     const times = [account.created_at, ...theirRequests.map((row) => row.updated_at), ...threads.map((message) => message.created_at)];
     return {
       account,
@@ -176,6 +176,7 @@ export interface ClientSettings {
   billing_address?: string | null;
   billing_email?: string | null;
   monthly_fee?: number | null;
+  archived_at?: string | null;
 }
 
 const validZone = (zone: string) => {
@@ -210,6 +211,8 @@ export function clientSettings(input: Record<string, unknown>): ClientSettings {
     if (settings.no_hour_limit) settings.monthly_hours = null;
   }
   if ("weekly_email" in input) settings.weekly_email = Boolean(input.weekly_email);
+  // Put away (out of Today, the list, the weekly email), or brought back.
+  if ("archived" in input) settings.archived_at = input.archived === true ? new Date().toISOString() : null;
   if ("cycle_day" in input) {
     const day = Number(input.cycle_day);
     if (!(Number.isInteger(day) && day >= 1 && day <= 28)) throw new ClientInputError("Hours refresh on a day from the 1st to the 28th.");
