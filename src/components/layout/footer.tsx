@@ -121,6 +121,14 @@ export function Footer() {
                       Product
                     </Link>
                   </li>
+                  <li>
+                    <Link
+                      href="/free"
+                      className="text-sm text-white/70 hover:text-white transition-colors"
+                    >
+                      Free resources
+                    </Link>
+                  </li>
                 </ul>
               </nav>
 
