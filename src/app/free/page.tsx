@@ -6,15 +6,15 @@ import { HeroText, PageTransition } from "@/components/ui";
 import { buttonVariants } from "@/components/ui/button";
 import { RevealText } from "@/components/editorial/reveal-text";
 import { StudioCta } from "@/components/sections/studio-cta";
-import { freePacks } from "@/content/free-packs";
+import { freeResources } from "@/content/free-packs";
 
-// Everything we give away, newest first. Each pack has its own page.
+// Everything we give away, newest first. Each one has its own page.
 
 const muted = "text-[hsl(var(--color-foreground-muted))]";
 const subtle = "text-[hsl(var(--color-foreground-subtle))]";
 
 export default function FreePage() {
-  const packs = [...freePacks].sort((a, b) => b.released.localeCompare(a.released));
+  const resources = [...freeResources].sort((a, b) => b.released.localeCompare(a.released));
   return (
     <>
       <Header />
@@ -29,13 +29,13 @@ export default function FreePage() {
                 </h1>
                 <HeroText delay={0.15}>
                   <p className={`mt-8 max-w-2xl text-xl leading-relaxed ${muted}`}>
-                    Backgrounds, templates and tools from the studio, free for personal and client work. New packs drop on Instagram first.
+                    Backgrounds, tool lists and type picks from the studio, free for personal and client work. New ones drop on Instagram first.
                   </p>
                   <a
                     href="https://www.instagram.com/craefto/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`mt-8 ${buttonVariants({ variant: "ghost" })} -ml-6`}
+                    className={`mt-8 -ml-6 ${buttonVariants({ variant: "ghost" })}`}
                   >
                     <InstagramLogo size={18} aria-hidden="true" />
                     Follow @craefto
@@ -44,30 +44,32 @@ export default function FreePage() {
                 </HeroText>
               </div>
 
-              <ul data-no-reveal className="mt-14 grid gap-6 md:mt-20 md:grid-cols-2">
-                {packs.map((pack) => (
-                  <li key={pack.slug}>
-                    <Link href={`/free/${pack.slug}`} className="group block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-accent))]">
-                      <span className="grid grid-cols-4 gap-2 overflow-hidden rounded-3xl">
-                        {pack.items.slice(0, 4).map((item) => (
-                          <span key={item.number} className="relative block aspect-[1290/2796] overflow-hidden">
-                            <Image
-                              src={item.phone}
-                              alt=""
-                              fill
-                              sizes="(min-width: 768px) 12vw, 24vw"
-                              className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
-                            />
-                          </span>
-                        ))}
+              <ul data-no-reveal className="mt-14 grid gap-x-6 gap-y-12 sm:grid-cols-2 md:mt-20 lg:grid-cols-3">
+                {resources.map((resource, index) => (
+                  <li key={resource.slug}>
+                    <Link
+                      href={`/free/${resource.slug}`}
+                      className="group block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-accent))]"
+                    >
+                      <span className="relative block aspect-[4/5] overflow-hidden rounded-3xl bg-[hsl(var(--color-background-subtle))]">
+                        <Image
+                          src={resource.cover.src}
+                          alt={resource.cover.alt}
+                          fill
+                          sizes="(min-width: 1024px) 30vw, (min-width: 640px) 46vw, 92vw"
+                          className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+                          priority={index < 3}
+                        />
                       </span>
                       <span className="mt-5 flex items-end justify-between gap-4">
                         <span>
-                          <span className="block font-mono text-xs uppercase tracking-[0.06em] text-[hsl(var(--color-accent))]">{pack.issue}</span>
-                          <span className="mt-1 block font-[family-name:var(--font-heading)] text-2xl font-semibold tracking-tight">{pack.kind}</span>
-                          <span className={`mt-1 block ${muted}`}>{pack.items.length} pieces · desktop and phone</span>
+                          <span className="block font-mono text-xs uppercase tracking-[0.06em] text-[hsl(var(--color-accent))]">{resource.issue}</span>
+                          <span className="mt-1 block font-[family-name:var(--font-heading)] text-2xl font-semibold tracking-tight">{resource.kind}</span>
+                          <span className={`mt-1 block ${muted}`}>
+                            {resource.type === "download" ? `${resource.items.length} pieces to download` : resource.summary[0]}
+                          </span>
                         </span>
-                        <ArrowRight size={22} aria-hidden="true" className="mb-1 transition-transform duration-300 group-hover:translate-x-1" />
+                        <ArrowRight size={22} aria-hidden="true" className="mb-1 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
                       </span>
                     </Link>
                   </li>
